@@ -1,0 +1,232 @@
+{
+  "dataset_sha256": "56b161a184e3791bc3562a3e98c5f06af2b3af973e9ed021de49521afb7b1a0a",
+  "rows": 1400,
+  "features": [
+    "annual_rainfall",
+    "aspect",
+    "clay_content",
+    "distance_to_water",
+    "elevation",
+    "flood_occurrence",
+    "land_cover_class",
+    "mean_humidity",
+    "mean_temperature",
+    "mean_wind_speed",
+    "ndvi",
+    "organic_carbon",
+    "sand_content",
+    "slope",
+    "soil_ph",
+    "terrain_ruggedness_index",
+    "water_content",
+    "flood_level_10yr_m",
+    "flood_level_25yr_m",
+    "flood_level_50yr_m",
+    "flood_level_100yr_m",
+    "flood_level_200yr_m",
+    "flood_level_500yr_m",
+    "gsi_landslide_code",
+    "dist_nearest_road",
+    "dist_nearest_highway",
+    "dist_nearest_hospital",
+    "dist_nearest_school",
+    "dist_nearest_quarry",
+    "dist_nearest_bus_stop",
+    "dist_nearest_railway_station",
+    "dist_nearest_pharmacy",
+    "dist_nearest_shop",
+    "dist_nearest_bank",
+    "dist_nearest_park",
+    "dist_nearest_power_line",
+    "dist_nearest_waste_facility",
+    "dist_nearest_industrial"
+  ],
+  "target": "Experimental public-data screening label",
+  "target_names": {
+    "0": "screen_out_public_data",
+    "1": "low_public_data_suitability",
+    "2": "moderate_public_data_suitability",
+    "3": "higher_public_data_suitability"
+  },
+  "target_warning": "Weak labels encode transparent public-data rules, not observed construction outcomes or expert approval",
+  "split": "Entire districts held out",
+  "training_districts": [
+    "Kannur",
+    "Kollam",
+    "Kottayam",
+    "Kozhikode",
+    "Malappuram",
+    "Palakkad",
+    "Pathanamthitta",
+    "Thiruvananthapuram",
+    "Thrissur"
+  ],
+  "validation_districts": [
+    "Ernakulam",
+    "Wayanad"
+  ],
+  "test_districts": [
+    "Alappuzha",
+    "Idukki",
+    "Kasaragod"
+  ],
+  "split_class_counts": {
+    "train": [
+      76,
+      137,
+      87,
+      600
+    ],
+    "validation": [
+      13,
+      20,
+      28,
+      139
+    ],
+    "test": [
+      33,
+      54,
+      48,
+      165
+    ]
+  },
+  "models": {
+    "extra_trees": {
+      "validation": {
+        "macro_f1": 0.7802814555067619,
+        "accuracy": 0.835,
+        "log_loss": 0.6007937174054238,
+        "confusion_matrix": [
+          [
+            10,
+            2,
+            0,
+            1
+          ],
+          [
+            2,
+            15,
+            2,
+            1
+          ],
+          [
+            0,
+            1,
+            23,
+            4
+          ],
+          [
+            0,
+            0,
+            20,
+            119
+          ]
+        ],
+        "n": 200
+      },
+      "test": {
+        "macro_f1": 0.7743357154393149,
+        "accuracy": 0.8266666666666667,
+        "log_loss": 0.5490163949223731,
+        "confusion_matrix": [
+          [
+            20,
+            9,
+            0,
+            4
+          ],
+          [
+            5,
+            43,
+            5,
+            1
+          ],
+          [
+            0,
+            2,
+            40,
+            6
+          ],
+          [
+            0,
+            0,
+            20,
+            145
+          ]
+        ],
+        "n": 300
+      },
+      "training": "Supervised tree baseline on public-data weak labels"
+    },
+    "feature_transformer": {
+      "validation": {
+        "macro_f1": 0.8134381677350427,
+        "accuracy": 0.83,
+        "log_loss": 0.5049354434013367,
+        "confusion_matrix": [
+          [
+            13,
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            16,
+            3,
+            0
+          ],
+          [
+            0,
+            0,
+            24,
+            4
+          ],
+          [
+            3,
+            0,
+            23,
+            113
+          ]
+        ],
+        "n": 200
+      },
+      "test": {
+        "macro_f1": 0.8220703707422188,
+        "accuracy": 0.8533333333333334,
+        "log_loss": 0.47313380241394043,
+        "confusion_matrix": [
+          [
+            23,
+            8,
+            1,
+            1
+          ],
+          [
+            0,
+            46,
+            8,
+            0
+          ],
+          [
+            0,
+            2,
+            45,
+            1
+          ],
+          [
+            1,
+            0,
+            22,
+            142
+          ]
+        ],
+        "n": 300
+      },
+      "training": "Feature-token Transformer trained on weak labels with validation early stopping",
+      "epochs_run": 30,
+      "parameters": 19748
+    }
+  },
+  "validation_winner": "feature_transformer"
+}

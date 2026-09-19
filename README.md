@@ -19,7 +19,9 @@ Four model experiments are defined:
 
 The generated dataset stays local at `data/processed/landslide_dataset.csv`; KSDMA redistribution permission has not been established. `scripts/build_dataset.py` reproduces it from the source archives and Earth Engine. The tracked `docs/dataset-card.json` and `docs/evaluation.json` record its provenance and results without publishing the source geometries or generated rows.
 
-A second, separate statewide table is generated at `data/processed/kerala_statewide_features.csv`. Its 1,400 rows comprise 100 points in each district and combine terrain, climate, vegetation, soil, surface-water, official hazard-reference, and OSM proximity fields. Its `label` is an evidence-only hazard reference, not a suitability ground truth; points outside the official polygons remain `unlabeled`. See `docs/statewide-dataset-card.json` for units, periods, sources, missingness, and limitations.
+A second, separate statewide table is generated at `data/processed/kerala_statewide_features.csv`. Its 1,400 rows comprise 100 points in each district and combine terrain, climate, vegetation, soil, surface-water, official hazard-reference, and OSM proximity fields. Current hazard enrichment uses GSI 2022 district landslide shapefiles and KSDMA/UNEP historical flood water-level rasters for 10, 25, 50, 100, 200, and 500-year return periods.
+
+`scripts/label_statewide_dataset.py` adds a four-class experimental public-data screening target, a 0–100 score, component penalties, confidence, and a rule trace. These are transparent weak labels for model development, not observed construction outcomes or expert ground truth. See `docs/statewide-dataset-card.json` for rules, units, periods, sources, missingness, and limitations.
 
 ## Run locally
 
@@ -44,14 +46,16 @@ Copy `.env.example` to `.env` and set local values. Never commit Earth Engine cr
 .venv/bin/python scripts/extract_osm.py ../southern-zone-260916.osm.pbf
 .venv/bin/python scripts/build_dataset.py
 .venv/bin/python scripts/build_statewide_dataset.py --points-per-district 100
+.venv/bin/python scripts/label_statewide_dataset.py
 PYTORCH_ENABLE_MPS_FALLBACK=1 .venv/bin/python scripts/train.py --tabpfn --finetune --device mps
+PYTORCH_ENABLE_MPS_FALLBACK=1 .venv/bin/python scripts/train_statewide.py --tabpfn --finetune --device mps
 ```
 
 The Apple Silicon device flag can be replaced with `cpu` or `cuda` as appropriate. TabPFN 3.5 weights carry Prior Labs' research/non-commercial license; review it before any deployment.
 
 ## Data sources
 
-- Kerala State Disaster Management Authority / NCESS historical flood and landslide susceptibility maps.
+- Kerala State Disaster Management Authority historic flood references, current GSI 2022 landslide susceptibility, and UNEP/KSDMA historical flood-return water levels.
 - NASA/USGS SRTM, CHIRPS, JRC Global Surface Water, Dynamic World, MODIS NDVI, ERA5-Land, and OpenLandMap through Google Earth Engine.
 - OpenStreetMap contributors under ODbL 1.0.
 - Optional Google Places Nearby Search, queried live when a server-side key is configured.

@@ -18,4 +18,5 @@ web/dist/
 .impeccable/mocks/
 .impeccable/direction-options.json
 data/preparation-log.json
+data/current-hazard-sources.json
 *.log

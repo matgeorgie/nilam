@@ -15,6 +15,7 @@ import pandas as pd
 from shapely import STRtree
 
 from kerala_land_lab.data import DISTRICTS
+from kerala_land_lab.current_hazards import attach_flood_levels, attach_gsi_landslide, download_current_hazards
 from kerala_land_lab.earth import initialize
 from kerala_land_lab.statewide import balanced_district_points, hazard_reference_label, terrain_zone
 
@@ -133,9 +134,9 @@ def attach_hazards(points: gpd.GeoDataFrame, processed: Path) -> gpd.GeoDataFram
         flood_refs.append(flood); landslide_refs.append(slide); labels.append(label); scores.append(score); bases.append(basis)
     points["flood_reference"] = flood_refs
     points["landslide_susceptibility"] = landslide_refs
-    points["label"] = labels
-    points["confidence_score"] = scores
-    points["label_basis"] = bases
+    points["hazard_reference_label"] = labels
+    points["hazard_reference_confidence"] = scores
+    points["hazard_reference_basis"] = bases
     return points
 
 
@@ -165,17 +166,23 @@ def main() -> None:
     points["terrain_zone"] = points.elevation.apply(terrain_zone)
     points["seismic_zone"] = "III"
     points = attach_hazards(points, processed)
+    download_current_hazards(args.data_dir)
+    points = attach_gsi_landslide(points, args.data_dir)
+    points = attach_flood_levels(points, args.data_dir)
     points = attach_osm(points, processed)
     columns = [
         "point_id", "lat", "lng", "district", "terrain_zone", "annual_rainfall", "aspect",
         "clay_content", "distance_to_water", "elevation", "flood_occurrence", "flood_reference",
         "land_cover_class", "mean_humidity", "mean_temperature", "mean_wind_speed", "ndvi",
         "organic_carbon", "sand_content", "slope", "soil_ph", "terrain_ruggedness_index",
-        "water_content", "seismic_zone", "landslide_susceptibility", "dist_nearest_road",
+        "water_content", "seismic_zone", "landslide_susceptibility", "gsi_landslide_susceptibility",
+        "flood_level_10yr_m", "flood_level_25yr_m", "flood_level_50yr_m", "flood_level_100yr_m",
+        "flood_level_200yr_m", "flood_level_500yr_m", "dist_nearest_road",
         "dist_nearest_highway", "dist_nearest_hospital", "dist_nearest_school", "dist_nearest_quarry",
         "dist_nearest_bus_stop", "dist_nearest_railway_station", "dist_nearest_pharmacy",
         "dist_nearest_shop", "dist_nearest_bank", "dist_nearest_park", "dist_nearest_power_line",
-        "dist_nearest_waste_facility", "dist_nearest_industrial", "label", "confidence_score", "label_basis",
+        "dist_nearest_waste_facility", "dist_nearest_industrial", "hazard_reference_label",
+        "hazard_reference_confidence", "hazard_reference_basis",
     ]
     output = processed / "kerala_statewide_features.csv"
     result = pd.DataFrame(points.drop(columns="geometry"))[columns]
@@ -184,7 +191,7 @@ def main() -> None:
         "created_at": datetime.now(timezone.utc).isoformat(), "rows": len(result), "columns": columns,
         "seed": args.seed, "sampling": f"{args.points_per_district} random interior points in each of 14 district boundaries",
         "district_counts": result.district.value_counts().sort_index().to_dict(),
-        "label_counts": result.label.value_counts().to_dict(), "sha256": hashlib.sha256(output.read_bytes()).hexdigest(),
+        "hazard_reference_label_counts": result.hazard_reference_label.value_counts().to_dict(), "sha256": hashlib.sha256(output.read_bytes()).hexdigest(),
         "target_definition": "Evidence-only hazard reference; not a residential suitability or construction-safety label",
         "confidence_definition": "1.0 means a direct point/polygon intersection with a KSDMA/NCESS reference; 0.0 means unlabeled. It is not predictive confidence.",
         "feature_notes": {
@@ -199,14 +206,14 @@ def main() -> None:
             "terrain": "USGS/SRTMGL1_003", "rainfall": "UCSB-CHG/CHIRPS/DAILY, 2000-2024 annual mean",
             "water": "JRC/GSW1_4/GlobalSurfaceWater", "land_cover": "GOOGLE/DYNAMICWORLD/V1, 2021-2024 modal class",
             "vegetation": "MODIS/061/MOD13Q1, 2019-2024 mean NDVI", "climate": "ECMWF/ERA5_LAND/MONTHLY_AGGR, 2015-2024 mean",
-            "soil": "OpenLandMap surface predictions, 250m", "hazards": "KSDMA/NCESS reference polygons",
+            "soil": "OpenLandMap surface predictions, 250m", "hazards": "KSDMA historic flood polygons, current GSI 2022 district landslide shapefiles, and UNEP/KSDMA historical flood-return rasters",
             "infrastructure": "OpenStreetMap Southern Zone extract, ODbL 1.0",
         },
         "missing_by_feature": result.isna().sum().to_dict(),
         "limitations": ["Random sample points are not cadastral parcels", "No bearing-capacity test, title, zoning, permit, sewage, crime, price, noise, air-quality, or utility-service confirmation", "Unmapped means unknown, never safe", "Labels require expert review before supervised suitability training"],
     }
     Path("docs/statewide-dataset-card.json").write_text(json.dumps(card, indent=2) + "\n")
-    print(json.dumps({"output": str(output), "rows": len(result), "districts": card["district_counts"], "labels": card["label_counts"], "sha256": card["sha256"]}, indent=2))
+    print(json.dumps({"output": str(output), "rows": len(result), "districts": card["district_counts"], "hazard_reference_labels": card["hazard_reference_label_counts"], "sha256": card["sha256"]}, indent=2))
 
 
 if __name__ == "__main__":
