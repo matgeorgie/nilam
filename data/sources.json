@@ -1,0 +1,20 @@
+[
+  {
+    "file": "ksdma_flood.zip",
+    "url": "https://sdma.kerala.gov.in/wp-content/uploads/2018/10/Flood_KML.zip",
+    "bytes": 37638999,
+    "sha256": "7011f8597da2f2fcbe01ed19e4776c41ec911910ba89e20b890063972a3e849a",
+    "retrieved": "2026-09-19T07:06:54.331741+00:00",
+    "license": "Not yet established; do not redistribute",
+    "purpose": "Historical susceptibility reference, not observed construction suitability"
+  },
+  {
+    "file": "ksdma_landslide.rar",
+    "url": "https://sdma.kerala.gov.in/wp-content/uploads/2020/08/Landslide-1.rar",
+    "bytes": 3186315,
+    "sha256": "6687fcd63701b9a851e523eecb121dca93f4ebf17f1a6d5a6b961ce0a843645a",
+    "retrieved": "2026-09-19T07:06:55.742630+00:00",
+    "license": "Not yet established; do not redistribute",
+    "purpose": "Historical susceptibility reference, not observed construction suitability"
+  }
+]

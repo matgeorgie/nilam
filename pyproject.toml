@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "kerala-land-lab"
+version = "0.1.0"
+description = "Evidence-first Kerala residential land screening research"
+requires-python = ">=3.11"
+dependencies = ["geopandas>=1.0,<2", "shapely>=2,<3", "requests>=2.32,<3", "defusedxml>=0.7,<1"]
+
+[project.optional-dependencies]
+research = ["earthengine-api>=1.7,<2", "tabpfn>=9,<10", "scikit-learn>=1.6,<2", "shap>=0.48,<1", "torch>=2.6,<3", "osmium>=4,<5"]
+test = ["pytest>=8,<10"]
+
+[project.scripts]
+kerala-data = "kerala_land_lab.data:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]

@@ -1,0 +1,179 @@
+{
+  "polygon_parts": 4074,
+  "source_placemarks": 2115,
+  "districts_with_flood_layers": [
+    "Alappuzha",
+    "Ernakulam",
+    "Idukki",
+    "Kannur",
+    "Kasaragod",
+    "Kollam",
+    "Kottayam",
+    "Kozhikode",
+    "Malappuram",
+    "Palakkad",
+    "Pathanamthitta",
+    "Thiruvananthapuram",
+    "Thrissur",
+    "Wayanad"
+  ],
+  "classes": [
+    {
+      "source": "flood/Alappuzha",
+      "source_label": "Flood plain",
+      "parts": 352
+    },
+    {
+      "source": "flood/Alappuzha",
+      "source_label": "Waterbody",
+      "parts": 131
+    },
+    {
+      "source": "flood/Ernakulam",
+      "source_label": "Flood plain",
+      "parts": 198
+    },
+    {
+      "source": "flood/Ernakulam",
+      "source_label": "Waterbody",
+      "parts": 124
+    },
+    {
+      "source": "flood/Idukki",
+      "source_label": "Flood plain",
+      "parts": 91
+    },
+    {
+      "source": "flood/Idukki",
+      "source_label": "Waterbody",
+      "parts": 84
+    },
+    {
+      "source": "flood/Kannur",
+      "source_label": "Flood plain",
+      "parts": 173
+    },
+    {
+      "source": "flood/Kannur",
+      "source_label": "Waterbody",
+      "parts": 69
+    },
+    {
+      "source": "flood/Kasaragod",
+      "source_label": "Flood plain",
+      "parts": 113
+    },
+    {
+      "source": "flood/Kasaragod",
+      "source_label": "Waterbody",
+      "parts": 109
+    },
+    {
+      "source": "flood/Kollam",
+      "source_label": "Flood plain",
+      "parts": 159
+    },
+    {
+      "source": "flood/Kollam",
+      "source_label": "Waterbody",
+      "parts": 156
+    },
+    {
+      "source": "flood/Kottayam",
+      "source_label": "Flood plain",
+      "parts": 161
+    },
+    {
+      "source": "flood/Kottayam",
+      "source_label": "Waterbody",
+      "parts": 33
+    },
+    {
+      "source": "flood/Kozhikode",
+      "source_label": "Flood plain",
+      "parts": 116
+    },
+    {
+      "source": "flood/Kozhikode",
+      "source_label": "Waterbody",
+      "parts": 92
+    },
+    {
+      "source": "flood/Malappuram",
+      "source_label": "Flood plain",
+      "parts": 224
+    },
+    {
+      "source": "flood/Malappuram",
+      "source_label": "Waterbody",
+      "parts": 162
+    },
+    {
+      "source": "flood/Palakkad",
+      "source_label": "Flood plain",
+      "parts": 205
+    },
+    {
+      "source": "flood/Palakkad",
+      "source_label": "Waterbody",
+      "parts": 114
+    },
+    {
+      "source": "flood/Pathanamthitta",
+      "source_label": "Flood plain",
+      "parts": 100
+    },
+    {
+      "source": "flood/Pathanamthitta",
+      "source_label": "Waterbody",
+      "parts": 115
+    },
+    {
+      "source": "flood/Thiruvananthapuram",
+      "source_label": "Flood plain",
+      "parts": 144
+    },
+    {
+      "source": "flood/Thiruvananthapuram",
+      "source_label": "Waterbody",
+      "parts": 51
+    },
+    {
+      "source": "flood/Thrissur",
+      "source_label": "Flood plain",
+      "parts": 234
+    },
+    {
+      "source": "flood/Thrissur",
+      "source_label": "Waterbody",
+      "parts": 203
+    },
+    {
+      "source": "flood/Wayanad",
+      "source_label": "Flood plain",
+      "parts": 56
+    },
+    {
+      "source": "flood/Wayanad",
+      "source_label": "Waterbody",
+      "parts": 9
+    },
+    {
+      "source": "landslide/kerala",
+      "source_label": "High Hazard Zone",
+      "parts": 130
+    },
+    {
+      "source": "landslide/kerala",
+      "source_label": "Low Hazard Zone",
+      "parts": 10
+    },
+    {
+      "source": "landslide/kerala",
+      "source_label": "Medium Hazard Zone",
+      "parts": 156
+    }
+  ],
+  "repaired_parts": 13,
+  "warning": "No intersection means unmapped/unknown, never safe. Landslide districts have not been spatially joined."
+}
