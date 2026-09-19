@@ -16,4 +16,6 @@ node_modules/
 web/dist/
 .impeccable/review/
 .impeccable/mocks/
+.impeccable/direction-options.json
+data/preparation-log.json
 *.log

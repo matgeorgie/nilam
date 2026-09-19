@@ -76,4 +76,7 @@ for start in range(0, len(samples), args.batch_size):
     print(f"Earth Engine measurements: {len(records)}/{len(samples)}",flush=True)
 frame = samples.drop(columns="geometry").merge(pd.DataFrame(records),on="sample_id",validate="one_to_one")
 frame.to_csv(root / "landslide_dataset.csv",index=False)
-(root / "dataset-card.json").write_text(json.dumps({"seed":args.seed,"rows":len(frame),"features":FEATURES,"feature_sources":CATALOG,"targets":labels,"sampling":"Class-balanced, polygon area weighted; not representative of Kerala prevalence", "purpose":"Reproduce historical mapped landslide susceptibility", "not_validated_for":"Construction suitability or future landslide probability", "source_polygons":int(frame.source_polygon_id.nunique()),"missing_by_feature":frame[FEATURES].isna().sum().to_dict()},indent=2))
+card={"seed":args.seed,"rows":len(frame),"features":FEATURES,"feature_sources":CATALOG,"targets":labels,"sampling":"Class-balanced, polygon area weighted; not representative of Kerala prevalence", "purpose":"Reproduce historical mapped landslide susceptibility", "not_validated_for":"Construction suitability or future landslide probability", "source_polygons":int(frame.source_polygon_id.nunique()),"district_counts":frame.district.value_counts().to_dict(),"geographic_limitation":"The available KSDMA landslide polygons sampled here are concentrated in Wayanad; this pilot is not statewide evidence.","missing_by_feature":frame[FEATURES].isna().sum().to_dict()}
+(root / "dataset-card.json").write_text(json.dumps(card,indent=2))
+Path("docs").mkdir(exist_ok=True)
+Path("docs/dataset-card.json").write_text(json.dumps(card,indent=2))

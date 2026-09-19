@@ -1,0 +1,72 @@
+{
+  "seed": 42,
+  "rows": 540,
+  "features": [
+    "elevation",
+    "slope",
+    "northness",
+    "eastness",
+    "relief_300m",
+    "rainfall_annual"
+  ],
+  "feature_sources": {
+    "elevation": {
+      "unit": "m",
+      "source": "USGS/SRTMGL1_003",
+      "resolution_m": 30,
+      "vintage": "2000"
+    },
+    "slope": {
+      "unit": "degrees",
+      "source": "SRTM-derived slope",
+      "resolution_m": 30,
+      "vintage": "2000"
+    },
+    "northness": {
+      "unit": "cos(aspect)",
+      "source": "SRTM-derived aspect",
+      "resolution_m": 30,
+      "vintage": "2000"
+    },
+    "eastness": {
+      "unit": "sin(aspect)",
+      "source": "SRTM-derived aspect",
+      "resolution_m": 30,
+      "vintage": "2000"
+    },
+    "relief_300m": {
+      "unit": "m",
+      "source": "SRTM focal elevation standard deviation within 300m",
+      "resolution_m": 30,
+      "vintage": "2000"
+    },
+    "rainfall_annual": {
+      "unit": "mm/year",
+      "source": "UCSB-CHG/CHIRPS/DAILY",
+      "resolution_m": 5566,
+      "vintage": "2000\u20132009 mean annual total"
+    }
+  },
+  "targets": {
+    "Low Hazard Zone": 0,
+    "Medium Hazard Zone": 1,
+    "High Hazard Zone": 2
+  },
+  "sampling": "Class-balanced, polygon area weighted; not representative of Kerala prevalence",
+  "purpose": "Reproduce historical mapped landslide susceptibility",
+  "not_validated_for": "Construction suitability or future landslide probability",
+  "source_polygons": 145,
+  "district_counts": {
+    "Wayanad": 537,
+    "Kozhikode": 3
+  },
+  "geographic_limitation": "The available KSDMA landslide polygons sampled here are concentrated in Wayanad; this pilot is not statewide evidence.",
+  "missing_by_feature": {
+    "elevation": 0,
+    "slope": 0,
+    "northness": 0,
+    "eastness": 0,
+    "relief_300m": 0,
+    "rainfall_annual": 0
+  }
+}

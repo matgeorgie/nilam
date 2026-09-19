@@ -1,0 +1,249 @@
+{
+  "dataset_sha256": "bd31918c81cc453cb1a2457ddb29504f5a2ed9f7a7731c54ef41064dedd9ed0b",
+  "seed": 42,
+  "features": [
+    "elevation",
+    "slope",
+    "northness",
+    "eastness",
+    "relief_300m",
+    "rainfall_annual"
+  ],
+  "split": "Original source polygons held apart; class-specific row counts balanced greedily; pilot only, not independent district/event validation",
+  "rows": 540,
+  "class_counts": [
+    180,
+    180,
+    180
+  ],
+  "district_counts": {
+    "Wayanad": 537,
+    "Kozhikode": 3
+  },
+  "geographic_limitation": "537 of 540 rows are in Wayanad; these results must not be generalized statewide.",
+  "split_class_counts": {
+    "train": [
+      106,
+      108,
+      108
+    ],
+    "validation": [
+      37,
+      36,
+      36
+    ],
+    "test": [
+      37,
+      36,
+      36
+    ]
+  },
+  "class_names": [
+    "Low mapped susceptibility",
+    "Medium mapped susceptibility",
+    "High mapped susceptibility"
+  ],
+  "sampling_warning": "Class-balanced dataset: probabilities do not estimate Kerala event prevalence",
+  "target_warning": "Agreement with historical KSDMA mapped classes, not real construction safety",
+  "models": {
+    "extra_trees": {
+      "validation": {
+        "macro_f1": 0.4089771223293628,
+        "accuracy": 0.44954128440366975,
+        "log_loss": 1.2054142390492009,
+        "confusion_matrix": [
+          [
+            4,
+            23,
+            10
+          ],
+          [
+            5,
+            18,
+            13
+          ],
+          [
+            4,
+            5,
+            27
+          ]
+        ],
+        "n": 109
+      },
+      "test": {
+        "macro_f1": 0.5015243955614624,
+        "accuracy": 0.5045871559633027,
+        "log_loss": 1.0281768481587572,
+        "confusion_matrix": [
+          [
+            13,
+            12,
+            12
+          ],
+          [
+            5,
+            22,
+            9
+          ],
+          [
+            13,
+            3,
+            20
+          ]
+        ],
+        "n": 109
+      },
+      "training": "Supervised tree ensemble"
+    },
+    "feature_transformer": {
+      "validation": {
+        "macro_f1": 0.3583831370398222,
+        "accuracy": 0.4036697247706422,
+        "log_loss": 1.1995855569839478,
+        "confusion_matrix": [
+          [
+            3,
+            20,
+            14
+          ],
+          [
+            7,
+            13,
+            16
+          ],
+          [
+            6,
+            2,
+            28
+          ]
+        ],
+        "n": 109
+      },
+      "test": {
+        "macro_f1": 0.4785912882298424,
+        "accuracy": 0.47706422018348627,
+        "log_loss": 0.9865301251411438,
+        "confusion_matrix": [
+          [
+            14,
+            8,
+            15
+          ],
+          [
+            6,
+            18,
+            12
+          ],
+          [
+            13,
+            3,
+            20
+          ]
+        ],
+        "n": 109
+      },
+      "training": "Feature-token Transformer trained from scratch with AdamW; early stopping on validation only",
+      "epochs_run": 16,
+      "parameters": 17667
+    },
+    "tabpfn_3_5_fast": {
+      "validation": {
+        "macro_f1": 0.47926804274630364,
+        "accuracy": 0.48623853211009177,
+        "log_loss": 1.8752824068069458,
+        "confusion_matrix": [
+          [
+            11,
+            7,
+            19
+          ],
+          [
+            0,
+            17,
+            19
+          ],
+          [
+            2,
+            9,
+            25
+          ]
+        ],
+        "n": 109
+      },
+      "test": {
+        "macro_f1": 0.3426368952684742,
+        "accuracy": 0.3486238532110092,
+        "log_loss": 1.8854182958602905,
+        "confusion_matrix": [
+          [
+            7,
+            17,
+            13
+          ],
+          [
+            6,
+            17,
+            13
+          ],
+          [
+            16,
+            6,
+            14
+          ]
+        ],
+        "n": 109
+      },
+      "training": "Pretrained weights; in-context fit only, no gradient updates"
+    },
+    "tabpfn_finetuned": {
+      "validation": {
+        "macro_f1": 0.5044897959183673,
+        "accuracy": 0.5137614678899083,
+        "log_loss": 2.0431411266326904,
+        "confusion_matrix": [
+          [
+            11,
+            7,
+            19
+          ],
+          [
+            0,
+            19,
+            17
+          ],
+          [
+            2,
+            8,
+            26
+          ]
+        ],
+        "n": 109
+      },
+      "test": {
+        "macro_f1": 0.3592179750074487,
+        "accuracy": 0.3669724770642202,
+        "log_loss": 2.0688552856445312,
+        "confusion_matrix": [
+          [
+            7,
+            17,
+            13
+          ],
+          [
+            6,
+            18,
+            12
+          ],
+          [
+            15,
+            6,
+            15
+          ]
+        ],
+        "n": 109
+      },
+      "training": "Gradient fine-tuning of pretrained TabPFN; checkpoints saved separately"
+    }
+  },
+  "validation_winner": "tabpfn_finetuned"
+}
