@@ -4,6 +4,7 @@ from __future__ import annotations
 import hashlib
 import json
 import zipfile
+from functools import lru_cache
 from pathlib import Path
 
 import geopandas as gpd
@@ -68,13 +69,18 @@ def _zip_layer(path: Path) -> gpd.GeoDataFrame:
     return gpd.read_file(f"zip://{path.resolve()}!{layer}")
 
 
-def attach_gsi_landslide(points: gpd.GeoDataFrame, data_dir: Path) -> gpd.GeoDataFrame:
+@lru_cache(maxsize=2)
+def gsi_layer(data_dir: Path) -> gpd.GeoDataFrame:
     layers = []
     for district, slug in GSI_DISTRICTS.items():
         layer = _zip_layer(data_dir / f"raw/ksdma_gsi_2022/gsi_2022_{slug}.zip").to_crs(4326)
         layer["district_source"] = district
         layers.append(layer[["Susceptibi", "district_source", "geometry"]])
-    susceptibility = gpd.GeoDataFrame(pd.concat(layers, ignore_index=True), crs=4326)
+    return gpd.GeoDataFrame(pd.concat(layers, ignore_index=True), crs=4326)
+
+
+def attach_gsi_landslide(points: gpd.GeoDataFrame, data_dir: Path) -> gpd.GeoDataFrame:
+    susceptibility = gsi_layer(data_dir)
     joined = gpd.sjoin(points[["point_id", "geometry"]], susceptibility, predicate="intersects", how="left")
     priority = {"High": 3, "Moderate": 2, "Low": 1}
     values = {}

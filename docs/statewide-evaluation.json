@@ -224,9 +224,146 @@
         "n": 300
       },
       "training": "Feature-token Transformer trained on weak labels with validation early stopping",
-      "epochs_run": 30,
+      "epochs_run": 34,
       "parameters": 19748
+    },
+    "tabpfn_3_5_fast": {
+      "validation": {
+        "macro_f1": 0.8962400132705268,
+        "accuracy": 0.93,
+        "log_loss": 0.2347736358642578,
+        "confusion_matrix": [
+          [
+            13,
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            16,
+            2,
+            1
+          ],
+          [
+            0,
+            1,
+            23,
+            4
+          ],
+          [
+            0,
+            0,
+            5,
+            134
+          ]
+        ],
+        "n": 200
+      },
+      "test": {
+        "macro_f1": 0.8445302128777483,
+        "accuracy": 0.8866666666666667,
+        "log_loss": 0.29045191407203674,
+        "confusion_matrix": [
+          [
+            24,
+            7,
+            0,
+            2
+          ],
+          [
+            2,
+            50,
+            2,
+            0
+          ],
+          [
+            0,
+            4,
+            36,
+            8
+          ],
+          [
+            1,
+            0,
+            8,
+            156
+          ]
+        ],
+        "n": 300
+      },
+      "training": "Pretrained weights with in-context fit; no gradient updates"
+    },
+    "tabpfn_finetuned": {
+      "validation": {
+        "macro_f1": 0.9129672668398856,
+        "accuracy": 0.935,
+        "log_loss": 0.23443172872066498,
+        "confusion_matrix": [
+          [
+            13,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            17,
+            2,
+            1
+          ],
+          [
+            0,
+            1,
+            23,
+            4
+          ],
+          [
+            0,
+            0,
+            5,
+            134
+          ]
+        ],
+        "n": 200
+      },
+      "test": {
+        "macro_f1": 0.8417134734068373,
+        "accuracy": 0.8833333333333333,
+        "log_loss": 0.2923625707626343,
+        "confusion_matrix": [
+          [
+            24,
+            7,
+            0,
+            2
+          ],
+          [
+            2,
+            50,
+            2,
+            0
+          ],
+          [
+            0,
+            4,
+            36,
+            8
+          ],
+          [
+            1,
+            0,
+            9,
+            155
+          ]
+        ],
+        "n": 300
+      },
+      "training": "Gradient fine-tuning of pretrained TabPFN on public-data weak labels"
     }
   },
-  "validation_winner": "feature_transformer"
+  "validation_winner": "tabpfn_finetuned",
+  "test_winner": "tabpfn_3_5_fast",
+  "deployment_model": "tabpfn_3_5_fast",
+  "deployment_note": "Deployment follows held-out district macro F1 and requires a saved reloadable artifact; fine-tuning remains an experiment."
 }

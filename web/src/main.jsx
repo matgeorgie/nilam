@@ -59,7 +59,7 @@ function App() {
     [mapError, setMapError] = useState(""),
     [district, setDistrict] = useState(""),
     [layer, setLayer] = useState(true),
-    [model, setModel] = useState("extra_trees"),
+    [model, setModel] = useState("tabpfn"),
     [radius, setRadius] = useState(150),
     [coordinates, setCoordinates] = useState({ lat: "9.9312", lon: "76.2673" }),
     [tab, setTab] = useState("overview");
@@ -672,8 +672,8 @@ function App() {
                       {report.prediction.status === "available" ? (
                         <>
                           <p className="section-note">
-                            {modelNames[report.prediction.model]} · historical
-                            landslide map classes
+                            {modelNames[report.prediction.model]} · statewide
+                            public-data screening classes
                           </p>
                           <div className="probabilities">
                             {report.prediction.class_scores.map((v, i) => (
@@ -695,14 +695,14 @@ function App() {
                             ))}
                           </div>
                           <p className="unknown-note">
-                            These are model class scores—not the probability of
-                            a landslide or permission to build.
+                            These scores reproduce the experimental public-data
+                            target. They are not safety probabilities or
+                            permission to build.
                           </p>
                           <h3>Why this prediction?</h3>
                           <p className="section-note">
-                            Effect on the model’s{" "}
-                            <strong>high-susceptibility</strong> score. Green
-                            lowers it; rust raises it.
+                            Effect on the model’s selected screening-class
+                            score. Green lowers it; rust raises it.
                           </p>
                           <div className="contributions">
                             {[...report.prediction.explanation.contributions]
@@ -904,10 +904,10 @@ function App() {
         <p className="eyebrow">THE RESEARCH BEHIND NILAM</p>
         <h2>Methods, not mystery.</h2>
         <p>
-          We train models to reproduce historical KSDMA landslide susceptibility
-          classes from Earth Engine terrain and rainfall. This is an initial
-          research task, distinct from validating whether a home can safely be
-          built.
+          We compare models on a statewide public-data screening target built
+          from current hazard references, terrain, climate, land cover and
+          mapped access. It remains distinct from expert validation of whether
+          a home can safely be built.
         </p>
         {evaluation ? (
           <>
@@ -947,7 +947,7 @@ function App() {
               </table>
             </div>
             <p>
-              {evaluation.split}. {evaluation.sampling_warning}.
+              {evaluation.split}. {evaluation.target_warning}.
             </p>
             <details>
               <summary>Reproducibility details</summary>
@@ -971,15 +971,15 @@ function App() {
         <ul className="sources">
           <li>
             <a
-              href="https://sdma.kerala.gov.in/maps/"
+              href="https://sdma.kerala.gov.in/hazard-maps/"
               target="_blank"
               rel="noreferrer"
             >
-              KSDMA / NCESS historical hazard maps ↗
+              KSDMA and GSI hazard maps ↗
             </a>
             <span>
-              Source page attributes the maps to 2010. Missing coverage is not a
-              negative label.
+              GSI 2022 landslide susceptibility and KSDMA/UNEP historical
+              flood-return water levels. Missing coverage is not proof of safety.
             </span>
           </li>
           <li>
@@ -1004,7 +1004,7 @@ function App() {
               CHIRPS rainfall ↗
             </a>
             <span>
-              Approximately 5.6 km source cells. 2000–2009 average annual
+              Approximately 5.6 km source cells. 2000–2024 average annual
               totals.
             </span>
           </li>

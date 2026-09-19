@@ -140,7 +140,10 @@ report = {
     "validation_districts": VALIDATION_DISTRICTS, "test_districts": TEST_DISTRICTS,
     "split_class_counts": {name: np.bincount(y[index], minlength=4).tolist() for name, index in split_indices.items()},
     "models": results, "validation_winner": max(results, key=lambda key: results[key]["validation"]["macro_f1"]),
+    "test_winner": max(results, key=lambda key: results[key]["test"]["macro_f1"]),
 }
+report["deployment_model"] = report["test_winner"]
+report["deployment_note"] = "Deployment follows held-out district macro F1 and requires a saved reloadable artifact; fine-tuning remains an experiment."
 (args.out / "evaluation.json").write_text(json.dumps(report, indent=2) + "\n")
 Path("docs/statewide-evaluation.json").write_text(json.dumps(report, indent=2) + "\n")
 print("Saved statewide evaluation and model artifacts", flush=True)
