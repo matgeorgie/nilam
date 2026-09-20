@@ -78,8 +78,10 @@ Build the satellite dataset. The command is resumable and skips valid files alre
 
 ```bash
 PROJECT_ID=land-suitability-508903 \
-.venv-multimodal/bin/python scripts/download_satellite_chips.py --workers 3
+.venv-multimodal/bin/python scripts/download_satellite_chips.py --workers 1
 ```
+
+On macOS, use `--workers 1`. Concurrent native OpenSSL reads have caused interpreter crashes on the target machine. Completed `.npz` chips are atomic and the command resumes by skipping them.
 
 Train the fused model:
 
