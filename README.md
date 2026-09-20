@@ -63,3 +63,11 @@ The Apple Silicon device flag can be replaced with `cpu` or `cuda` as appropriat
 ## Next validation milestone
 
 Build a statewide flood-reference dataset across all 14 districts, evaluate by held-out districts, add independent event inventories, calibrate uncertainty, and collect expert-reviewed plot labels. Only the last step can turn the project from hazard screening toward validated residential suitability.
+
+## Suitability map and SHAP
+
+The web app supports point selection and editable polygon drawing on normal or satellite Mapbox basemaps. Polygon reports sample up to nine locations across the selected area and show the median model score plus its spatial range.
+
+The displayed suitability percentage is an ordinal experimental index derived from the four model-class probabilities (8%, 34%, 64%, and 90% anchors). Permutation SHAP explains this exact scalar output. Each attribution is reported in percentage points, grouped by evidence family, and paired with the measured feature value. Positive SHAP values raise the displayed score; negative values lower it.
+
+This score is not a probability of safe construction. See [docs/academic-roadmap.md](docs/academic-roadmap.md) for the expert-label, multimodal satellite, graph-learning, temporal-monsoon, and conformal-uncertainty research plan.

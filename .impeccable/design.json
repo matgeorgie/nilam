@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-20T00:00:00Z",
+  "title": "Design System: Nilam",
+  "extensions": {
+    "colorMeta": {
+      "forest-ink": {"role":"primary","displayName":"Forest Ink","canonical":"#123c31","tonalRamp":["#082019","#123c31","#28584a","#467567","#699487","#91b4a8","#bdd4cc","#edf5f1"]},
+      "kerala-green": {"role":"primary","displayName":"Kerala Green","canonical":"#176149","tonalRamp":["#06271c","#0c4532","#176149","#347d63","#579a7e","#80b79e","#afd5c3","#e8f5ee"]},
+      "constraint-rust": {"role":"secondary","displayName":"Constraint Rust","canonical":"#a3523e","tonalRamp":["#34130d","#61291e","#8a4232","#a3523e","#bd705d","#d69a8a","#e9c5bb","#faefec"]},
+      "warm-field": {"role":"neutral","displayName":"Warm Field","canonical":"#f3f5f0","tonalRamp":["#20231f","#3f443d","#62685e","#858d81","#aab1a5","#cdd2ca","#e4e8e1","#f3f5f0"]},
+      "paper": {"role":"neutral","displayName":"Paper","canonical":"#fbfcf9","tonalRamp":["#20221f","#444740","#6b7067","#92988e","#b9beb6","#d8dcd5","#eceee9","#fbfcf9"]}
+    },
+    "typographyMeta": {
+      "display": {"displayName":"Editorial Display","purpose":"Major product and empty-state headings only."},
+      "body": {"displayName":"Evidence Body","purpose":"Research copy and explanations."},
+      "label": {"displayName":"Control Label","purpose":"Controls, factor metadata, and measured values."}
+    },
+    "shadows": [
+      {"name":"floating-map","value":"0 6px 24px #143b2c24","purpose":"Guidance floating over the map."},
+      {"name":"selected-control","value":"0 1px 4px #173c2d1a","purpose":"Selected segmented option."},
+      {"name":"dialog","value":"0 25px 90px #0d2b214d","purpose":"Research-method dialog."}
+    ],
+    "motion": [
+      {"name":"loading-shimmer","value":"1.5s linear infinite","purpose":"Indicates active geospatial analysis."},
+      {"name":"mobile-result-reveal","value":"smooth scrollIntoView","purpose":"Moves a completed mobile assessment to its score."}
+    ],
+    "breakpoints": [
+      {"name":"compact-desktop","value":"1100px"},
+      {"name":"mobile","value":"780px"}
+    ]
+  },
+  "components": [
+    {
+      "name":"Selected Segment",
+      "kind":"button",
+      "refersTo":"segmented-selected",
+      "description":"Selected point, polygon, map, or satellite mode.",
+      "html":"<button class=\"ds-segment\" aria-pressed=\"true\">Draw area</button>",
+      "css":".ds-segment{background:#fbfcf9;color:#123c31;border:0;border-radius:5px;padding:7px 10px;font:600 11px 'DM Sans',Arial,sans-serif;box-shadow:0 1px 4px #173c2d1a}.ds-segment:hover{filter:brightness(.97)}.ds-segment:focus-visible{outline:3px solid #e0a647;outline-offset:2px}"
+    },
+    {
+      "name":"Map Prompt",
+      "kind":"custom",
+      "refersTo":"map-prompt",
+      "description":"Compact instruction that floats over the map before selection.",
+      "html":"<div class=\"ds-map-prompt\"><strong>Click any location in Kerala</strong><span>Zoom in for parcel-level selection</span></div>",
+      "css":".ds-map-prompt{display:grid;gap:3px;background:#fbfcf9;color:#123c31;border-radius:10px;padding:13px 16px;box-shadow:0 6px 24px #143b2c24;font-family:'DM Sans',Arial,sans-serif}.ds-map-prompt strong{font-size:11px}.ds-map-prompt span{font-size:11px;color:#60736b}"
+    },
+    {
+      "name":"Suitability Score",
+      "kind":"custom",
+      "refersTo":"score-panel",
+      "description":"Leads every completed assessment with score, band, and location.",
+      "html":"<section class=\"ds-score\"><strong>72%</strong><div><b>Higher suitability</b><span>Palakkad</span></div></section>",
+      "css":".ds-score{display:flex;gap:24px;align-items:center;background:#edf3ed;color:#123c31;padding:24px 22px 17px;font-family:'DM Sans',Arial,sans-serif}.ds-score>strong{font-size:53px;letter-spacing:-.05em}.ds-score div{display:grid;gap:5px}.ds-score b{font-size:11px;text-transform:uppercase;color:#176149}.ds-score span{font-size:20px;font-weight:600}"
+    },
+    {
+      "name":"SHAP Factor Row",
+      "kind":"custom",
+      "description":"Pairs a measured feature with its signed model effect.",
+      "html":"<div class=\"ds-factor\"><div><strong>Ground slope</strong><span>Terrain · 10°</span></div><b>+1.5 pp</b></div>",
+      "css":".ds-factor{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid #d5ddd7;color:#123c31;font-family:'DM Sans',Arial,sans-serif}.ds-factor strong,.ds-factor b{font-size:11px}.ds-factor span{display:block;margin-top:3px;font-size:11px;color:#60736b}.ds-factor>b{color:#2c8063}"
+    },
+    {
+      "name":"Recovery Button",
+      "kind":"button",
+      "description":"Restarts selection after an unavailable or failed analysis.",
+      "html":"<button class=\"ds-recovery\">Choose another location</button>",
+      "css":".ds-recovery{border:0;border-radius:8px;background:#123c31;color:#fbfcf9;padding:10px 13px;font:600 11px 'DM Sans',Arial,sans-serif}.ds-recovery:hover{background:#176149}.ds-recovery:focus-visible{outline:3px solid #e0a647;outline-offset:2px}"
+    }
+  ],
+  "narrative": {
+    "northStar":"The Kerala Field Report",
+    "overview":"Nilam feels like a careful field report placed beside a live map: calm, legible, evidence-led, and specific to Kerala. The interface uses warm paper neutrals, restrained greens, and compact analytical detail. Color explains state and effect; it does not decorate empty space.",
+    "keyCharacteristics":["Warm paper field with deep Kerala-green structure.","Large editorial headings paired with compact sans-serif evidence.","Flat bordered surfaces with depth reserved for floating map controls.","Suitability score followed by signed, value-bearing SHAP drivers."],
+    "rules":[
+      {"name":"The Evidence Color Rule","body":"Green and rust must encode direction or state; neither is ambient decoration.","section":"colors"},
+      {"name":"The Two-Voice Rule","body":"Newsreader speaks only for major editorial headings; all task controls and evidence stay in DM Sans.","section":"typography"},
+      {"name":"The Flat Workspace Rule","body":"Analytical surfaces use borders and tone; shadows belong only to elements that physically float over another task surface.","section":"elevation"}
+    ],
+    "dos":["Do keep the map and explanation visible together on desktop.","Do pair each model effect with a friendly feature name, measured value, direction, and percentage-point contribution.","Do preserve an explicit weak-label and non-certification statement near research claims.","Do clear stale results when the user changes the model."],
+    "donts":["Don't use green or rust without a state or directional meaning.","Don't present class confidence as construction-safety probability.","Don't add hazard overlays to the primary map workspace.","Don't hide missing model output behind an incomplete evidence report; use a clear unavailable state and recovery action."]
+  }
+}

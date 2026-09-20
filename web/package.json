@@ -13,6 +13,7 @@
   "license": "ISC",
   "type": "module",
   "dependencies": {
+    "@mapbox/mapbox-gl-draw": "^1.5.2",
     "mapbox-gl": "^3.31.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",

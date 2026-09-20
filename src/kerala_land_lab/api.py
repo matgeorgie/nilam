@@ -11,8 +11,8 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
-from shapely.geometry import Point, mapping
-from kerala_land_lab.earth import load_env, initialize, statewide_point_features, STATEWIDE_FEATURES, STATEWIDE_CATALOG
+from shapely.geometry import Point, mapping, shape
+from kerala_land_lab.earth import load_env, initialize, statewide_point_features, statewide_points_features, STATEWIDE_FEATURES, STATEWIDE_CATALOG
 from kerala_land_lab.current_hazards import attach_flood_levels, attach_gsi_landslide
 from kerala_land_lab.places import nearby_places
 from kerala_land_lab.weak_labels import LABEL_NAMES
@@ -39,6 +39,11 @@ class Location(BaseModel):
     lat:float=Field(ge=8,le=13)
     lon:float=Field(ge=74,le=78)
     radius_m:int=Field(default=150,ge=50,le=500)
+    model:str=Field(default='tabpfn',pattern='^(extra_trees|feature_transformer|tabpfn)$')
+
+
+class AreaSelection(BaseModel):
+    geometry:dict
     model:str=Field(default='tabpfn',pattern='^(extra_trees|feature_transformer|tabpfn)$')
 
 
@@ -102,13 +107,49 @@ def statewide_values(lon,lat,point):
     return values
 
 
+def statewide_values_many(coordinates, points):
+    global earth_ready
+    with earth_lock:
+        if not earth_ready:initialize();earth_ready=True
+        rows=statewide_points_features(coordinates)
+    point_frame=gpd.GeoDataFrame({'point_id':[f'area-{i}' for i in range(len(coordinates))]},geometry=[Point(lon,lat) for lon,lat in coordinates],crs=4326)
+    point_frame=attach_gsi_landslide(point_frame,ROOT/'data')
+    point_frame=attach_flood_levels(point_frame,ROOT/'data')
+    geo=geography()
+    for values,(_,row),point in zip(rows,point_frame.iterrows(),points):
+        values.update({f'flood_level_{period}yr_m':float(row[f'flood_level_{period}yr_m']) for period in (10,25,50,100,200,500)})
+        values['gsi_landslide_susceptibility']=row.gsi_landslide_susceptibility
+        values['gsi_landslide_code']={'Not mapped':0,'Low':1,'Moderate':2,'High':3}[row.gsi_landslide_susceptibility]
+        values['dist_nearest_road']=nearest_distance(geo['roads'],point)
+        values['dist_nearest_highway']=nearest_distance(geo['roads'][geo['roads'].major.astype(bool)],point)
+        for kind in ['hospital','school','quarry','bus_stop','railway_station','pharmacy','shop','bank','park','waste_facility','industrial']:
+            values[f'dist_nearest_{kind}']=nearest_distance(geo['facilities'][geo['facilities'].kind==kind],point)
+        values['dist_nearest_power_line']=nearest_distance(geo['power_lines'],point)
+    return rows
+
+
+SCORE_ANCHORS=np.array([0.08,0.34,0.64,0.90],dtype=np.float32)
+FEATURE_GROUPS={
+    'annual_rainfall':'Climate','mean_humidity':'Climate','mean_temperature':'Climate','mean_wind_speed':'Climate',
+    'aspect':'Terrain','elevation':'Terrain','slope':'Terrain','terrain_ruggedness_index':'Terrain',
+    'clay_content':'Soil','organic_carbon':'Soil','sand_content':'Soil','soil_ph':'Soil','water_content':'Soil',
+    'distance_to_water':'Water & flood','flood_occurrence':'Water & flood',
+    'flood_level_10yr_m':'Water & flood','flood_level_25yr_m':'Water & flood','flood_level_50yr_m':'Water & flood','flood_level_100yr_m':'Water & flood','flood_level_200yr_m':'Water & flood','flood_level_500yr_m':'Water & flood',
+    'land_cover_class':'Land cover','ndvi':'Land cover','gsi_landslide_code':'Natural hazards',
+    'dist_nearest_road':'Access','dist_nearest_highway':'Access','dist_nearest_bus_stop':'Access','dist_nearest_railway_station':'Access',
+    'dist_nearest_hospital':'Amenities','dist_nearest_school':'Amenities','dist_nearest_pharmacy':'Amenities','dist_nearest_shop':'Amenities','dist_nearest_bank':'Amenities','dist_nearest_park':'Amenities',
+    'dist_nearest_quarry':'Environmental exposure','dist_nearest_power_line':'Utilities','dist_nearest_waste_facility':'Environmental exposure','dist_nearest_industrial':'Environmental exposure',
+}
+
+
 def prediction(values,selected):
     import joblib
     import shap
     file=ROOT/'models/statewide/baseline.joblib'
     if not file.exists():return {'status':'unavailable','reason':'Training has not finished'}
     bundle=load_statewide_baseline()
-    raw=np.array([[values.get(name,np.nan) for name in bundle['features']]],dtype=np.float32)
+    value_rows=values if isinstance(values,list) else [values]
+    raw=np.array([[row.get(name,np.nan) for name in bundle['features']] for row in value_rows],dtype=np.float32)
     x=bundle['imputer'].transform(raw).astype(np.float32)
     background=statewide_background()
     with model_lock:
@@ -119,24 +160,35 @@ def prediction(values,selected):
             network=FeatureTransformer(len(bundle['features']),n_classes=4);network.load_state_dict(torch.load(ROOT/'models/statewide/feature_transformer.pt',map_location='cpu',weights_only=True));network.eval()
             def predict(a):
                 with torch.no_grad():return torch.softmax(network(torch.tensor(scaler.transform(a),dtype=torch.float32)),dim=1).numpy()
-            probs=predict(x)[0]
-            target=int(np.argmax(probs));exp=shap.Explainer(predict,background[:8],algorithm='permutation',seed=42)(x,max_evals=2*len(bundle['features'])+1)
-            contributions=exp.values[0,:,target];base=float(exp.base_values[0,target]);method='Permutation SHAP · 8 training references'
+            all_probs=predict(x); method='Permutation SHAP · statewide suitability score · 8 representative training medoids'
+            predict_proba=predict
         elif selected=='tabpfn':
             estimator=load_statewide_tabpfn()
-            probs=estimator.predict_proba(x)[0]
-            target=int(np.argmax(probs));exp=shap.Explainer(estimator.predict_proba,background[:4],algorithm='permutation',seed=42)(x,max_evals=2*len(bundle['features'])+1)
-            contributions=exp.values[0,:,target];base=float(exp.base_values[0,target]);method='Permutation SHAP · 4 training references'
+            all_probs=estimator.predict_proba(x); predict_proba=estimator.predict_proba
+            method='Permutation SHAP · statewide suitability score · 8 representative training medoids'
         else:
-            estimator=bundle['estimator'];probs=estimator.predict_proba(x)[0]
-            target=int(np.argmax(probs));explainer=shap.TreeExplainer(estimator)
-            shap_values=explainer.shap_values(x);contributions=shap_values[0,:,target] if np.asarray(shap_values).ndim==3 else shap_values[target][0]
-            base=np.asarray(explainer.expected_value).reshape(-1)[target];method='TreeSHAP · predicted screening-class output'
+            estimator=bundle['estimator'];all_probs=estimator.predict_proba(x);predict_proba=estimator.predict_proba
+            method='Permutation SHAP · statewide suitability score · 8 representative training medoids'
+        sample_scores=all_probs@SCORE_ANCHORS
+        median=float(np.median(sample_scores));representative=int(np.argmin(np.abs(sample_scores-median)))
+        probs=all_probs[representative]
+        def predict_score(a):return predict_proba(a)@SCORE_ANCHORS
+        references=representative_background()
+        exp=shap.Explainer(predict_score,references,algorithm='permutation',seed=42)(x[representative:representative+1],max_evals=2*len(bundle['features'])+1)
+        contributions=np.asarray(exp.values[0])*100;base=float(np.asarray(exp.base_values).reshape(-1)[0]*100)
+    items=[];groups={}
+    for i,name in enumerate(bundle['features']):
+        contribution=float(contributions[i]);group=FEATURE_GROUPS.get(name,'Other')
+        groups[group]=groups.get(group,0)+contribution
+        items.append({'feature':name,'group':group,'value':None if np.isnan(raw[representative,i]) else float(raw[representative,i]),'contribution':contribution})
+    score=float(sample_scores[representative]*100)
     return {'status':'available','model':selected,'class_index':int(np.argmax(probs)),
-            'class_names':[LABEL_NAMES[i].replace('_public_data','').replace('_',' ').title() for i in range(4)],'class_scores':probs.tolist(),
-            'explanation':{'method':method,'base_value':float(base),'output_value':float(probs[target]),
-                'contributions':[{'feature':name,'value':None if np.isnan(raw[0,i]) else float(raw[0,i]),'contribution':float(contributions[i])} for i,name in enumerate(bundle['features'])],
-                'meaning':'Contributions explain the selected screening class. They are associations with a weak-label model, not causal effects or safety probabilities.'},
+            'class_names':['Screen out','Low','Moderate','Higher'],'class_scores':probs.tolist(),
+            'suitability_percent':round(score,1),
+            'spatial_summary':{'samples':len(value_rows),'minimum_percent':round(float(sample_scores.min()*100),1),'maximum_percent':round(float(sample_scores.max()*100),1),'median_percent':round(float(np.median(sample_scores)*100),1)},
+            'explanation':{'method':method,'base_value':round(base,2),'output_value':round(score,2),
+                'contributions':items,'groups':[{'group':key,'contribution':round(value,2)} for key,value in sorted(groups.items(),key=lambda item:abs(item[1]),reverse=True)],
+                'meaning':'SHAP values are percentage-point effects on the displayed suitability score. Positive values raise the score; negative values lower it. Effects describe this model, not physical causation.'},
             'limitation':'Model reproduces transparent public-data weak labels. It is not expert ground truth, a permit decision, or proof that construction is safe.'}
 
 
@@ -161,6 +213,39 @@ def statewide_background():
     frame['gsi_landslide_code']=frame.gsi_landslide_susceptibility.map({'Not mapped':0,'Low':1,'Moderate':2,'High':3})
     frame=frame[frame.district.isin(bundle['training_districts'])]
     return bundle['imputer'].transform(frame[bundle['features']].to_numpy(dtype=np.float32)).astype(np.float32)
+
+
+@lru_cache(maxsize=1)
+def representative_background():
+    """Eight geographically pooled, feature-space medoids for SHAP masking."""
+    from sklearn.cluster import KMeans
+    from sklearn.preprocessing import StandardScaler
+    background=statewide_background();scaled=StandardScaler().fit_transform(background)
+    clusters=KMeans(n_clusters=8,random_state=42,n_init=10).fit(scaled)
+    indices=[]
+    for center in clusters.cluster_centers_:
+        distances=np.square(scaled-center).sum(axis=1);indices.append(int(np.argmin(distances)))
+    return background[indices]
+
+
+def score_outcome(estimate):
+    if estimate.get('status')!='available':
+        return 'Analysis unavailable','The model could not complete this assessment. Try again or choose another model.'
+    score=estimate['suitability_percent']
+    if score<25:return 'Very low suitability','The public-data model found several strong constraints at this location.'
+    if score<50:return 'Low suitability','Mapped conditions contain material constraints that need specialist review.'
+    if score<70:return 'Moderate suitability','The model found a mixed profile with both supportive and limiting conditions.'
+    return 'Higher suitability','The mapped public-data profile is comparatively favourable within this experimental model.'
+
+
+def sample_polygon(polygon,max_points=9):
+    points=[polygon.representative_point()]
+    minx,miny,maxx,maxy=polygon.bounds
+    for y in np.linspace(miny,maxy,5)[1:-1]:
+        for x in np.linspace(minx,maxx,5)[1:-1]:
+            candidate=Point(float(x),float(y))
+            if polygon.covers(candidate) and all(candidate.distance(existing)>.5 for existing in points):points.append(candidate)
+    return points[:max_points]
 
 
 @app.post('/api/analyze')
@@ -195,16 +280,7 @@ def analyze(location:Location):
     if os.environ.get('GOOGLE_PLACES_API_KEY'):
         try:google_places=nearby_places(location.lon,location.lat,max(3000,location.radius_m*4))
         except Exception as exc:errors.append({'source':'Google Places','type':type(exc).__name__,'message':'Live Google Maps places are temporarily unavailable; OpenStreetMap results remain visible'})
-    current_flags=(terrain.get('gsi_landslide_susceptibility')=='High' or (terrain.get('flood_level_10yr_m') or 0)>0)
-    flags=[e['label'] for e in evidence if e['label'] in {'High Hazard Zone','Flood plain','Waterbody'}]
-    if current_flags or flags:
-        outcome='High concern';reason='The selected area intersects a historical mapped hazard. Examine the overlap and obtain a site assessment.'
-    elif estimate.get('status')=='available' and estimate['class_index']<=1:
-        outcome='Further investigation';reason='The statewide screening model places this location in a high-concern public-data class.'
-    elif estimate.get('status')=='available' and estimate['class_index']==2:
-        outcome='Review recommended';reason='The statewide screening model places this location in the moderate public-data suitability class.'
-    else:
-        outcome='Evidence incomplete';reason='Available layers cannot establish that a house can safely or legally be built here.'
+    outcome,reason=score_outcome(estimate)
     outline=gpd.GeoSeries([area],crs=32643).to_crs(4326).iloc[0]
     return {'location':location.model_dump(),'district':district.iloc[0]['name'] if len(district) else 'Kerala boundary area',
             'outcome':outcome,'reason':reason,'area':mapping(outline),'hazards':evidence,
@@ -217,6 +293,42 @@ def analyze(location:Location):
             'unknowns':['Soil bearing capacity and foundation design','Title, zoning, CRZ and wetland compliance','Drinking-water quality and seasonal supply','Electricity, sewage, broadband and waste-service connections','Crime, noise and site-specific air quality','Land price and construction cost'],
             'next_steps':['Have a geotechnical professional inspect soil and slope stability','Verify plot records and applicable restrictions with the local authority','Check monsoon drainage and physical/legal access on site'],
             'scope':'150m default neighbourhood screening; not a cadastral survey or construction clearance'}
+
+
+@app.post('/api/analyze-area')
+def analyze_area(selection:AreaSelection):
+    try:polygon_wgs=shape(selection.geometry)
+    except Exception as exc:raise HTTPException(422,'Draw a valid polygon') from exc
+    if polygon_wgs.geom_type!='Polygon' or not polygon_wgs.is_valid or polygon_wgs.area==0:raise HTTPException(422,'Draw a valid polygon')
+    polygon=gpd.GeoSeries([polygon_wgs],crs=4326).to_crs(32643).iloc[0]
+    if polygon.area<25:raise HTTPException(422,'Draw an area larger than 25 m²')
+    if polygon.area>5_000_000:raise HTTPException(422,'Keep the selected area below 5 km²')
+    geo=geography()
+    if not geo['state'].geometry.iloc[0].covers(polygon):raise HTTPException(422,'Keep the polygon inside Kerala')
+    points=sample_polygon(polygon)
+    point_series=gpd.GeoSeries(points,crs=32643).to_crs(4326)
+    coordinates=[(float(item.x),float(item.y)) for item in point_series]
+    errors=[];rows=[]
+    try:rows=statewide_values_many(coordinates,points)
+    except Exception as exc:errors.append({'source':'Earth Engine','type':type(exc).__name__,'message':'Measurements unavailable; try again shortly'})
+    try:estimate=prediction(rows,selection.model) if rows else {'status':'unavailable','reason':'Measurements unavailable'}
+    except Exception as exc:estimate={'status':'unavailable','reason':f'Model inference unavailable ({type(exc).__name__})'}
+    outcome,reason=score_outcome(estimate)
+    representative=rows[0] if rows else {}
+    centroid=polygon.representative_point();districts=intersecting(geo['districts'],polygon)
+    nearby=[]
+    for kind in ['hospital','pharmacy','school','grocery','bank','fire_station']:
+        facilities=geo['amenities'][geo['amenities'].kind==kind]
+        if facilities.empty:continue
+        indices,distance=facilities.sindex.nearest(centroid,return_distance=True,return_all=False);item=facilities.iloc[int(indices[1,0])]
+        nearby.append({'kind':kind,'name':item['name'],'distance_m':round(float(distance[0])),'source':'OpenStreetMap','distance_type':'Straight-line from area centre'})
+    road_indices,road_distance=geo['roads'].sindex.nearest(centroid,return_distance=True,return_all=False);road=geo['roads'].iloc[int(road_indices[1,0])]
+    centroid_wgs=gpd.GeoSeries([centroid],crs=32643).to_crs(4326).iloc[0]
+    return {'location':{'lat':centroid_wgs.y,'lon':centroid_wgs.x,'area_m2':round(polygon.area),'selection_type':'polygon','sample_count':len(points),'model':selection.model},
+            'district':', '.join(sorted(districts.name.unique())) if len(districts) else 'Kerala boundary area','outcome':outcome,'reason':reason,'area':mapping(polygon_wgs),'hazards':[],
+            'terrain':[{'feature':name,'value':representative.get(name),**STATEWIDE_CATALOG[name]} for name in STATEWIDE_FEATURES],
+            'nearby':nearby,'google_places':[],'road':{'distance_m':round(float(road_distance[0])),'kind':road.kind,'mapped_access':road.access,'caveat':'Mapped road proximity does not prove legal access'},
+            'prediction':estimate,'errors':errors,'scope':f'{round(polygon.area):,} m² polygon sampled at {len(points)} locations; not a cadastral survey or construction clearance'}
 
 
 if (ROOT/'web/dist').exists():

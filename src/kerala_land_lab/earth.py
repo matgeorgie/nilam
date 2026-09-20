@@ -112,3 +112,25 @@ def statewide_feature_image():
 def statewide_point_features(lon, lat):
     values = statewide_feature_image().reduceRegion(ee.Reducer.first(), ee.Geometry.Point([lon, lat]), scale=30, maxPixels=1000).getInfo()
     return {name: None if values.get(name) == -9999 else values.get(name) for name in STATEWIDE_FEATURES}
+
+
+def statewide_points_features(points):
+    """Fetch Earth Engine features for several points in one server request."""
+    features = [
+        ee.Feature(ee.Geometry.Point([lon, lat]), {"sample_id": index})
+        for index, (lon, lat) in enumerate(points)
+    ]
+    result = statewide_feature_image().reduceRegions(
+        collection=ee.FeatureCollection(features),
+        reducer=ee.Reducer.first(),
+        scale=30,
+    ).getInfo()
+    rows = [None] * len(points)
+    for feature in result.get("features", []):
+        properties = feature.get("properties", {})
+        index = int(properties["sample_id"])
+        rows[index] = {
+            name: None if properties.get(name) == -9999 else properties.get(name)
+            for name in STATEWIDE_FEATURES
+        }
+    return [row or {name: None for name in STATEWIDE_FEATURES} for row in rows]

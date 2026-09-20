@@ -23,3 +23,21 @@ def test_hazard_priority_and_terrain_zones():
     assert hazard_reference_label("Flood plain", "High")[0] == "high_hazard_reference"
     assert hazard_reference_label("Flood plain", "Unknown")[0] == "hazard_review_reference"
     assert [terrain_zone(v) for v in [10, 100, 500]] == ["lowland_0_20m", "midland_20_300m", "highland_above_300m"]
+
+
+def test_polygon_sampling_stays_inside_and_is_bounded():
+    from kerala_land_lab.api import sample_polygon
+    from shapely.geometry import box
+
+    polygon = box(0, 0, 100, 100)
+    points = sample_polygon(polygon)
+    assert 1 < len(points) <= 9
+    assert all(polygon.covers(point) for point in points)
+
+
+def test_score_outcome_always_reports_a_model_result():
+    from kerala_land_lab.api import score_outcome
+
+    label, reason = score_outcome({"status": "available", "suitability_percent": 72})
+    assert label == "Higher suitability"
+    assert "favourable" in reason
