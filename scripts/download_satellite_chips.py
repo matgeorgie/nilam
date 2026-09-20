@@ -3,55 +3,18 @@ from __future__ import annotations
 
 import argparse
 from concurrent.futures import ThreadPoolExecutor, as_completed
-import io
 import json
 import os
 from pathlib import Path
 import time
-import zipfile
 
 import ee
 import numpy as np
 import pandas as pd
-import rasterio
 import requests
 
 from kerala_land_lab.earth import initialize, load_env
-from kerala_land_lab.multimodal import EE_S2_BANDS
-
-
-def mask_s2(image):
-    scl = image.select("SCL")
-    clear = scl.neq(0).And(scl.neq(1)).And(scl.neq(3)).And(scl.neq(8)).And(scl.neq(9)).And(scl.neq(10)).And(scl.neq(11))
-    return image.updateMask(clear).select(EE_S2_BANDS)
-
-
-def seasonal_composite(start_month: int, end_month: int, region):
-    collection = (ee.ImageCollection("COPERNICUS/S2_SR_HARMONIZED")
-                  .filterBounds(region)
-                  .filterDate("2023-01-01", "2026-01-01")
-                  .filter(ee.Filter.calendarRange(start_month, end_month, "month"))
-                  .filter(ee.Filter.lt("CLOUDY_PIXEL_PERCENTAGE", 65))
-                  .map(mask_s2))
-    return collection.median()
-
-
-def source_image(region):
-    dry = seasonal_composite(1, 3, region).rename([f"dry_{band}" for band in EE_S2_BANDS])
-    monsoon = seasonal_composite(6, 9, region).rename([f"monsoon_{band}" for band in EE_S2_BANDS])
-    return dry.addBands(monsoon).unmask(0).clamp(0, 10000).toUint16()
-
-
-def geotiff_array(content: bytes) -> np.ndarray:
-    if content[:2] == b"PK":
-        with zipfile.ZipFile(io.BytesIO(content)) as archive:
-            names = [name for name in archive.namelist() if name.lower().endswith((".tif", ".tiff"))]
-            if len(names) != 1:
-                raise ValueError(f"Expected one GeoTIFF, found {names}")
-            content = archive.read(names[0])
-    with rasterio.MemoryFile(content) as memory:
-        with memory.open() as dataset:
-            return dataset.read()
+from kerala_land_lab.satellite import geotiff_array, source_image
 
 
 def download_one(row: dict, output: Path, patch_m: int, attempts: int = 4) -> dict:

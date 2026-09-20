@@ -32,7 +32,7 @@ Requirements: Python 3.11+, Node.js, a local Earth Engine login, a Mapbox public
 python -m venv --system-site-packages .venv
 .venv/bin/python -m pip install -e '.[research,test]'
 cd web && npm install && npm run build && cd ..
-.venv/bin/python -m uvicorn kerala_land_lab.api:app --host 127.0.0.1 --port 8000
+.venv-multimodal/bin/python -m uvicorn kerala_land_lab.api:app --host 127.0.0.1 --port 8000
 ```
 
 For frontend development, run `npm run dev` inside `web`; it proxies `/api` to port 8000.
@@ -53,6 +53,8 @@ PYTORCH_ENABLE_MPS_FALLBACK=1 .venv/bin/python scripts/train_statewide.py --tabp
 ```
 
 The multimodal experiment uses a separate Python 3.11 environment. It downloads two 12-band Sentinel-2 chips for every statewide point, fine-tunes the last TerraMind blocks, and evaluates vision-only, tabular-only, and fused heads on whole-district holdouts. See [the multimodal experiment protocol](docs/multimodal-fusion.md) for the exact commands and limitations.
+
+When `models/multimodal_v2/terramind_tabular_fusion.pt` is present, the application uses Multimodal v2 by default. Live assessments build dry- and monsoon-season Sentinel-2 composites, combine them with the 38 mapped features, and display the satellite, tabular, and cross-attention routing weights alongside conditional SHAP explanations.
 
 The Apple Silicon device flag can be replaced with `cpu` or `cuda` as appropriate. TabPFN 3.5 weights carry Prior Labs' research/non-commercial license; review it before any deployment.
 

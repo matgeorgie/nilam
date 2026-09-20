@@ -83,13 +83,13 @@ class MultimodalFusionModel(nn.Module):
         }
 
 
-def build_terramind(checkpoint: Path | None = None, variant: str = "base") -> tuple[nn.Module, int]:
+def build_terramind(checkpoint: Path | None = None, variant: str = "base", pretrained: bool = True) -> tuple[nn.Module, int]:
     try:
         from terratorch.registry import BACKBONE_REGISTRY
     except ImportError as exc:
         raise RuntimeError("Install the multimodal environment from requirements-multimodal.txt") from exc
     kwargs = {
-        "pretrained": checkpoint is None,
+        "pretrained": checkpoint is None and pretrained,
         "modalities": ["S2L2A"],
         "bands": {"S2L2A": S2_BANDS},
     }
@@ -140,11 +140,10 @@ class ChipRecord:
     valid_fraction: float
 
 
-def load_chip(path: Path, augment: bool = False) -> torch.Tensor:
-    with np.load(path) as archive:
-        chips = archive["chips"].astype(np.float32)
+def normalize_chip(chips: np.ndarray, augment: bool = False) -> torch.Tensor:
+    chips = chips.astype(np.float32, copy=False)
     if chips.shape != (2, 12, 224, 224):
-        raise ValueError(f"{path} has {chips.shape}; expected (2, 12, 224, 224)")
+        raise ValueError(f"Chip has {chips.shape}; expected (2, 12, 224, 224)")
     tensor = torch.from_numpy(chips)
     tensor = (tensor - S2_MEAN.view(1, -1, 1, 1)) / S2_STD.view(1, -1, 1, 1)
     if augment:
@@ -155,3 +154,9 @@ def load_chip(path: Path, augment: bool = False) -> torch.Tensor:
         rotations = int(torch.randint(0, 4, ()).item())
         tensor = torch.rot90(tensor, rotations, (-2, -1))
     return tensor
+
+
+def load_chip(path: Path, augment: bool = False) -> torch.Tensor:
+    with np.load(path) as archive:
+        chips = archive["chips"]
+    return normalize_chip(chips, augment)

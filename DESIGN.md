@@ -160,6 +160,12 @@ Controls use gently rounded corners: 5px within segmented groups, 8px for groups
 - List SHAP drivers in supported and reduced columns with the actual feature value and percentage-point effect.
 - Aggregate the same effects into semantic evidence groups below the factor list.
 
+### Multimodal Fusion Trace
+- Place the fusion trace directly after the suitability result so users can see how the score was assembled before reading individual SHAP drivers.
+- Show satellite seasons, mapped site evidence, and cross-attention as three parallel streams with their branch estimate and learned routing weight.
+- Use the active green status only when the multimodal artifact produced the current result.
+- State that routing weights describe model combination, not causal feature importance.
+
 ## Do's and Don'ts
 
 ### Do:
