@@ -7,6 +7,8 @@ import hashlib
 import json
 from pathlib import Path
 import random
+import time
+import warnings
 
 import joblib
 import numpy as np
@@ -60,6 +62,7 @@ def optimizer_for(model, head_lr, backbone_lr, weight_decay):
 
 
 def main():
+    warnings.filterwarnings("ignore", message=r"`torch\.jit\.script` is deprecated.*", category=FutureWarning)
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--data",type=Path,default=Path("data/processed/kerala_statewide_features.csv"))
     parser.add_argument("--chips",type=Path,default=Path("data/processed/sentinel2_chips"))
@@ -73,11 +76,13 @@ def main():
     args=parser.parse_args();args.out.mkdir(parents=True,exist_ok=True)
     random.seed(args.seed);np.random.seed(args.seed);torch.manual_seed(args.seed)
     device=torch.device("mps" if args.device=="auto" and torch.backends.mps.is_available() else "cuda" if args.device=="auto" and torch.cuda.is_available() else "cpu" if args.device=="auto" else args.device)
+    print(f"[setup] device={device} variant={args.variant}",flush=True)
     frame=pd.read_csv(args.data);frame["gsi_landslide_code"]=frame.gsi_landslide_susceptibility.map(GSI_CODES)
     if set(frame.weak_label_version.unique())!={VERSION}:raise RuntimeError("Weak-label version mismatch")
     available=frame.point_id.map(lambda point_id:(args.chips/f"{point_id}.npz").exists())
     missing=frame.loc[~available,"point_id"].tolist()
     if missing:raise RuntimeError(f"Missing {len(missing)} chips; rerun download_satellite_chips.py. First: {missing[:5]}")
+    print(f"[data] verified {len(frame)} samples and satellite chips",flush=True)
     train_mask=~frame.district.isin(VALIDATION_DISTRICTS+TEST_DISTRICTS);validation_mask=frame.district.isin(VALIDATION_DISTRICTS);test_mask=frame.district.isin(TEST_DISTRICTS)
     splits={"train":np.flatnonzero(train_mask),"validation":np.flatnonzero(validation_mask),"test":np.flatnonzero(test_mask)}
     baseline=joblib.load("models/statewide/baseline.joblib")
@@ -85,14 +90,22 @@ def main():
     scaler=StandardScaler().fit(imputed[splits["train"]]);tabular=scaler.transform(imputed).astype(np.float32)
     datasets={name:SiteDataset(frame,index,tabular,args.chips,augment=name=="train") for name,index in splits.items()}
     loaders={name:DataLoader(dataset,batch_size=args.batch_size,shuffle=name=="train",num_workers=args.workers,pin_memory=device.type=="cuda") for name,dataset in datasets.items()}
+    print(f"[split] train={len(datasets['train'])} validation={len(datasets['validation'])} test={len(datasets['test'])}",flush=True)
+    print(f"[model] loading TerraMind {args.variant} checkpoint",flush=True)
     backbone,vision_dim=build_terramind(args.checkpoint,args.variant);set_backbone_trainable(backbone,0)
     model=MultimodalFusionModel(backbone,len(FEATURES),vision_dim).to(device)
+    total_parameters=sum(parameter.numel() for parameter in model.parameters())
+    trainable_parameters=sum(parameter.numel() for parameter in model.parameters() if parameter.requires_grad)
+    print(f"[model] ready: {total_parameters:,} parameters; {trainable_parameters:,} initially trainable",flush=True)
     counts=np.bincount(frame.loc[train_mask,"label"].to_numpy(),minlength=4);class_weights=torch.tensor(len(splits["train"])/(4*counts),dtype=torch.float32,device=device)
     criterion=nn.CrossEntropyLoss(weight=class_weights);optimizer=optimizer_for(model,args.head_lr,args.backbone_lr,args.weight_decay)
     best_score=-1;best_state=None;patience=0;history=[];trainable_blocks=[]
     for epoch in range(1,args.epochs+1):
         if epoch==args.unfreeze_epoch:
             trainable_blocks=set_backbone_trainable(model.backbone,args.unfreeze_blocks);optimizer=optimizer_for(model,args.head_lr,args.backbone_lr,args.weight_decay)
+            print(f"[epoch {epoch}] unfroze {len(trainable_blocks)} parameters from final {args.unfreeze_blocks} backbone blocks",flush=True)
+        epoch_started=time.monotonic()
+        print(f"[epoch {epoch}/{args.epochs}] training {len(loaders['train'])} batches",flush=True)
         model.train();optimizer.zero_grad(set_to_none=True);losses=[]
         for step,batch in enumerate(loaders["train"],1):
             result=model(batch["chips"].to(device),batch["tabular"].to(device));target=batch["label"].to(device)
@@ -100,6 +113,9 @@ def main():
             (loss/args.accumulate).backward();losses.append(float(loss.detach().cpu()))
             if step%args.accumulate==0 or step==len(loaders["train"]):
                 nn.utils.clip_grad_norm_([p for p in model.parameters() if p.requires_grad],1.0);optimizer.step();optimizer.zero_grad(set_to_none=True)
+            if step==1 or step%25==0 or step==len(loaders["train"]):
+                elapsed=time.monotonic()-epoch_started
+                print(f"[epoch {epoch}/{args.epochs}] batch {step}/{len(loaders['train'])} mean_loss={np.mean(losses):.4f} elapsed={elapsed:.0f}s",flush=True)
         y_val,val_probs,val_gates=probabilities(model,loaders["validation"],device);val={name:metrics(y_val,prob) for name,prob in val_probs.items()};score=val["fusion"]["macro_f1"]
         history.append({"epoch":epoch,"train_loss":float(np.mean(losses)),"validation":val,"mean_gate":val_gates.mean(axis=0).tolist(),"backbone_unfrozen":epoch>=args.unfreeze_epoch})
         print(json.dumps(history[-1]),flush=True)
