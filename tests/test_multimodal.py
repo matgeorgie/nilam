@@ -24,7 +24,9 @@ def test_multimodal_fusion_outputs_all_ablation_heads():
     assert result["fusion"].shape==(2,4)
     assert result["vision"].shape==(2,4)
     assert result["tabular"].shape==(2,4)
+    assert result["cross"].shape==(2,4)
     assert torch.allclose(result["gate"].sum(1),torch.ones(2),atol=1e-5)
+    assert torch.all(result["gate"]>=0.02)
 
 
 def test_only_last_backbone_block_is_unfrozen():

@@ -41,9 +41,9 @@ flowchart LR
     FT --> B[Tabular-only auxiliary head]
 ```
 
-The shared vision encoder converts both seasons to patch tokens. Mean-pooled season representations pass through a temporal transformer. Each standardized tabular scalar becomes a learned feature token and passes through a separate transformer. Cross-attention lets satellite representations query the tabular evidence. A learned gate combines the vision, tabular, and cross-modal branches.
+The shared vision encoder converts both seasons to patch tokens. Mean-pooled season representations pass through a temporal transformer. The validated statewide feature transformer supplies the tabular tokens and logits. Its weights remain frozen so multimodal training cannot destroy the stronger tabular baseline. Cross-attention lets satellite representations query projected tabular tokens. Layer-normalized vision, tabular, and cross-modal branches produce separate logits. A bounded learned gate mixes those logits, while a zero-initialized residual head learns corrections. This design starts close to the tabular baseline and prevents any branch from receiving exactly zero weight.
 
-Three heads are trained together. The fusion head is the primary output; vision-only and tabular-only heads provide auxiliary supervision and required ablations. Reporting all three on the same held-out districts tests whether fusion adds information instead of merely increasing parameter count.
+The fusion head is the primary output. Vision-only, frozen tabular-only, and cross-attention heads provide the required ablations. Reporting all four on the same held-out districts tests whether fusion adds information instead of merely increasing parameter count.
 
 ## Training and evaluation protocol
 
@@ -93,4 +93,4 @@ PYTORCH_ENABLE_MPS_FALLBACK=1 \
   --device mps --epochs 30 --batch-size 1 --accumulate 16
 ```
 
-Outputs are written under `models/multimodal/`: the best checkpoint, training history, and held-out evaluation. Raw chips and weights remain local and are ignored by Git.
+Outputs are written under `models/multimodal_v2/`: the best checkpoint, training history, and held-out evaluation. Raw chips and weights remain local and are ignored by Git. The original representation-level fusion is retained as a v1 ablation because its gate saturated on the vision branch during the first experiment.

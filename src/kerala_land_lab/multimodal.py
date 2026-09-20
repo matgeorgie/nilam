@@ -9,6 +9,8 @@ import numpy as np
 import torch
 from torch import nn
 
+from kerala_land_lab.model import FeatureTransformer
+
 S2_BANDS = [
     "COASTAL_AEROSOL", "BLUE", "GREEN", "RED", "RED_EDGE_1", "RED_EDGE_2",
     "RED_EDGE_3", "NIR_BROAD", "NIR_NARROW", "WATER_VAPOR", "SWIR_1", "SWIR_2",
@@ -18,35 +20,30 @@ S2_MEAN = torch.tensor([1390.458, 1503.317, 1718.197, 1853.910, 2199.100, 2779.9
 S2_STD = torch.tensor([2106.761, 2141.107, 2038.973, 2134.138, 2085.321, 1889.926, 1820.257, 1871.918, 1753.829, 1797.379, 1434.261, 1334.311])
 
 
-class TabularTokenEncoder(nn.Module):
-    def __init__(self, n_features: int, dimension: int):
-        super().__init__()
-        self.weight = nn.Parameter(torch.randn(n_features, dimension) * 0.02)
-        self.bias = nn.Parameter(torch.zeros(n_features, dimension))
-        self.feature_identity = nn.Parameter(torch.randn(n_features, dimension) * 0.02)
-        layer = nn.TransformerEncoderLayer(dimension, 4, dimension * 3, dropout=0.15, batch_first=True, norm_first=True)
-        self.encoder = nn.TransformerEncoder(layer, 2, enable_nested_tensor=False)
-
-    def forward(self, values: torch.Tensor) -> torch.Tensor:
-        tokens = values.unsqueeze(-1) * self.weight + self.bias + self.feature_identity
-        return self.encoder(tokens)
-
-
 class MultimodalFusionModel(nn.Module):
     """Two-season TerraMind tokens fused with public-data feature tokens."""
-    def __init__(self, backbone: nn.Module, n_tabular: int, vision_dim: int, n_classes: int = 4, seasons: int = 2):
+    def __init__(self, backbone: nn.Module, n_tabular: int, vision_dim: int, n_classes: int = 4, seasons: int = 2, tabular_expert: FeatureTransformer | None = None):
         super().__init__()
         self.backbone = backbone
         self.seasons = seasons
         self.season_embedding = nn.Parameter(torch.randn(1, seasons, vision_dim) * 0.02)
         temporal_layer = nn.TransformerEncoderLayer(vision_dim, 4, vision_dim * 3, dropout=0.15, batch_first=True, norm_first=True)
         self.temporal = nn.TransformerEncoder(temporal_layer, 2, enable_nested_tensor=False)
-        self.tabular = TabularTokenEncoder(n_tabular, vision_dim)
+        self.tabular = tabular_expert or FeatureTransformer(n_tabular, dimension=32, n_classes=n_classes)
+        tabular_dim = self.tabular.dimension
+        self.tabular_projection = nn.Sequential(nn.Linear(tabular_dim, vision_dim), nn.LayerNorm(vision_dim))
+        self.vision_norm = nn.LayerNorm(vision_dim)
+        self.cross_norm = nn.LayerNorm(vision_dim)
         self.cross_attention = nn.MultiheadAttention(vision_dim, 4, dropout=0.1, batch_first=True)
-        self.branch_gate = nn.Sequential(nn.Linear(vision_dim * 3, vision_dim), nn.GELU(), nn.Linear(vision_dim, 3), nn.Softmax(dim=-1))
-        self.fusion_head = nn.Sequential(nn.LayerNorm(vision_dim), nn.Linear(vision_dim, vision_dim), nn.GELU(), nn.Dropout(0.25), nn.Linear(vision_dim, n_classes))
+        self.branch_gate = nn.Sequential(nn.Linear(vision_dim * 3, vision_dim // 2), nn.GELU(), nn.Linear(vision_dim // 2, 3))
+        nn.init.zeros_(self.branch_gate[-1].weight)
+        with torch.no_grad():
+            self.branch_gate[-1].bias.copy_(torch.tensor([0.0, 6.0, 0.0]))
+        self.fusion_residual = nn.Sequential(nn.LayerNorm(vision_dim * 3), nn.Linear(vision_dim * 3, vision_dim), nn.GELU(), nn.Dropout(0.25), nn.Linear(vision_dim, n_classes))
+        nn.init.zeros_(self.fusion_residual[-1].weight)
+        nn.init.zeros_(self.fusion_residual[-1].bias)
         self.vision_head = nn.Sequential(nn.LayerNorm(vision_dim), nn.Linear(vision_dim, n_classes))
-        self.tabular_head = nn.Sequential(nn.LayerNorm(vision_dim), nn.Linear(vision_dim, n_classes))
+        self.cross_head = nn.Sequential(nn.LayerNorm(vision_dim), nn.Linear(vision_dim, n_classes))
 
     def _vision_tokens(self, chips: torch.Tensor) -> torch.Tensor:
         batch, seasons, channels, height, width = chips.shape
@@ -62,18 +59,26 @@ class MultimodalFusionModel(nn.Module):
         return self.temporal(pooled + self.season_embedding[:, :seasons])
 
     def forward(self, chips: torch.Tensor, tabular: torch.Tensor) -> dict[str, torch.Tensor]:
-        season_tokens = self._vision_tokens(chips)
-        tabular_tokens = self.tabular(tabular)
+        season_tokens = self.vision_norm(self._vision_tokens(chips))
+        compact_tabular_tokens = self.tabular.encode_tokens(tabular)
+        tabular_logits = self.tabular.head(compact_tabular_tokens[:, 0])
+        tabular_tokens = self.tabular_projection(compact_tabular_tokens)
         cross, _ = self.cross_attention(season_tokens, tabular_tokens, tabular_tokens, need_weights=False)
         vision_summary = season_tokens.mean(dim=1)
-        tabular_summary = tabular_tokens.mean(dim=1)
-        cross_summary = cross.mean(dim=1)
-        weights = self.branch_gate(torch.cat([vision_summary, tabular_summary, cross_summary], dim=-1))
-        fused = weights[:, 0:1] * vision_summary + weights[:, 1:2] * tabular_summary + weights[:, 2:3] * cross_summary
+        tabular_summary = tabular_tokens[:, 0]
+        cross_summary = self.cross_norm(cross.mean(dim=1))
+        summaries = torch.cat([vision_summary, tabular_summary, cross_summary], dim=-1)
+        gate_probability = torch.softmax(self.branch_gate(summaries) / 2.0, dim=-1)
+        weights = 0.94 * gate_probability + 0.02
+        vision_logits = self.vision_head(vision_summary)
+        cross_logits = self.cross_head(cross_summary)
+        experts = torch.stack([vision_logits, tabular_logits, cross_logits], dim=1)
+        fused_logits = (weights.unsqueeze(-1) * experts).sum(dim=1) + 0.1 * self.fusion_residual(summaries)
         return {
-            "fusion": self.fusion_head(fused),
-            "vision": self.vision_head(vision_summary),
-            "tabular": self.tabular_head(tabular_summary),
+            "fusion": fused_logits,
+            "vision": vision_logits,
+            "tabular": tabular_logits,
+            "cross": cross_logits,
             "gate": weights,
         }
 
