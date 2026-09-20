@@ -2,13 +2,13 @@
 
 ## Model choice
 
-Nilam uses `ibm-esa-geospatial/TerraMind-1.0-tiny` as its satellite encoder. TerraMind is a geospatial foundation model trained on the multimodal TerraMesh corpus, and the selected checkpoint accepts the complete 12-band Sentinel-2 L2A input rather than an RGB rendering. The tiny checkpoint has 5,923,968 backbone parameters and a 192-dimensional representation. It is small enough to fine-tune on a 16 GB Apple M4 while preserving the transfer-learning experiment.
+Nilam uses `ibm-esa-geospatial/TerraMind-1.0-base` as its primary satellite encoder. TerraMind is a geospatial foundation model trained on the multimodal TerraMesh corpus, and the selected checkpoint accepts the complete 12-band Sentinel-2 L2A input rather than an RGB rendering. The base backbone has 87,313,920 parameters and a 768-dimensional representation. Frozen-backbone training followed by selective unfreezing of the final two blocks fits the 16 GB Apple M4 using batch size one and gradient accumulation.
 
-Clay and Prithvi-EO were considered. Clay v1.5 is substantially larger for this laptop. Prithvi-EO-2.0-tiny is feasible, but TerraMind is the stronger match for the planned extension to Sentinel-1, DEM, and other aligned modalities.
+Clay and Prithvi-EO were considered. Prithvi-EO-2.0-tiny is feasible, but TerraMind is the stronger match for the planned extension to Sentinel-1, DEM, and other aligned modalities. TerraMind Large was rejected for local training because its 3.8 GB weight file leaves insufficient headroom for stable activations and optimizer state on a 16 GB unified-memory system. TerraMind Tiny remains available as a fast ablation.
 
 Sources:
 
-- [TerraMind checkpoint and model card](https://huggingface.co/ibm-esa-geospatial/TerraMind-1.0-tiny)
+- [TerraMind Base checkpoint and model card](https://huggingface.co/ibm-esa-geospatial/TerraMind-1.0-base)
 - [TerraMind source](https://github.com/IBM/terramind)
 - [TerraTorch TerraMind guide](https://github.com/torchgeo/terratorch/blob/main/docs/guide/terramind.md)
 
@@ -69,9 +69,9 @@ uv pip install --python .venv-multimodal/bin/python -r requirements-multimodal.t
 Download the chosen checkpoint:
 
 ```bash
-hf download ibm-esa-geospatial/TerraMind-1.0-tiny \
-  --include 'TerraMind_v1_tiny.pt' \
-  --local-dir models/terramind-v1-tiny
+hf download ibm-esa-geospatial/TerraMind-1.0-base \
+  --include 'TerraMind_v1_base.pt' \
+  --local-dir models/terramind-v1-base
 ```
 
 Build the satellite dataset. The command is resumable and skips valid files already present:
@@ -86,8 +86,9 @@ Train the fused model:
 ```bash
 PYTORCH_ENABLE_MPS_FALLBACK=1 \
 .venv-multimodal/bin/python scripts/train_multimodal.py \
-  --checkpoint models/terramind-v1-tiny/TerraMind_v1_tiny.pt \
-  --device mps --epochs 30 --batch-size 4 --accumulate 4
+  --variant base \
+  --checkpoint models/terramind-v1-base/TerraMind_v1_base.pt \
+  --device mps --epochs 30 --batch-size 1 --accumulate 16
 ```
 
 Outputs are written under `models/multimodal/`: the best checkpoint, training history, and held-out evaluation. Raw chips and weights remain local and are ignored by Git.

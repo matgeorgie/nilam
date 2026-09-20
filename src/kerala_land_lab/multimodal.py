@@ -78,7 +78,7 @@ class MultimodalFusionModel(nn.Module):
         }
 
 
-def build_terramind_tiny(checkpoint: Path | None = None) -> tuple[nn.Module, int]:
+def build_terramind(checkpoint: Path | None = None, variant: str = "base") -> tuple[nn.Module, int]:
     try:
         from terratorch.registry import BACKBONE_REGISTRY
     except ImportError as exc:
@@ -90,9 +90,19 @@ def build_terramind_tiny(checkpoint: Path | None = None) -> tuple[nn.Module, int
     }
     if checkpoint is not None:
         kwargs["ckpt_path"] = str(checkpoint)
-    backbone = BACKBONE_REGISTRY.build("terramind_v1_tiny", **kwargs)
-    dimension = int(getattr(backbone, "num_features", getattr(backbone, "embed_dim", 192)))
+    if variant not in {"tiny", "base"}:
+        raise ValueError("variant must be 'tiny' or 'base'")
+    backbone = BACKBONE_REGISTRY.build(f"terramind_v1_{variant}", **kwargs)
+    if hasattr(backbone, "encoder_norm"):
+        dimension = int(backbone.encoder_norm.normalized_shape[0])
+    else:
+        dimension = 192 if variant == "tiny" else 768
     return backbone, dimension
+
+
+def build_terramind_tiny(checkpoint: Path | None = None) -> tuple[nn.Module, int]:
+    """Backward-compatible tiny builder used by lightweight tests and experiments."""
+    return build_terramind(checkpoint, variant="tiny")
 
 
 def set_backbone_trainable(backbone: nn.Module, last_blocks: int = 0) -> list[str]:

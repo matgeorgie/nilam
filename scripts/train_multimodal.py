@@ -17,7 +17,7 @@ from sklearn.preprocessing import StandardScaler
 from torch import nn
 from torch.utils.data import DataLoader, Dataset
 
-from kerala_land_lab.multimodal import MultimodalFusionModel, build_terramind_tiny, load_chip, set_backbone_trainable, S2_BANDS
+from kerala_land_lab.multimodal import MultimodalFusionModel, build_terramind, load_chip, set_backbone_trainable, S2_BANDS
 from kerala_land_lab.weak_labels import VERSION
 FEATURES = [
     "annual_rainfall", "aspect", "clay_content", "distance_to_water", "elevation", "flood_occurrence", "land_cover_class", "mean_humidity", "mean_temperature", "mean_wind_speed", "ndvi", "organic_carbon", "sand_content", "slope", "soil_ph", "terrain_ruggedness_index", "water_content", "flood_level_10yr_m", "flood_level_25yr_m", "flood_level_50yr_m", "flood_level_100yr_m", "flood_level_200yr_m", "flood_level_500yr_m", "gsi_landslide_code", "dist_nearest_road", "dist_nearest_highway", "dist_nearest_hospital", "dist_nearest_school", "dist_nearest_quarry", "dist_nearest_bus_stop", "dist_nearest_railway_station", "dist_nearest_pharmacy", "dist_nearest_shop", "dist_nearest_bank", "dist_nearest_park", "dist_nearest_power_line", "dist_nearest_waste_facility", "dist_nearest_industrial",
@@ -64,9 +64,10 @@ def main():
     parser.add_argument("--data",type=Path,default=Path("data/processed/kerala_statewide_features.csv"))
     parser.add_argument("--chips",type=Path,default=Path("data/processed/sentinel2_chips"))
     parser.add_argument("--out",type=Path,default=Path("models/multimodal"))
-    parser.add_argument("--checkpoint",type=Path,help="Local TerraMind_v1_tiny.pt; omit for automatic HF download")
+    parser.add_argument("--checkpoint",type=Path,help="Local TerraMind checkpoint matching --variant; omit for automatic download")
+    parser.add_argument("--variant",choices=("tiny","base"),default="base",help="TerraMind backbone; base is recommended on the 16 GB M4")
     parser.add_argument("--epochs",type=int,default=30);parser.add_argument("--unfreeze-epoch",type=int,default=7);parser.add_argument("--unfreeze-blocks",type=int,default=2)
-    parser.add_argument("--batch-size",type=int,default=4);parser.add_argument("--accumulate",type=int,default=4);parser.add_argument("--workers",type=int,default=0)
+    parser.add_argument("--batch-size",type=int,default=1);parser.add_argument("--accumulate",type=int,default=16);parser.add_argument("--workers",type=int,default=0)
     parser.add_argument("--head-lr",type=float,default=3e-4);parser.add_argument("--backbone-lr",type=float,default=1e-5);parser.add_argument("--weight-decay",type=float,default=.02)
     parser.add_argument("--device",default="auto");parser.add_argument("--seed",type=int,default=42)
     args=parser.parse_args();args.out.mkdir(parents=True,exist_ok=True)
@@ -84,7 +85,7 @@ def main():
     scaler=StandardScaler().fit(imputed[splits["train"]]);tabular=scaler.transform(imputed).astype(np.float32)
     datasets={name:SiteDataset(frame,index,tabular,args.chips,augment=name=="train") for name,index in splits.items()}
     loaders={name:DataLoader(dataset,batch_size=args.batch_size,shuffle=name=="train",num_workers=args.workers,pin_memory=device.type=="cuda") for name,dataset in datasets.items()}
-    backbone,vision_dim=build_terramind_tiny(args.checkpoint);frozen=set_backbone_trainable(backbone,0)
+    backbone,vision_dim=build_terramind(args.checkpoint,args.variant);set_backbone_trainable(backbone,0)
     model=MultimodalFusionModel(backbone,len(FEATURES),vision_dim).to(device)
     counts=np.bincount(frame.loc[train_mask,"label"].to_numpy(),minlength=4);class_weights=torch.tensor(len(splits["train"])/(4*counts),dtype=torch.float32,device=device)
     criterion=nn.CrossEntropyLoss(weight=class_weights);optimizer=optimizer_for(model,args.head_lr,args.backbone_lr,args.weight_decay)
@@ -109,7 +110,7 @@ def main():
     results={}
     for split in ("validation","test"):
         y,probs,gates=probabilities(model,loaders[split],device);results[split]={name:metrics(y,prob) for name,prob in probs.items()};results[split]["mean_gate"]={"vision":float(gates[:,0].mean()),"tabular":float(gates[:,1].mean()),"cross_attention":float(gates[:,2].mean())}
-    checkpoint={"state_dict":model.state_dict(),"features":FEATURES,"tabular_mean":scaler.mean_.tolist(),"tabular_scale":scaler.scale_.tolist(),"vision_dim":vision_dim,"bands":S2_BANDS,"seasons":["dry_Jan_Mar","monsoon_Jun_Sep"],"weak_label_version":VERSION,"training_districts":sorted(frame.loc[train_mask,"district"].unique()),"model":"TerraMind-1.0-tiny + temporal transformer + gated cross-attention","trainable_backbone_parameters":trainable_blocks}
+    checkpoint={"state_dict":model.state_dict(),"features":FEATURES,"tabular_mean":scaler.mean_.tolist(),"tabular_scale":scaler.scale_.tolist(),"vision_dim":vision_dim,"bands":S2_BANDS,"seasons":["dry_Jan_Mar","monsoon_Jun_Sep"],"weak_label_version":VERSION,"training_districts":sorted(frame.loc[train_mask,"district"].unique()),"model":f"TerraMind-1.0-{args.variant} + temporal transformer + gated cross-attention","variant":args.variant,"trainable_backbone_parameters":trainable_blocks}
     torch.save(checkpoint,args.out/"terramind_tabular_fusion.pt")
     report={"dataset_sha256":hashlib.sha256(args.data.read_bytes()).hexdigest(),"chip_count":len(frame),"chip_shape":[2,12,224,224],"split":"Same whole-district holdout as statewide tabular study","validation_districts":VALIDATION_DISTRICTS,"test_districts":TEST_DISTRICTS,"results":results,"best_validation_macro_f1":best_score,"epochs_run":len(history),"device":str(device),"target_warning":"Experimental weak labels, not observed construction outcomes"}
     (args.out/"evaluation.json").write_text(json.dumps(report,indent=2)+"\n");(args.out/"training_history.json").write_text(json.dumps(history,indent=2)+"\n")
