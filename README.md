@@ -16,6 +16,7 @@ Four model experiments are defined:
 - A feature-token Transformer trained from scratch with AdamW and validation early stopping.
 - TabPFN 3.5 Fast used in its normal in-context mode.
 - TabPFN 3.5 Fast with gradient fine-tuning and local checkpoints.
+- TerraMind 1.0 Tiny with two-season Sentinel-2 imagery and gated cross-attention fusion.
 
 The generated dataset stays local at `data/processed/landslide_dataset.csv`; KSDMA redistribution permission has not been established. `scripts/build_dataset.py` reproduces it from the source archives and Earth Engine. The tracked `docs/dataset-card.json` and `docs/evaluation.json` record its provenance and results without publishing the source geometries or generated rows.
 
@@ -50,6 +51,8 @@ Copy `.env.example` to `.env` and set local values. Never commit Earth Engine cr
 PYTORCH_ENABLE_MPS_FALLBACK=1 .venv/bin/python scripts/train.py --tabpfn --finetune --device mps
 PYTORCH_ENABLE_MPS_FALLBACK=1 .venv/bin/python scripts/train_statewide.py --tabpfn --finetune --device mps
 ```
+
+The multimodal experiment uses a separate Python 3.11 environment. It downloads two 12-band Sentinel-2 chips for every statewide point, fine-tunes the last TerraMind blocks, and evaluates vision-only, tabular-only, and fused heads on whole-district holdouts. See [the multimodal experiment protocol](docs/multimodal-fusion.md) for the exact commands and limitations.
 
 The Apple Silicon device flag can be replaced with `cpu` or `cuda` as appropriate. TabPFN 3.5 weights carry Prior Labs' research/non-commercial license; review it before any deployment.
 

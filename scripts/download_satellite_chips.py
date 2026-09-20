@@ -1,0 +1,118 @@
+"""Download two-season, 12-band Sentinel-2 L2A chips for statewide samples."""
+from __future__ import annotations
+
+import argparse
+from concurrent.futures import ThreadPoolExecutor, as_completed
+import io
+import json
+import os
+from pathlib import Path
+import time
+import zipfile
+
+import ee
+import numpy as np
+import pandas as pd
+import rasterio
+import requests
+
+from kerala_land_lab.earth import initialize, load_env
+from kerala_land_lab.multimodal import EE_S2_BANDS
+
+
+def mask_s2(image):
+    scl = image.select("SCL")
+    clear = scl.neq(0).And(scl.neq(1)).And(scl.neq(3)).And(scl.neq(8)).And(scl.neq(9)).And(scl.neq(10)).And(scl.neq(11))
+    return image.updateMask(clear).select(EE_S2_BANDS)
+
+
+def seasonal_composite(start_month: int, end_month: int, region):
+    collection = (ee.ImageCollection("COPERNICUS/S2_SR_HARMONIZED")
+                  .filterBounds(region)
+                  .filterDate("2023-01-01", "2026-01-01")
+                  .filter(ee.Filter.calendarRange(start_month, end_month, "month"))
+                  .filter(ee.Filter.lt("CLOUDY_PIXEL_PERCENTAGE", 65))
+                  .map(mask_s2))
+    return collection.median()
+
+
+def source_image(region):
+    dry = seasonal_composite(1, 3, region).rename([f"dry_{band}" for band in EE_S2_BANDS])
+    monsoon = seasonal_composite(6, 9, region).rename([f"monsoon_{band}" for band in EE_S2_BANDS])
+    return dry.addBands(monsoon).unmask(0).clamp(0, 10000).toUint16()
+
+
+def geotiff_array(content: bytes) -> np.ndarray:
+    if content[:2] == b"PK":
+        with zipfile.ZipFile(io.BytesIO(content)) as archive:
+            names = [name for name in archive.namelist() if name.lower().endswith((".tif", ".tiff"))]
+            if len(names) != 1:
+                raise ValueError(f"Expected one GeoTIFF, found {names}")
+            content = archive.read(names[0])
+    with rasterio.MemoryFile(content) as memory:
+        with memory.open() as dataset:
+            return dataset.read()
+
+
+def download_one(row: dict, output: Path, patch_m: int, attempts: int = 4) -> dict:
+    point_id = row["point_id"]
+    destination = output / f"{point_id}.npz"
+    if destination.exists():
+        with np.load(destination) as archive:
+            chips = archive["chips"]
+            return {"point_id": point_id, "status": "existing", "path": str(destination), "valid_fraction": float(np.any(chips > 0, axis=(0, 1)).mean())}
+    region = ee.Geometry.Point([float(row["lng"]), float(row["lat"])]).buffer(patch_m / 2).bounds()
+    image = source_image(region)
+    error = None
+    for attempt in range(attempts):
+        try:
+            url = image.getDownloadURL({"name": point_id, "region": region, "dimensions": "224x224", "crs": "EPSG:32643", "format": "GEO_TIFF"})
+            response = requests.get(url, timeout=180)
+            response.raise_for_status()
+            array = geotiff_array(response.content)
+            if array.shape != (24, 224, 224):
+                raise ValueError(f"Unexpected exported shape {array.shape}")
+            chips = array.reshape(2, 12, 224, 224).astype(np.uint16)
+            valid_fraction = float(np.any(chips > 0, axis=(0, 1)).mean())
+            if valid_fraction < 0.70:
+                raise ValueError(f"Only {valid_fraction:.1%} valid pixels")
+            temporary = destination.with_suffix(".tmp.npz")
+            np.savez_compressed(temporary, chips=chips, lat=np.float32(row["lat"]), lng=np.float32(row["lng"]), district=row["district"])
+            os.replace(temporary, destination)
+            return {"point_id": point_id, "status": "downloaded", "path": str(destination), "valid_fraction": valid_fraction}
+        except Exception as exc:
+            error = exc
+            print(f"{point_id} attempt {attempt + 1}/{attempts}: {type(exc).__name__}: {exc}", flush=True)
+            time.sleep(2 ** attempt)
+    return {"point_id": point_id, "status": "error", "error": f"{type(error).__name__}: {error}"}
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--data", type=Path, default=Path("data/processed/kerala_statewide_features.csv"))
+    parser.add_argument("--output", type=Path, default=Path("data/processed/sentinel2_chips"))
+    parser.add_argument("--patch-m", type=int, default=2240, help="Ground width represented by each 224px chip")
+    parser.add_argument("--workers", type=int, default=3)
+    parser.add_argument("--limit", type=int)
+    args = parser.parse_args()
+    load_env(); initialize(); args.output.mkdir(parents=True, exist_ok=True)
+    frame = pd.read_csv(args.data)
+    if args.limit:
+        frame = frame.head(args.limit)
+    records = []
+    with ThreadPoolExecutor(max_workers=args.workers) as executor:
+        futures = [executor.submit(download_one, row._asdict(), args.output, args.patch_m) for row in frame.itertuples(index=False)]
+        for number, future in enumerate(as_completed(futures), 1):
+            record = future.result(); records.append(record)
+            print(f"[{number}/{len(futures)}] {record['point_id']} {record['status']}", flush=True)
+            if number % 20 == 0:
+                (args.output / "manifest.json").write_text(json.dumps(records, indent=2) + "\n")
+    (args.output / "manifest.json").write_text(json.dumps(records, indent=2) + "\n")
+    failures = [record for record in records if record["status"] == "error"]
+    print(json.dumps({"requested": len(records), "complete": len(records) - len(failures), "failed": len(failures), "output": str(args.output)}, indent=2))
+    if failures:
+        raise SystemExit(2)
+
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,3 @@
+# Use Python 3.11 on macOS. TerraTorch and its compiled dependencies may not support Python 3.14 yet.
+-e .[research,test]
+terratorch>=1.2.5,<2
