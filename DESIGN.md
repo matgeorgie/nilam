@@ -2,19 +2,19 @@
 name: Nilam
 description: A restrained Kerala land-intelligence workspace for spatial evidence and explainable model results.
 colors:
-  forest-ink: "#143f34"
-  deep-ink: "#254f44"
-  kerala-green: "#176149"
-  evidence-green: "#29795f"
-  constraint-rust: "#aa503d"
-  muted-leaf: "#627870"
-  warm-field: "#f5f3ed"
-  paper: "#fffef9"
-  divider: "#cdd9d3"
+  forest-ink: "#153c32"
+  deep-ink: "#0d2b24"
+  kerala-green: "#17694f"
+  evidence-green: "#258866"
+  constraint-rust: "#b14f3c"
+  muted-leaf: "#61766f"
+  warm-field: "#f3f5f1"
+  paper: "#ffffff"
+  divider: "#d8e1dc"
 typography:
-  display: "Libre Franklin 700"
+  display: "Manrope 700-800"
   body: "DM Sans 400-700"
-shape: "Square field-report panels; minimal rounding"
+shape: "Restrained 8-20px rounding for controls, panels, and floating map results"
 ---
 
 # Design System: Nilam
@@ -28,15 +28,15 @@ world. Color explains state and direction; it does not decorate empty space.
 
 ## Product Structure
 
-Two equal workflow choices appear before the workspace:
+Two permanent navigation choices keep the workflows separate:
 
 - **Assess a site** supports Google place search, point selection, a drawn site
   boundary, normal/satellite maps, progressive model stages, Street View, and
-  an exportable explanation.
-- **Find matching land** supports a district, a drawn search boundary, or a
+  a simple SHAP explanation.
+- **Find suitable land** supports a district, a drawn search boundary, or a
   25 km map-centred radius. It captures typed or spoken requirements, shows
-  editable filters, and reports model suitability, preference fit, and combined
-  rank separately.
+  ranked result cards directly on the map, and opens concrete site details when
+  a result is selected.
 
 The desktop workspace keeps the map and evidence panel together. Below 880px it
 stacks in task order. A completed assessment scrolls the evidence panel into
@@ -44,7 +44,7 @@ view on small screens.
 
 ## Typography
 
-- **Libre Franklin** carries the product promise, score, result title, and major
+- **Manrope** carries the product promise, score, result title, and major
   editorial headings. Use tight tracking and strong weight.
 - **DM Sans** carries controls, evidence, measurements, explanations, and
   metadata.
@@ -60,10 +60,9 @@ view on small screens.
 ## Surface and Shape Rules
 
 Analytical surfaces use one-pixel divider lines and tonal changes. The main
-workspace, result panels, candidate rows, and controls stay square. Soft shadow
-is reserved for the workspace container, map guidance, and dialogs that float
-above another surface. Avoid decorative cards, glass effects, and pill-shaped
-controls.
+workspace has a restrained 20-pixel radius; inputs and buttons use 8-11 pixels.
+Soft shadow is reserved for the workspace container, map guidance, result
+markers, and dialogs that float above another surface.
 
 ## Assessment Components
 
@@ -76,23 +75,22 @@ scores and validation-calibrated fusion influence are distinct from SHAP feature
 importance. During progressive analysis, pending branches say “Pending.”
 
 SHAP drivers include a friendly label, observed value, and percentage-point
-effect. Positive and negative effects occupy separate columns. Unmapped hazard
-associations appear in a dedicated caution block and remain visible for audit.
+effect. Positive and negative effects use separate, plainly named lists.
 
 ## Candidate Components
 
-The requirements composer leads the right panel. Exact distances are visible
-and editable after Laya interpretation. Always-on hazard safeguards sit apart
-from preferences. Candidate rows show three independent values: model
-suitability, preference fit, and combined rank. A candidate is called a zone,
-never a plot or available property, until authoritative parcel evidence exists.
+Area selection leads the right panel, followed by optional text or local voice
+preferences. Laya interpretation remains behind the direct search interaction.
+Candidate map cards show combined match; the selected detail view separates
+land suitability from preference fit. A candidate is called a location, never
+an available property, until authoritative parcel evidence exists.
 
 ## Interaction and Accessibility
 
 - Every workflow, map style, and selection type has a visible selected state.
 - Keyboard focus uses a three-pixel green outline with two-pixel offset.
-- Loading is explained as mapped evidence, seasonal satellite analysis, and
-  SHAP rather than a generic spinner.
+- Loading is explained as mapped data, satellite check, and explanation rather
+  than a generic spinner.
 - Rapid selections cancel stale browser requests.
 - Motion respects `prefers-reduced-motion`.
 - Street View is labeled as visual context and never feeds the suitability
@@ -100,7 +98,7 @@ never a plot or available property, until authoritative parcel evidence exists.
 
 ## Scientific Copy Rules
 
-State the weak-label limitation near research metrics. Keep on-site and legal
-verification visible in completed reports. Do not describe model association as
-causality, candidate rank as purchasability, land-cover class as confirmed
-vacancy, or Google imagery as evidence of present-day site condition.
+State the weak-label limitation in academic documentation and research metrics,
+outside the main decision flow. Do not describe model association as causality,
+candidate rank as purchasability, land-cover class as confirmed vacancy, or
+Google imagery as evidence of present-day site condition.

@@ -11,7 +11,7 @@ dependencies = ["geopandas>=1.0,<2", "shapely>=2,<3", "rasterio>=1.4,<2", "reque
 
 [project.optional-dependencies]
 research = ["earthengine-api>=1.7,<2", "tabpfn>=9,<10", "scikit-learn>=1.6,<2", "shap>=0.48,<1", "torch>=2.6,<3", "osmium>=4,<5"]
-local-ai = ["laya>=0.1,<1", "gliner2>=1,<2", "transformers>=4.57,<6", "accelerate>=1.10,<2"]
+local-ai = ["laya>=0.1,<1", "gliner2>=1,<2", "transformers>=4.57,<6", "accelerate>=1.10,<2", "imageio-ffmpeg>=0.6,<1"]
 test = ["pytest>=8,<10"]
 
 [project.scripts]

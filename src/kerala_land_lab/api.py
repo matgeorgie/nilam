@@ -2,6 +2,7 @@
 from __future__ import annotations
 import json
 import os
+import subprocess
 from pathlib import Path
 from functools import lru_cache
 from contextlib import asynccontextmanager
@@ -437,19 +438,38 @@ def speech_pipeline():
     return pipeline('automatic-speech-recognition',model='distil-whisper/distil-small.en',device=device)
 
 
+def decode_speech_audio(path:Path):
+    try:
+        import imageio_ffmpeg
+        import numpy as np
+    except ImportError as exc:
+        raise RuntimeError('Install the local-ai dependencies to use voice input') from exc
+    command=[imageio_ffmpeg.get_ffmpeg_exe(),'-v','error','-i',str(path),'-f','f32le','-ac','1','-ar','16000','pipe:1']
+    result=subprocess.run(command,capture_output=True,check=False)
+    if result.returncode or not result.stdout:
+        raise ValueError('The recording could not be decoded. Record a short request and try again.')
+    return {'raw':np.frombuffer(result.stdout,dtype=np.float32).copy(),'sampling_rate':16000}
+
+
 @app.post('/api/transcribe')
 async def transcribe(request:Request):
     content=await request.body()
     if not content:raise HTTPException(422,'Record a short English request first')
-    suffix='.webm' if 'webm' in request.headers.get('content-type','') else '.wav'
+    content_type=request.headers.get('content-type','').lower()
+    suffix=next((extension for media,extension in (
+        ('webm','.webm'),('mp4','.m4a'),('m4a','.m4a'),('ogg','.ogg'),
+        ('aiff','.aiff'),('aifc','.aifc'),('wav','.wav'),
+    ) if media in content_type),'.wav')
     path=None
     try:
         with tempfile.NamedTemporaryFile(suffix=suffix,delete=False) as handle:
             handle.write(content);path=Path(handle.name)
-        result=speech_pipeline()(str(path))
+        result=speech_pipeline()(decode_speech_audio(path))
         return {'text':result.get('text','').strip(),'model':'distil-whisper/distil-small.en','processing':'local'}
     except RuntimeError as exc:
         raise HTTPException(503,str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(422,str(exc)) from exc
     finally:
         if path and path.exists():path.unlink()
 
