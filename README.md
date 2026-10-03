@@ -1,78 +1,150 @@
 # Nilam
 
-Nilam is an evidence-first Kerala residential land-screening research project. A user selects a location and sees historical hazard overlays, terrain and rainfall measurements, mapped access and facilities, an explainable model estimate, and a list of facts the available data cannot establish.
+Nilam is a local-first Kerala residential land-screening research project. It has two workflows:
 
-It is a research prototype. It does not issue construction clearance, replace a geotechnical investigation, establish legal access or title, or predict a landslide probability.
+1. **Assess a site** by searching, clicking a point, or drawing a polygon on Google Maps.
+2. **Find matching land** by describing a preferred home location in text or English speech and ranking candidate zones inside a district or map-centred search area.
 
-## Current research result
+Nilam is a research screening tool. Its score is not construction clearance, a legal opinion, a property listing, proof that land is vacant, or the probability that a house is safe. Soil bearing capacity, title, zoning, wetland/CRZ status, drainage, utilities, legal access, and price still require primary records and professional inspection.
 
-The first pilot dataset contains 540 class-balanced points sampled from KSDMA/NCESS historical landslide-susceptibility polygons. Earth Engine supplies six predictors: elevation, slope, two circular aspect components, local relief, and historical annual rainfall. Original source polygons are kept disjoint across train, validation, and test partitions.
+## Product model
 
-The data is geographically narrow: 537 points are in Wayanad and three in Kozhikode. The experiment therefore measures a Wayanad-focused ability to reproduce the historical map. It is not evidence of Kerala-wide model performance or construction safety.
+The application exposes one model: **TerraMind Base + TabPFN 3.5 adaptive late fusion**.
 
-Four model experiments are defined:
+- **TabPFN** reads 38 terrain, climate, soil, water, hazard, access, utility, and amenity features. It is the dominant expert because it performed best on held-out districts.
+- **TerraMind** reads two 224 × 224 × 12 Sentinel-2 L2A composites: dry season (January–March) and monsoon season (June–September). The final two TerraMind blocks were fine-tuned during the multimodal experiment.
+- Both experts output probabilities for four weak-label suitability classes. A validation-calibrated geometric pool converts them into one probability distribution. The selected TerraMind weight is 8%; TabPFN retains 92% influence.
+- The displayed percentage is the probability-weighted ordinal index using class anchors 8%, 34%, 64%, and 90%. It is an experimental comparative score, not a calibrated safety probability.
+- Conditional permutation SHAP perturbs TabPFN features while holding TerraMind evidence fixed, so the final report can explain mapped feature effects without repeatedly running the satellite backbone.
 
-- ExtraTrees, a supervised non-neural baseline.
-- A feature-token Transformer trained from scratch with AdamW and validation early stopping.
-- TabPFN 3.5 Fast used in its normal in-context mode.
-- TabPFN 3.5 Fast with gradient fine-tuning and local checkpoints.
-- TerraMind 1.0 Base with two-season Sentinel-2 imagery and gated cross-attention fusion.
+Calibration uses Ernakulam and Wayanad. Alappuzha, Idukki, and Kasaragod remain untouched test districts. The fused model obtained 0.847 macro-F1 and TabPFN alone obtained 0.850 on the 300-point test set. The gate accepts fusion only within a narrow performance tolerance and therefore limits TerraMind to 8%. Full metrics are tracked in [`docs/terramind-tabpfn-evaluation.json`](docs/terramind-tabpfn-evaluation.json).
 
-The generated dataset stays local at `data/processed/landslide_dataset.csv`; KSDMA redistribution permission has not been established. `scripts/build_dataset.py` reproduces it from the source archives and Earth Engine. The tracked `docs/dataset-card.json` and `docs/evaluation.json` record its provenance and results without publishing the source geometries or generated rows.
+## Statewide dataset
 
-A second, separate statewide table is generated at `data/processed/kerala_statewide_features.csv`. Its 1,400 rows comprise 100 points in each district and combine terrain, climate, vegetation, soil, surface-water, official hazard-reference, and OSM proximity fields. Current hazard enrichment uses GSI 2022 district landslide shapefiles and KSDMA/UNEP historical flood water-level rasters for 10, 25, 50, 100, 200, and 500-year return periods.
+`data/processed/kerala_statewide_features.csv` contains 1,400 study rows: 100 spatially balanced points from each of Kerala’s 14 districts. It is generated locally and intentionally ignored by Git because the source geospatial assets are not redistributed.
 
-`scripts/label_statewide_dataset.py` adds a four-class experimental public-data screening target, a 0–100 score, component penalties, confidence, and a rule trace. These are transparent weak labels for model development, not observed construction outcomes or expert ground truth. See `docs/statewide-dataset-card.json` for rules, units, periods, sources, missingness, and limitations.
+The table combines:
+
+- SRTM terrain: elevation, slope, aspect, and terrain ruggedness;
+- CHIRPS/ERA5-Land climate: rainfall, humidity, temperature, and wind;
+- OpenLandMap soils: clay, sand, pH, organic carbon, and water content;
+- Dynamic World, MODIS, and JRC surface evidence: land cover, NDVI, water occurrence, and distance to water;
+- GSI 2022 landslide susceptibility and KSDMA/UNEP flood depths for 10–500-year return periods;
+- OpenStreetMap distances to roads, transport, hospitals, schools, pharmacies, shops, banks, parks, quarries, industry, waste facilities, and power lines.
+
+`scripts/label_statewide_dataset.py` adds a transparent four-class weak target and rule trace. These labels represent public-data screening rules, not observed building outcomes or expert ground truth. See [`docs/statewide-dataset-card.json`](docs/statewide-dataset-card.json).
+
+The 1,400 points remain the controlled academic training/evaluation cohort. Candidate search can use a separate dense grid produced by `scripts/build_search_index.py`; it does not alter the held-out model study.
+
+## Local semantic and voice tools
+
+- **Laya** is the primary local typed-decision engine for intent and risk routing. Exact numeric requirements are extracted deterministically and shown to the user for review.
+- **GLiNER2.5-Decide** is an optional experimental comparison enabled with `NILAM_ENABLE_GLINER=1`. It is not on the critical prediction path.
+- **Distil-Whisper small.en** transcribes English requests locally. Its weights download on first voice use.
+- Candidate search keeps safety constraints separate from preferences. It will not trade a mapped high flood or high landslide condition for a shorter commute.
+
+Google Maps provides the basemap, address search, and optional Street View context. Google Maps does not identify vacant or legally buildable parcels; Nilam therefore returns **candidate zones**, never property availability claims.
+
+The first Laya interpretation downloads its local checkpoint (about 846 MB)
+from Hugging Face. Later requests use the local cache. GLiNER and Distil-Whisper
+also download only when their optional paths are used.
 
 ## Run locally
 
-Requirements: Python 3.11+, Node.js, a local Earth Engine login, a Mapbox public token, and the Southern Zone OSM PBF.
+Requirements: macOS/Linux, Python 3.11, Node.js, completed Earth Engine authentication, local model artifacts, the prepared data files, and a Google Maps browser key with Maps JavaScript API, Places API (New), and Street View enabled.
 
-```bash
-python -m venv --system-site-packages .venv
-.venv/bin/python -m pip install -e '.[research,test]'
-cd web && npm install && npm run build && cd ..
-.venv-multimodal/bin/python -m uvicorn kerala_land_lab.api:app --host 127.0.0.1 --port 8000
+Copy `.env.example` to `.env` and set:
+
+```dotenv
+PROJECT_ID=your-google-cloud-project-id
+GOOGLE_MAPS_API_KEY=your-restricted-browser-key
+OSM_PBF_PATH=../southern-zone-260916.osm.pbf
+NILAM_ENABLE_LAYA=1
+NILAM_ENABLE_GLINER=0
 ```
 
-For frontend development, run `npm run dev` inside `web`; it proxies `/api` to port 8000.
+Restrict the Google key to `http://127.0.0.1:*` and the required browser APIs. Do not commit `.env`.
 
-Copy `.env.example` to `.env` and set local values. Never commit Earth Engine credentials or a Google Places key. Google Places is optional; when configured, Nilam queries it live, keeps its results separate from OSM, displays Google Maps attribution, and does not cache place content.
-
-## Reproduce the research
+Install and build:
 
 ```bash
-.venv/bin/python -m kerala_land_lab.data download
-.venv/bin/python -m kerala_land_lab.data prepare
-.venv/bin/python scripts/extract_osm.py ../southern-zone-260916.osm.pbf
-.venv/bin/python scripts/build_dataset.py
-.venv/bin/python scripts/build_statewide_dataset.py --points-per-district 100
-.venv/bin/python scripts/label_statewide_dataset.py
-PYTORCH_ENABLE_MPS_FALLBACK=1 .venv/bin/python scripts/train.py --tabpfn --finetune --device mps
-PYTORCH_ENABLE_MPS_FALLBACK=1 .venv/bin/python scripts/train_statewide.py --tabpfn --finetune --device mps
+cd "/Users/mathewbijugeorge/Documents/Codex Project/kerala-land-lab"
+
+uv venv --python /opt/homebrew/bin/python3.11 .venv-multimodal
+uv pip install --python .venv-multimodal/bin/python -r requirements-multimodal.txt
+
+cd web
+npm install
+npm run build
+cd ..
 ```
 
-The multimodal experiment uses a separate Python 3.11 environment. It downloads two 12-band Sentinel-2 chips for every statewide point, fine-tunes the last TerraMind blocks, and evaluates vision-only, tabular-only, and fused heads on whole-district holdouts. See [the multimodal experiment protocol](docs/multimodal-fusion.md) for the exact commands and limitations.
+Start the complete built application:
 
-When `models/multimodal_v2/terramind_tabular_fusion.pt` is present, the application uses Multimodal v2 by default. Live assessments build dry- and monsoon-season Sentinel-2 composites, combine them with the 38 mapped features, and display the satellite, tabular, and cross-attention routing weights alongside conditional SHAP explanations.
+```bash
+cd "/Users/mathewbijugeorge/Documents/Codex Project/kerala-land-lab"
 
-The Apple Silicon device flag can be replaced with `cpu` or `cuda` as appropriate. TabPFN 3.5 weights carry Prior Labs' research/non-commercial license; review it before any deployment.
+PROJECT_ID=land-suitability-508903 \
+PYTORCH_ENABLE_MPS_FALLBACK=1 \
+.venv-multimodal/bin/python -m uvicorn kerala_land_lab.api:app \
+  --host 127.0.0.1 --port 8000
+```
 
-## Data sources
+Open [http://127.0.0.1:8000](http://127.0.0.1:8000). For frontend development, run `npm run dev` in `web` and open port 5173; Vite proxies `/api` to port 8000.
 
-- Kerala State Disaster Management Authority historic flood references, current GSI 2022 landslide susceptibility, and UNEP/KSDMA historical flood-return water levels.
-- NASA/USGS SRTM, CHIRPS, JRC Global Surface Water, Dynamic World, MODIS NDVI, ERA5-Land, and OpenLandMap through Google Earth Engine.
-- OpenStreetMap contributors under ODbL 1.0.
-- Optional Google Places Nearby Search, queried live when a server-side key is configured.
+## Reproduce data and models
 
-## Next validation milestone
+Prepare base geospatial assets and the 1,400-row study:
 
-Build a statewide flood-reference dataset across all 14 districts, evaluate by held-out districts, add independent event inventories, calibrate uncertainty, and collect expert-reviewed plot labels. Only the last step can turn the project from hazard screening toward validated residential suitability.
+```bash
+.venv-multimodal/bin/python -m kerala_land_lab.data download
+.venv-multimodal/bin/python -m kerala_land_lab.data prepare
+.venv-multimodal/bin/python scripts/extract_osm.py ../southern-zone-260916.osm.pbf
+PROJECT_ID=land-suitability-508903 .venv-multimodal/bin/python scripts/build_statewide_dataset.py --points-per-district 100
+.venv-multimodal/bin/python scripts/label_statewide_dataset.py
+```
 
-## Suitability map and SHAP
+Download seasonal chips with one worker on macOS, then train TerraMind multimodal v2:
 
-The web app supports point selection and editable polygon drawing on normal or satellite Mapbox basemaps. Polygon reports sample up to nine locations across the selected area and show the median model score plus its spatial range.
+```bash
+PROJECT_ID=land-suitability-508903 \
+.venv-multimodal/bin/python scripts/download_satellite_chips.py --workers 1
 
-The displayed suitability percentage is an ordinal experimental index derived from the four model-class probabilities (8%, 34%, 64%, and 90% anchors). Permutation SHAP explains this exact scalar output. Each attribution is reported in percentage points, grouped by evidence family, and paired with the measured feature value. Positive SHAP values raise the displayed score; negative values lower it.
+PYTORCH_ENABLE_MPS_FALLBACK=1 \
+.venv-multimodal/bin/python scripts/train_multimodal.py \
+  --variant base \
+  --checkpoint "$HOME/models/terramind-v1-base/TerraMind_v1_base.pt" \
+  --device mps --epochs 30 --batch-size 1 --accumulate 16
+```
 
-This score is not a probability of safe construction. See [docs/academic-roadmap.md](docs/academic-roadmap.md) for the expert-label, multimodal satellite, graph-learning, temporal-monsoon, and conformal-uncertainty research plan.
+Fit/calibrate the product fusion from the trained TerraMind vision head and fitted TabPFN artifact:
+
+```bash
+PYTORCH_ENABLE_MPS_FALLBACK=1 \
+.venv-multimodal/bin/python scripts/calibrate_terramind_tabpfn.py --batch-size 1
+```
+
+Build the optional dense candidate index. This is a resumable, long-running local preprocessing step and does not retrain the model:
+
+```bash
+PROJECT_ID=land-suitability-508903 \
+.venv-multimodal/bin/python scripts/build_search_index.py --spacing-m 1000
+```
+
+Without the dense index, candidate search falls back to the 1,400 controlled statewide points.
+
+## Core files
+
+- `src/kerala_land_lab/api.py` — API, progressive assessment, caching, search, voice, and model serving.
+- `src/kerala_land_lab/fusion.py` — audited TerraMind/TabPFN probability fusion.
+- `src/kerala_land_lab/search.py` — geographic filtering, non-negotiable safety rules, and preference ranking.
+- `src/kerala_land_lab/semantic.py` — deterministic requirements plus Laya and optional GLiNER routing.
+- `src/kerala_land_lab/satellite.py` — Earth Engine Sentinel-2 seasonal chips and persistent cache.
+- `scripts/build_statewide_dataset.py` — 1,400-row Earth Engine/OSM dataset pipeline.
+- `scripts/download_satellite_chips.py` — resumable dry/monsoon chip downloader.
+- `scripts/train_multimodal.py` — TerraMind fine-tuning and multimodal ablation training.
+- `scripts/calibrate_terramind_tabpfn.py` — product fusion calibration and district holdout evaluation.
+- `scripts/build_search_index.py` — separate dense statewide candidate grid.
+- `web/src/main.jsx` and `web/src/style.css` — Google Maps product interface.
+
+TabPFN weights have their own research/non-commercial terms. Review the installed model license before any deployment.

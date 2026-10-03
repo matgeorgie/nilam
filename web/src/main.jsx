@@ -1,115 +1,419 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
-import mapboxgl from "mapbox-gl";
-import MapboxDraw from "@mapbox/mapbox-gl-draw";
-import "mapbox-gl/dist/mapbox-gl.css";
-import "@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css";
 import "./style.css";
 
-const districts = ["Kasaragod", "Kannur", "Wayanad", "Kozhikode", "Malappuram", "Palakkad", "Thrissur", "Ernakulam", "Idukki", "Kottayam", "Alappuzha", "Pathanamthitta", "Kollam", "Thiruvananthapuram"];
-const names = {
-  annual_rainfall:"Annual rainfall", aspect:"Slope orientation", clay_content:"Clay content", distance_to_water:"Distance to mapped water", elevation:"Elevation", flood_occurrence:"Persistent surface water", land_cover_class:"Land cover", mean_humidity:"Humidity", mean_temperature:"Temperature", mean_wind_speed:"Wind speed", ndvi:"Vegetation density", organic_carbon:"Soil organic carbon", sand_content:"Sand content", slope:"Ground slope", soil_ph:"Soil pH", terrain_ruggedness_index:"Terrain ruggedness", water_content:"Soil water retention", flood_level_10yr_m:"10-year flood depth", flood_level_25yr_m:"25-year flood depth", flood_level_50yr_m:"50-year flood depth", flood_level_100yr_m:"100-year flood depth", flood_level_200yr_m:"200-year flood depth", flood_level_500yr_m:"500-year flood depth", gsi_landslide_code:"GSI landslide class", dist_nearest_road:"Nearest road", dist_nearest_highway:"Nearest highway", dist_nearest_hospital:"Nearest hospital", dist_nearest_school:"Nearest school", dist_nearest_quarry:"Nearest quarry", dist_nearest_bus_stop:"Nearest bus stop", dist_nearest_railway_station:"Nearest railway station", dist_nearest_pharmacy:"Nearest pharmacy", dist_nearest_shop:"Nearest shop", dist_nearest_bank:"Nearest bank", dist_nearest_park:"Nearest park", dist_nearest_power_line:"Nearest power line", dist_nearest_waste_facility:"Nearest waste facility", dist_nearest_industrial:"Nearest industrial site"
+const API = "";
+const KERALA_CENTER = { lat: 10.36, lng: 76.27 };
+const DISTRICTS = ["Kasaragod", "Kannur", "Wayanad", "Kozhikode", "Malappuram", "Palakkad", "Thrissur", "Ernakulam", "Idukki", "Kottayam", "Alappuzha", "Pathanamthitta", "Kollam", "Thiruvananthapuram"];
+const FEATURE_NAMES = {
+  annual_rainfall: "Annual rainfall", aspect: "Slope orientation", clay_content: "Clay content",
+  distance_to_water: "Distance to mapped water", elevation: "Elevation", flood_occurrence: "Persistent surface water",
+  land_cover_class: "Land cover", mean_humidity: "Humidity", mean_temperature: "Temperature",
+  mean_wind_speed: "Wind speed", ndvi: "Vegetation density", organic_carbon: "Soil organic carbon",
+  sand_content: "Sand content", slope: "Ground slope", soil_ph: "Soil pH",
+  terrain_ruggedness_index: "Terrain ruggedness", water_content: "Soil water retention",
+  flood_level_10yr_m: "10-year flood depth", flood_level_25yr_m: "25-year flood depth",
+  flood_level_50yr_m: "50-year flood depth", flood_level_100yr_m: "100-year flood depth",
+  flood_level_200yr_m: "200-year flood depth", flood_level_500yr_m: "500-year flood depth",
+  gsi_landslide_code: "GSI landslide class", dist_nearest_road: "Nearest road",
+  dist_nearest_highway: "Nearest highway", dist_nearest_hospital: "Nearest hospital",
+  dist_nearest_school: "Nearest school", dist_nearest_quarry: "Nearest quarry",
+  dist_nearest_bus_stop: "Nearest bus stop", dist_nearest_railway_station: "Nearest railway station",
+  dist_nearest_pharmacy: "Nearest pharmacy", dist_nearest_shop: "Nearest shop",
+  dist_nearest_bank: "Nearest bank", dist_nearest_park: "Nearest park",
+  dist_nearest_power_line: "Nearest power line", dist_nearest_waste_facility: "Nearest waste facility",
+  dist_nearest_industrial: "Nearest industrial site",
 };
-const modelNames = {multimodal:"Multimodal v2 · TerraMind", extra_trees:"ExtraTrees", feature_transformer:"Feature Transformer", tabpfn:"TabPFN 3.5"};
-const distanceFeatures = new Set(Object.keys(names).filter((x)=>x.startsWith("dist_")).concat(["distance_to_water"]));
-const units = {annual_rainfall:"mm/yr",aspect:"°",clay_content:"%",distance_to_water:"m",elevation:"m",flood_occurrence:"%",mean_humidity:"%",mean_temperature:"°C",mean_wind_speed:"m/s",ndvi:"",organic_carbon:"g/kg",sand_content:"%",slope:"°",soil_ph:"pH",terrain_ruggedness_index:"m",water_content:"%",flood_level_10yr_m:"m",flood_level_25yr_m:"m",flood_level_50yr_m:"m",flood_level_100yr_m:"m",flood_level_200yr_m:"m",flood_level_500yr_m:"m"};
-const fmt=(v,d=1)=>v==null||Number.isNaN(Number(v))?"Unavailable":Number(v).toLocaleString("en-IN",{maximumFractionDigits:d});
-const valueLabel=(item)=>{
-  if(item.value==null)return "No reading";
-  if(distanceFeatures.has(item.feature))return item.value>=1000?`${fmt(item.value/1000)} km`:`${fmt(item.value,0)} m`;
-  if(item.feature==="gsi_landslide_code")return ["Not mapped","Low","Moderate","High"][Math.round(item.value)]||fmt(item.value);
-  if(item.feature==="land_cover_class")return ["Water","Trees","Grass","Flooded vegetation","Crops","Scrub","Built area","Bare ground","Snow/ice"][Math.round(item.value)]||fmt(item.value);
-  return `${fmt(item.value)}${units[item.feature]?` ${units[item.feature]}`:""}`;
-};
-async function api(url,options){const r=await fetch(url,options);if(!r.ok){const e=await r.json().catch(()=>({detail:"Request failed"}));throw new Error(e.detail||"Request failed");}return r.json();}
-function Icon({type}){const paths={area:"M4 5l7-2 9 5-3 11-10 1zM11 3v17M4 5l13 14",satellite:"M5 19l14-14M14 4l6 6-4 4-6-6zM4 14l6 6M3 21h8",table:"M4 5h16v14H4zM4 10h16M9 5v14",merge:"M5 5v3c0 3 2 4 7 4s7 1 7 4v3M19 5v3M12 12v7",point:"M12 3v18M3 12h18M12 7a5 5 0 100 10 5 5 0 000-10z"};return <svg viewBox="0 0 24 24" aria-hidden="true"><path d={paths[type]||paths.point}/></svg>}
+const DISTANCES = new Set(Object.keys(FEATURE_NAMES).filter((name) => name.startsWith("dist_")).concat(["distance_to_water"]));
+const UNITS = { annual_rainfall: "mm/yr", aspect: "°", clay_content: "%", elevation: "m", flood_occurrence: "%", mean_humidity: "%", mean_temperature: "°C", mean_wind_speed: "m/s", organic_carbon: "g/kg", sand_content: "%", slope: "°", soil_ph: "pH", terrain_ruggedness_index: "m", water_content: "%", flood_level_10yr_m: "m", flood_level_25yr_m: "m", flood_level_50yr_m: "m", flood_level_100yr_m: "m", flood_level_200yr_m: "m", flood_level_500yr_m: "m" };
 
-function FusionTrace({data}){
-  if(!data)return null;
-  const streams=[
-    {key:"satellite",icon:"satellite",title:"Satellite seasons",detail:"TerraMind · dry + monsoon",weight:data.routing_weights.satellite,score:data.branch_scores.satellite},
-    {key:"tabular",icon:"table",title:"Site evidence",detail:"38 mapped land features",weight:data.routing_weights.tabular,score:data.branch_scores.tabular},
-    {key:"cross_attention",icon:"merge",title:"Cross-attention",detail:"Image ↔ feature interactions",weight:data.routing_weights.cross_attention,score:data.branch_scores.cross_attention},
+const fmt = (value, digits = 1) => value == null || Number.isNaN(Number(value)) ? "Unavailable" : Number(value).toLocaleString("en-IN", { maximumFractionDigits: digits });
+const api = async (path, options = {}) => {
+  const response = await fetch(`${API}${path}`, options);
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({ detail: "Request failed" }));
+    throw new Error(typeof body.detail === "string" ? body.detail : "Request failed");
+  }
+  return response.json();
+};
+const post = (path, body, signal) => api(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body), signal });
+const valueLabel = (item) => {
+  if (item.value == null) return "No reading";
+  if (DISTANCES.has(item.feature)) return item.value >= 1000 ? `${fmt(item.value / 1000)} km` : `${fmt(item.value, 0)} m`;
+  if (item.feature === "gsi_landslide_code") return ["Not mapped", "Low", "Moderate", "High"][Math.round(item.value)] || fmt(item.value);
+  if (item.feature === "land_cover_class") return ["Water", "Trees", "Grass", "Flooded vegetation", "Crops", "Scrub", "Built area", "Bare ground", "Snow / ice"][Math.round(item.value)] || fmt(item.value);
+  return `${fmt(item.value)}${UNITS[item.feature] ? ` ${UNITS[item.feature]}` : ""}`;
+};
+
+function Icon({ type }) {
+  const paths = {
+    point: "M12 3v18M3 12h18M12 7a5 5 0 100 10 5 5 0 000-10z",
+    area: "M4 5l7-2 9 5-3 11-10 1zM11 3v17M4 5l13 14",
+    satellite: "M5 19l14-14M14 4l6 6-4 4-6-6zM4 14l6 6M3 21h8",
+    table: "M4 5h16v14H4zM4 10h16M9 5v14",
+    merge: "M5 5v3c0 3 2 4 7 4s7 1 7 4v3M19 5v3M12 12v7",
+    search: "M11 4a7 7 0 100 14 7 7 0 000-14zm5 12l5 5",
+    mic: "M12 3a3 3 0 00-3 3v5a3 3 0 006 0V6a3 3 0 00-3-3zM5 11a7 7 0 0014 0M12 18v3",
+    bookmark: "M6 4h12v17l-6-4-6 4z",
+    street: "M4 20V7l8-4 8 4v13M8 20v-8h8v8M9 8h6",
+  };
+  return <svg viewBox="0 0 24 24" aria-hidden="true"><path d={paths[type] || paths.point} /></svg>;
+}
+
+let mapsPromise;
+function loadGoogleMaps(key) {
+  if (window.google?.maps?.importLibrary) return Promise.resolve(window.google.maps);
+  if (mapsPromise) return mapsPromise;
+  mapsPromise = new Promise((resolve, reject) => {
+    window.__nilamMapsReady = () => resolve(window.google.maps);
+    const script = document.createElement("script");
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(key)}&libraries=places,marker&v=weekly&callback=__nilamMapsReady&loading=async`;
+    script.async = true;
+    script.onerror = () => reject(new Error("Google Maps could not load. Check the browser key and enabled APIs."));
+    document.head.appendChild(script);
+  });
+  return mapsPromise;
+}
+
+function Stage({ stage }) {
+  const items = [
+    ["mapped", "Mapped evidence", "TabPFN reads 38 land features"],
+    ["satellite", "Seasonal satellite", "TerraMind reads dry + monsoon imagery"],
+    ["explained", "Explanation", "SHAP attributes the final estimate"],
   ];
-  return <section className="fusion-trace" aria-label="Multimodal model evidence flow">
-    <div className="fusion-heading"><div><strong>Three evidence streams, one result</strong><span>{data.architecture}</span></div><b><i/>Multimodal {data.version}</b></div>
-    <div className="fusion-streams">{streams.map((stream)=><div className="fusion-stream" key={stream.key}>
-      <Icon type={stream.icon}/><div className="fusion-stream-copy"><strong>{stream.title}</strong><span>{stream.detail}</span><div className="route-track"><i style={{width:`${stream.weight}%`}}/></div></div>
-      <div className="fusion-numbers"><strong>{fmt(stream.score,0)}%</strong><span>{fmt(stream.weight,1)}% route</span></div>
-    </div>)}</div>
-    <div className="fusion-result"><Icon type="merge"/><span>Fused estimate</span><strong>{fmt(data.branch_scores.fused,0)}%</strong></div>
-    <p>{data.meaning}</p>
+  const index = { mapped: 0, satellite: 1, explained: 2 }[stage] ?? -1;
+  return <div className="stage" aria-label="Analysis progress">{items.map((item, i) => <div className={i <= index ? "done" : i === index + 1 ? "active" : ""} key={item[0]}><i>{i < index ? "✓" : i + 1}</i><span><strong>{item[1]}</strong><small>{item[2]}</small></span></div>)}</div>;
+}
+
+function FusionTrace({ data }) {
+  if (!data) return null;
+  const weights = data.routing_weights || {};
+  const scores = data.branch_scores || {};
+  const streams = [
+    { icon: "satellite", title: "TerraMind", detail: "Two seasonal Sentinel-2 composites", weight: weights.terramind || 0, score: scores.terramind },
+    { icon: "table", title: "TabPFN 3.5", detail: "38 mapped terrain, hazard and access features", weight: weights.tabpfn || 0, score: scores.tabpfn },
+  ];
+  return <section className="fusion-trace">
+    <div className="fusion-heading"><div><strong>Two experts, one calibrated result</strong><span>{data.architecture}</span></div><b><i />Quality-gated fusion</b></div>
+    {streams.map((stream) => <div className="fusion-stream" key={stream.title}>
+      <Icon type={stream.icon} />
+      <div className="fusion-stream-copy"><strong>{stream.title}</strong><span>{stream.detail}</span><div className="route-track"><i style={{ width: `${stream.weight}%` }} /></div></div>
+      <div className="fusion-numbers"><strong>{stream.score == null ? "Pending" : `${fmt(stream.score, 0)}%`}</strong><span>{fmt(stream.weight, 0)}% influence</span></div>
+    </div>)}
+    <div className="fusion-result"><Icon type="merge" /><span>Calibrated estimate</span><strong>{scores.fused == null ? "Pending" : `${fmt(scores.fused, 0)}%`}</strong></div>
+    <p>Influence is validation-calibrated model weighting. It is different from SHAP feature importance.</p>
   </section>;
 }
 
-function App(){
-  const [config,setConfig]=useState(null),[report,setReport]=useState(null),[loading,setLoading]=useState(false),[error,setError]=useState(""),[mapError,setMapError]=useState("");
-  const [mode,setMode]=useState("point"),[style,setStyleMode]=useState("normal"),[model,setModel]=useState("multimodal"),[district,setDistrict]=useState("");
-  const container=useRef(),map=useRef(),draw=useRef(),marker=useRef(),boundaries=useRef(),latest=useRef(),requestId=useRef(0),dialog=useRef(),reportPanel=useRef();
-  latest.current={mode,model};
-  useEffect(()=>{api("/api/config").then((value)=>{setConfig(value);setModel(value.default_model||"tabpfn");}).catch((e)=>setError(e.message));},[]);
-  useEffect(()=>{if(report&&window.innerWidth<=780)requestAnimationFrame(()=>reportPanel.current?.scrollIntoView({behavior:"smooth",block:"start"}));},[report]);
-  const run=async(url,body)=>{const id=++requestId.current;setLoading(true);setError("");setReport(null);try{const result=await api(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});if(id===requestId.current)setReport(result);}catch(e){if(id===requestId.current)setError(e.message);}finally{if(id===requestId.current)setLoading(false);}};
-  const analyzePoint=(lon,lat)=>{marker.current?.remove();marker.current=new mapboxgl.Marker({color:"#176149"}).setLngLat([lon,lat]).addTo(map.current);run("/api/analyze",{lat,lon,radius_m:150,model:latest.current.model});};
-  const analyzeArea=(feature)=>{marker.current?.remove();run("/api/analyze-area",{geometry:feature.geometry,model:latest.current.model});};
-  const addBoundaries=()=>{const m=map.current,b=boundaries.current;if(!m||!b||m.getSource("kerala"))return;m.addSource("kerala",{type:"geojson",data:b.state});m.addLayer({id:"kerala-shade",type:"fill",source:"kerala",paint:{"fill-color":"#147a58","fill-opacity":style==="satellite"?.05:.045}});m.addLayer({id:"kerala-line",type:"line",source:"kerala",paint:{"line-color":style==="satellite"?"#d6f5e7":"#215c49","line-width":1.4}});m.addSource("districts",{type:"geojson",data:b.districts});m.addLayer({id:"district-lines",type:"line",source:"districts",paint:{"line-color":style==="satellite"?"#b5d8cb":"#7b9b8f","line-width":.65,"line-dasharray":[3,3]}});};
-  useEffect(()=>{
-    if(!config||map.current||!container.current)return;if(!config.mapbox_token){setMapError("Mapbox token missing. Add MAPBOX_PUBLIC_TOKEN to .env.");return;}
-    mapboxgl.accessToken=config.mapbox_token;const m=new mapboxgl.Map({container:container.current,style:"mapbox://styles/mapbox/streets-v12",center:[76.25,10.5],zoom:6.6,minZoom:5,maxZoom:19,maxBounds:[[73.7,7.5],[79,14]],attributionControl:true});map.current=m;
-    m.addControl(new mapboxgl.NavigationControl({showCompass:false}),"bottom-right");
-    const d=new MapboxDraw({displayControlsDefault:false,controls:{},defaultMode:"simple_select"});draw.current=d;m.addControl(d,"top-right");
-    m.on("click",(e)=>{if(latest.current.mode==="point"&&d.getMode()==="simple_select")analyzePoint(e.lngLat.lng,e.lngLat.lat);});
-    m.on("draw.create",(e)=>{const f=e.features[0];d.deleteAll();d.add(f);d.changeMode("simple_select");analyzeArea(f);});
-    m.on("draw.update",(e)=>e.features[0]&&analyzeArea(e.features[0]));
-    m.on("draw.delete",()=>setReport(null));
-    m.on("error",()=>setMapError("Some map tiles could not load."));
-    m.on("load",async()=>{try{const [state,ds]=await Promise.all([api("/api/layers/kerala"),api("/api/layers/districts")]);boundaries.current={state,districts:ds};addBoundaries();m.fitBounds([[74.85,8.15],[77.45,12.9]],{padding:25,duration:0});}catch(e){setMapError(e.message);}});
-    return()=>{m.remove();map.current=null;};
-  },[config]);
-  useEffect(()=>{if(!map.current)return;map.current.setStyle(style==="satellite"?"mapbox://styles/mapbox/satellite-streets-v12":"mapbox://styles/mapbox/streets-v12");map.current.once("style.load",addBoundaries);},[style]);
-  const chooseMode=(next)=>{setMode(next);setReport(null);marker.current?.remove();draw.current?.deleteAll();if(next==="area")draw.current?.changeMode("draw_polygon");else draw.current?.changeMode("simple_select");};
-  const clear=()=>{setReport(null);setError("");marker.current?.remove();draw.current?.deleteAll();if(mode==="area")draw.current?.changeMode("draw_polygon");};
-  const changeModel=(next)=>{setModel(next);setReport(null);setError("");marker.current?.remove();draw.current?.deleteAll();if(mode==="area")draw.current?.changeMode("draw_polygon");};
-  const flyDistrict=(name)=>{setDistrict(name);const feature=boundaries.current?.districts.features.find((f)=>f.properties.name===name);if(!feature)return;const coords=feature.geometry.type==="Polygon"?feature.geometry.coordinates.flat():feature.geometry.coordinates.flat(2);const bounds=coords.reduce((b,c)=>b.extend(c),new mapboxgl.LngLatBounds(coords[0],coords[0]));map.current.fitBounds(bounds,{padding:45,duration:700});};
-  const download=()=>{const blob=new Blob([JSON.stringify(report,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="nilam-assessment.json";a.click();URL.revokeObjectURL(a.href);};
-  const explanation=report?.prediction?.explanation, factors=explanation?[...explanation.contributions].sort((a,b)=>Math.abs(b.contribution)-Math.abs(a.contribution)).slice(0,8):[];
-  const positive=factors.filter((x)=>x.contribution>0).slice(0,4),negative=factors.filter((x)=>x.contribution<0).slice(0,4);
-  const score=report?.prediction?.suitability_percent;
+function FactorList({ title, items, kind }) {
+  return <section className="factor-list"><h4>{title}</h4>{items.length ? items.map((item) => <div className="factor" key={item.feature}>
+    <div><strong>{FEATURE_NAMES[item.feature] || item.feature}</strong><span>{valueLabel(item)}</span></div>
+    <b className={kind}>{item.contribution > 0 ? "+" : ""}{fmt(item.contribution)} pp</b>
+  </div>) : <p>No strong factors in this direction.</p>}</section>;
+}
+
+function Requirements({ query, setQuery, requirements, setRequirements, interpreting, onInterpret, recording, onRecord }) {
+  const update = (key, value) => setRequirements((current) => ({ ...current, [key]: value }));
+  return <div className="requirements">
+    <div className="request-compose">
+      <label htmlFor="land-request">Describe the home and surroundings you want</label>
+      <textarea id="land-request" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Example: A quiet, green place in Thrissur, within 5 km of a hospital and away from flood-prone land." />
+      <div><button className="secondary" onClick={onRecord}><Icon type="mic" />{recording ? "Stop recording" : "Speak in English"}</button><button className="secondary" disabled={!query.trim() || interpreting} onClick={onInterpret}>{interpreting ? "Interpreting…" : "Interpret request"}</button></div>
+    </div>
+    <div className="semantic-note"><strong>Local semantic planner</strong><span>Laya turns your request into reviewable filters. Exact distances stay visible and editable.</span></div>
+    <div className="requirement-grid">
+      <label>Hospital within <span><input type="number" min="0.5" step="0.5" value={requirements.max_hospital_km ?? ""} onChange={(e) => update("max_hospital_km", e.target.value ? Number(e.target.value) : undefined)} /> km</span></label>
+      <label>School within <span><input type="number" min="0.5" step="0.5" value={requirements.max_school_km ?? ""} onChange={(e) => update("max_school_km", e.target.value ? Number(e.target.value) : undefined)} /> km</span></label>
+      <label>Road within <span><input type="number" min="0.1" step="0.1" value={requirements.max_road_km ?? ""} onChange={(e) => update("max_road_km", e.target.value ? Number(e.target.value) : undefined)} /> km</span></label>
+      <label>Maximum slope <span><input type="number" min="1" max="45" value={requirements.max_slope ?? 30} onChange={(e) => update("max_slope", Number(e.target.value))} /> °</span></label>
+    </div>
+    <div className="checks">
+      {[['prefer_quiet', 'Quiet surroundings'], ['prefer_green', 'Greener setting'], ['prefer_transit', 'Public transport'], ['prefer_open_land', 'Apparently open land']].map(([key, label]) => <label key={key}><input type="checkbox" checked={Boolean(requirements[key])} onChange={(e) => update(key, e.target.checked)} />{label}</label>)}
+    </div>
+    <div className="safeguards"><span>Always applied</span><strong>Exclude mapped water · high flood depth · high landslide class</strong></div>
+  </div>;
+}
+
+function App() {
+  const [config, setConfig] = useState(null);
+  const [workspace, setWorkspace] = useState("assess");
+  const [mode, setMode] = useState("point");
+  const [mapStyle, setMapStyle] = useState("roadmap");
+  const [district, setDistrict] = useState("");
+  const [report, setReport] = useState(null);
+  const [stage, setStage] = useState("");
+  const [error, setError] = useState("");
+  const [mapError, setMapError] = useState("");
+  const [polygonPoints, setPolygonPoints] = useState(0);
+  const [searchDrawing, setSearchDrawing] = useState(false);
+  const [searchGeometry, setSearchGeometry] = useState(null);
+  const [query, setQuery] = useState("");
+  const [requirements, setRequirements] = useState({ avoid_high_flood: true, avoid_high_landslide: true, prefer_open_land: true, max_slope: 30 });
+  const [interpreting, setInterpreting] = useState(false);
+  const [recording, setRecording] = useState(false);
+  const [searching, setSearching] = useState(false);
+  const [searchResult, setSearchResult] = useState(null);
+  const [saved, setSaved] = useState(() => JSON.parse(localStorage.getItem("nilam-shortlist") || "[]"));
+  const mapElement = useRef(null), searchElement = useRef(null), reportElement = useRef(null);
+  const map = useRef(null), maps = useRef(null), boundaries = useRef(null), pointMarker = useRef(null), areaPolygon = useRef(null), candidateMarkers = useRef([]), polygonPath = useRef([]);
+  const latest = useRef({}), request = useRef(null), media = useRef(null), mediaChunks = useRef([]), streetDialog = useRef(null), methodsDialog = useRef(null), streetElement = useRef(null);
+  latest.current = { workspace, mode, searchDrawing };
+
+  useEffect(() => { api("/api/config").then(setConfig).catch((e) => setError(e.message)); }, []);
+  useEffect(() => { localStorage.setItem("nilam-shortlist", JSON.stringify(saved)); }, [saved]);
+  useEffect(() => { if (report && window.innerWidth < 900) reportElement.current?.scrollIntoView({ behavior: "smooth", block: "start" }); }, [report?.prediction?.analysis_stage]);
+
+  const clearOverlays = (includeCandidates = false) => {
+    pointMarker.current?.setMap?.(null); pointMarker.current = null;
+    areaPolygon.current?.setMap(null); areaPolygon.current = null;
+    polygonPath.current = []; setPolygonPoints(0);
+    if (includeCandidates) { candidateMarkers.current.forEach((marker) => marker.setMap?.(null)); candidateMarkers.current = []; }
+  };
+
+  const runProgressive = async (path, body) => {
+    request.current?.abort();
+    const controller = new AbortController(); request.current = controller;
+    setReport(null); setError(""); setStage("mapped");
+    try {
+      const preview = await post(path, { ...body, detail: "preview" }, controller.signal);
+      setReport(preview); setStage("satellite");
+      if (path !== "/api/analyze-area") {
+        const full = await post(path, { ...body, detail: "full" }, controller.signal);
+        setReport(full); setStage("explained");
+      }
+      const explained = await post(path, { ...body, detail: "explain" }, controller.signal);
+      setReport(explained); setStage("complete");
+    } catch (e) {
+      if (e.name !== "AbortError") { setError(e.message); setStage(""); }
+    }
+  };
+
+  const markPoint = (lat, lng) => {
+    pointMarker.current?.setMap?.(null);
+    if (window.google?.maps && map.current) {
+      pointMarker.current = new window.google.maps.Marker({ map: map.current, position: { lat, lng }, title: "Selected site" });
+    }
+  };
+  const analyzePoint = (lat, lng) => { clearOverlays(false); markPoint(lat, lng); runProgressive("/api/analyze", { lat, lon: lng, radius_m: 150 }); };
+
+  const finishPolygon = () => {
+    if (polygonPath.current.length < 3) return;
+    const path = [...polygonPath.current];
+    areaPolygon.current?.setMap(null);
+    areaPolygon.current = new window.google.maps.Polygon({ map: map.current, paths: path, strokeColor: "#176149", strokeWeight: 2, fillColor: "#176149", fillOpacity: .16, editable: true });
+    const geometry = { type: "Polygon", coordinates: [[...path.map((p) => [p.lng, p.lat]), [path[0].lng, path[0].lat]]] };
+    polygonPath.current = []; setPolygonPoints(0);
+    runProgressive("/api/analyze-area", { geometry });
+  };
+
+  useEffect(() => {
+    if (!config || map.current || !mapElement.current) return;
+    if (!config.google_maps_api_key) { setMapError("Add GOOGLE_MAPS_API_KEY to .env to load search, map and Street View."); return; }
+    let alive = true;
+    loadGoogleMaps(config.google_maps_api_key).then(async (library) => {
+      if (!alive) return;
+      maps.current = library;
+      map.current = new window.google.maps.Map(mapElement.current, { center: KERALA_CENTER, zoom: 7, minZoom: 6, maxZoom: 20, mapTypeId: "roadmap", mapId: "DEMO_MAP_ID", streetViewControl: false, fullscreenControl: false, mapTypeControl: false, clickableIcons: false, restriction: { latLngBounds: { north: 13.2, south: 7.8, west: 74.6, east: 78.2 }, strictBounds: false } });
+      map.current.addListener("click", (event) => {
+        const lat = event.latLng.lat(), lng = event.latLng.lng();
+        if (latest.current.workspace === "find") {
+          if (latest.current.searchDrawing) {
+            polygonPath.current = [...polygonPath.current, { lat, lng }]; setPolygonPoints(polygonPath.current.length);
+            areaPolygon.current?.setMap(null);
+            areaPolygon.current = new window.google.maps.Polygon({ map: map.current, paths: polygonPath.current, strokeColor: "#176149", strokeWeight: 2, fillColor: "#176149", fillOpacity: .13 });
+          }
+          return;
+        }
+        if (latest.current.mode === "point") analyzePoint(lat, lng);
+        else {
+          polygonPath.current = [...polygonPath.current, { lat, lng }]; setPolygonPoints(polygonPath.current.length);
+          areaPolygon.current?.setMap(null);
+          areaPolygon.current = new window.google.maps.Polygon({ map: map.current, paths: polygonPath.current, strokeColor: "#176149", strokeWeight: 2, fillColor: "#176149", fillOpacity: .13 });
+        }
+      });
+      try {
+        const [state, districtData] = await Promise.all([api("/api/layers/kerala"), api("/api/layers/districts")]);
+        boundaries.current = districtData;
+        map.current.data.addGeoJson(state); map.current.data.addGeoJson(districtData);
+        map.current.data.setStyle((feature) => ({ fillColor: feature.getProperty("name") ? "transparent" : "#176149", fillOpacity: .035, strokeColor: feature.getProperty("name") ? "#78978b" : "#176149", strokeOpacity: .85, strokeWeight: feature.getProperty("name") ? .7 : 1.5 }));
+      } catch (e) { setMapError(e.message); }
+      try {
+        const { PlaceAutocompleteElement } = await window.google.maps.importLibrary("places");
+        const autocomplete = new PlaceAutocompleteElement({ placeholder: "Search a place in Kerala" });
+        autocomplete.setAttribute("aria-label", "Search a place in Kerala");
+        searchElement.current.replaceChildren(autocomplete);
+        autocomplete.addEventListener("gmp-select", async (event) => {
+          const place = event.placePrediction.toPlace();
+          await place.fetchFields({ fields: ["displayName", "location", "viewport"] });
+          if (!place.location) return;
+          if (place.viewport) map.current.fitBounds(place.viewport); else { map.current.panTo(place.location); map.current.setZoom(16); }
+          if (latest.current.workspace === "assess") analyzePoint(place.location.lat(), place.location.lng());
+        });
+      } catch { setMapError("Map loaded, but place search is unavailable. Enable Places API (New) for this browser key."); }
+    }).catch((e) => setMapError(e.message));
+    return () => { alive = false; request.current?.abort(); };
+  }, [config]);
+
+  useEffect(() => { map.current?.setMapTypeId(mapStyle); }, [mapStyle]);
+
+  const flyDistrict = (name) => {
+    setDistrict(name);
+    if (name) { setSearchGeometry(null); setSearchDrawing(false); }
+    if (!name || !boundaries.current) { map.current?.setCenter(KERALA_CENTER); map.current?.setZoom(7); return; }
+    const feature = boundaries.current.features.find((item) => item.properties.name === name);
+    if (!feature) return;
+    const bounds = new window.google.maps.LatLngBounds();
+    const walk = (node) => typeof node[0] === "number" ? bounds.extend({ lng: node[0], lat: node[1] }) : node.forEach(walk);
+    walk(feature.geometry.coordinates); map.current.fitBounds(bounds, 45);
+  };
+
+  const startSearchArea = () => {
+    clearOverlays(true); setSearchResult(null); setSearchGeometry(null); setDistrict("");
+    setSearchDrawing(true); setError("");
+  };
+
+  const finishSearchArea = () => {
+    if (polygonPath.current.length < 3) return;
+    const path = [...polygonPath.current];
+    areaPolygon.current?.setMap(null);
+    areaPolygon.current = new window.google.maps.Polygon({ map: map.current, paths: path, strokeColor: "#176149", strokeWeight: 2, fillColor: "#176149", fillOpacity: .16 });
+    setSearchGeometry({ type: "Polygon", coordinates: [[...path.map((point) => [point.lng, point.lat]), [path[0].lng, path[0].lat]]] });
+    polygonPath.current = []; setPolygonPoints(0); setSearchDrawing(false);
+  };
+
+  const interpret = async () => {
+    setInterpreting(true); setError("");
+    try { const result = await post("/api/preferences/interpret", { text: query }); setRequirements((current) => ({ ...current, ...result.requirements })); }
+    catch (e) { setError(e.message); }
+    finally { setInterpreting(false); }
+  };
+
+  const record = async () => {
+    if (recording) { media.current?.stop(); return; }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaChunks.current = []; media.current = new MediaRecorder(stream);
+      media.current.ondataavailable = (event) => mediaChunks.current.push(event.data);
+      media.current.onstop = async () => {
+        setRecording(false); stream.getTracks().forEach((track) => track.stop());
+        const blob = new Blob(mediaChunks.current, { type: media.current.mimeType || "audio/webm" });
+        try { const result = await api("/api/transcribe", { method: "POST", headers: { "Content-Type": blob.type }, body: blob }); setQuery(result.text); }
+        catch (e) { setError(e.message); }
+      };
+      media.current.start(); setRecording(true);
+    } catch (e) { setError(`Microphone unavailable: ${e.message}`); }
+  };
+
+  const search = async () => {
+    setSearching(true); setError(""); clearOverlays(true);
+    try {
+      const center = map.current?.getCenter();
+      const area = searchGeometry ? { geometry: searchGeometry } : district ? { district } : { center_lat: center?.lat() || KERALA_CENTER.lat, center_lon: center?.lng() || KERALA_CENTER.lng, radius_km: 25 };
+      const result = await post("/api/search", { area, query, requirements, limit: 10 }); setSearchResult(result);
+      if (window.google?.maps && map.current) {
+        const bounds = new window.google.maps.LatLngBounds();
+        candidateMarkers.current = result.candidates.map((candidate) => {
+          const position = { lat: candidate.lat, lng: candidate.lon }; bounds.extend(position);
+          const marker = new window.google.maps.Marker({ map: map.current, position, label: String(candidate.rank), title: `#${candidate.rank} · ${candidate.overall_fit_percent}% fit` });
+          marker.addListener("click", () => selectCandidate(candidate)); return marker;
+        });
+        if (result.candidates.length) map.current.fitBounds(bounds, 70);
+      }
+    } catch (e) { setError(e.message); }
+    finally { setSearching(false); }
+  };
+
+  const selectCandidate = (candidate) => {
+    setWorkspace("assess"); setMode("point");
+    map.current?.panTo({ lat: candidate.lat, lng: candidate.lon }); map.current?.setZoom(17);
+    analyzePoint(candidate.lat, candidate.lon);
+  };
+  const saveCandidate = (candidate) => setSaved((current) => current.some((item) => item.point_id === candidate.point_id) ? current.filter((item) => item.point_id !== candidate.point_id) : [...current, candidate]);
+
+  const showStreetView = async () => {
+    if (!report || !window.google) return;
+    streetDialog.current?.showModal();
+    const location = { lat: report.location.lat, lng: report.location.lon };
+    const service = new window.google.maps.StreetViewService();
+    try {
+      const result = await service.getPanorama({ location, radius: 100 });
+      new window.google.maps.StreetViewPanorama(streetElement.current, { position: result.data.location.latLng, pov: { heading: 0, pitch: 0 }, zoom: 1, addressControl: true });
+    } catch { streetElement.current.innerHTML = '<div class="street-empty"><strong>No nearby Street View imagery</strong><span>Satellite and mapped evidence remain available.</span></div>'; }
+  };
+
+  const download = () => {
+    const blob = new Blob([JSON.stringify(report, null, 2)], { type: "application/json" });
+    const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = "nilam-assessment.json"; link.click(); URL.revokeObjectURL(link.href);
+  };
+
+  const explanation = report?.prediction?.explanation;
+  const factors = useMemo(() => explanation?.contributions ? [...explanation.contributions].sort((a, b) => Math.abs(b.contribution) - Math.abs(a.contribution)).slice(0, 10) : [], [explanation]);
+  const caution = factors.filter((item) => item.feature === "gsi_landslide_code" && Number(item.value) === 0);
+  const positive = factors.filter((item) => item.contribution > 0 && !caution.includes(item)).slice(0, 5), negative = factors.filter((item) => item.contribution < 0 && !caution.includes(item)).slice(0, 5);
+  const score = report?.prediction?.suitability_percent;
+  const loading = Boolean(stage && stage !== "complete");
+
   return <>
-    <header className="masthead"><a className="brand" href="#">nilam<span>Kerala land intelligence</span></a><button className="method-link" onClick={()=>dialog.current?.showModal()}>Research method</button></header>
+    <header className="masthead"><a className="brand" href="#">nilam<span>Kerala land intelligence</span></a><div className="header-actions"><span className="model-lock"><i />TerraMind + TabPFN</span><button className="method-link" onClick={() => methodsDialog.current?.showModal()}>Research method</button></div></header>
     <main>
-      <section className="intro"><div><h1>Understand land<br/>before you build.</h1><p>Select a point or draw a site boundary anywhere in Kerala. Nilam reads dry- and monsoon-season satellite imagery alongside 38 mapped land features, then explains the fused result.</p></div><span>14 districts · 2 satellite seasons · 38 features</span></section>
+      <section className="intro"><div><p className="eyebrow">Public-data decision support for Kerala</p><h1>Understand land<br />before you build.</h1><p>Select a site for a transparent assessment, or describe the home you want and let Nilam rank promising candidate zones.</p></div><span>14 districts · 2 satellite seasons · 38 mapped features</span></section>
+      <nav className="workspace-switch" aria-label="Choose workflow"><button className={workspace === "assess" ? "active" : ""} onClick={() => setWorkspace("assess")}><Icon type="point" /><span><strong>Assess a site</strong><small>Click, search or draw a known location</small></span></button><button className={workspace === "find" ? "active" : ""} onClick={() => setWorkspace("find")}><Icon type="search" /><span><strong>Find matching land</strong><small>Rank candidate zones for your needs</small></span></button></nav>
       <section className="workspace">
         <div className="map-column">
           <div className="map-tools">
-            <select aria-label="Go to district" value={district} onChange={(e)=>flyDistrict(e.target.value)}><option value="">All Kerala</option>{districts.map((d)=><option key={d}>{d}</option>)}</select>
-            <div className="segmented" aria-label="Selection type"><button aria-pressed={mode==="point"} className={mode==="point"?"active":""} onClick={()=>chooseMode("point")}><Icon type="point"/>Point</button><button aria-pressed={mode==="area"} className={mode==="area"?"active":""} onClick={()=>chooseMode("area")}><Icon type="area"/>Draw area</button></div>
-            <div className="segmented" aria-label="Map style"><button aria-pressed={style==="normal"} className={style==="normal"?"active":""} onClick={()=>setStyleMode("normal")}>Map</button><button aria-pressed={style==="satellite"} className={style==="satellite"?"active":""} onClick={()=>setStyleMode("satellite")}><Icon type="satellite"/>Satellite</button></div>
-            <button className="clear" onClick={clear}>Clear</button>
+            <div ref={searchElement} className="place-search"><span>Loading place search…</span></div>
+            <select aria-label="Go to district" value={district} onChange={(e) => flyDistrict(e.target.value)}><option value="">All Kerala / map centre</option>{DISTRICTS.map((name) => <option key={name}>{name}</option>)}</select>
+            {workspace === "assess" ? <div className="segmented" aria-label="Selection type"><button className={mode === "point" ? "active" : ""} onClick={() => { clearOverlays(false); setMode("point"); }}><Icon type="point" />Point</button><button className={mode === "area" ? "active" : ""} onClick={() => { clearOverlays(false); setMode("area"); }}><Icon type="area" />Area</button></div> : <button className={`draw-search ${searchDrawing ? "active" : ""}`} onClick={startSearchArea}><Icon type="area" />Draw search area</button>}
+            <div className="segmented" aria-label="Map style"><button className={mapStyle === "roadmap" ? "active" : ""} onClick={() => setMapStyle("roadmap")}>Map</button><button className={mapStyle === "hybrid" ? "active" : ""} onClick={() => setMapStyle("hybrid")}><Icon type="satellite" />Satellite</button></div>
           </div>
-          <div className="map-frame"><div ref={container} className="map"/>{!report&&!loading&&<div className="map-prompt"><Icon type={mode}/><strong>{mode==="area"?"Click to trace the site boundary":"Click any location in Kerala"}</strong><span>{mode==="area"?"Close the polygon to run the assessment":"Zoom in for parcel-level selection"}</span></div>}{mapError&&<div className="map-error">{mapError}</div>}</div>
-          <div className="map-footer"><span>{mode==="area"?"Area mode samples up to 9 locations across the polygon":"Point mode evaluates a 150 m neighbourhood"}</span><span>Normal and satellite basemaps by Mapbox</span></div>
+          <div className="map-frame"><div ref={mapElement} className="map" />
+            {!report && !searchResult && !mapError && <div className="map-prompt"><Icon type={workspace === "find" ? searchDrawing ? "area" : "search" : mode} /><strong>{workspace === "find" ? searchDrawing ? "Click corners around the search area" : "Choose a district, draw an area or move the map" : mode === "area" ? "Click corners around the site" : "Click or search for a Kerala location"}</strong><span>{workspace === "find" ? searchDrawing ? "Finish after adding at least three points" : "Nilam searches the chosen boundary or 25 km around the map centre" : mode === "area" ? "Three or more points are required" : "A fast mapped preview appears before satellite verification"}</span></div>}
+            {polygonPoints >= 3 && <button className="finish-area" onClick={workspace === "find" ? finishSearchArea : finishPolygon}>Finish {workspace === "find" ? "search area" : "site area"} · {polygonPoints} points</button>}
+            {mapError && <div className="map-error">{mapError}</div>}
+          </div>
+          <div className="map-footer"><span>{workspace === "find" ? "Candidate zones are ranked from the local statewide index" : mode === "area" ? "Area mode samples up to 9 locations" : "Point mode evaluates a 150 m neighbourhood"}</span><span>Google Maps · Street View context where available</span></div>
         </div>
-        <aside ref={reportPanel} className="report-column" aria-live="polite">
-          <div className="report-toolbar"><div><strong>Suitability assessment</strong><span>{model==="multimodal"?"Satellite + mapped evidence fusion":"Experimental public-data model"}</span></div><label>Model<select value={model} onChange={(e)=>changeModel(e.target.value)}>{config?.multimodal_available&&<option value="multimodal">Multimodal v2 · TerraMind</option>}<option value="tabpfn">TabPFN 3.5</option><option value="feature_transformer">Feature Transformer</option><option value="extra_trees">ExtraTrees</option></select></label></div>
-          {loading?<div className="loading"><div className="skeleton score-skeleton"/><div className="skeleton"/><div className="skeleton short"/><p>{model==="multimodal"?"Building dry and monsoon satellite composites, then fusing them with 38 site features…":"Reading terrain, soil and access data…"}</p></div>:error?<div className="empty error"><h2>Assessment failed</h2><p>{error}</p><button onClick={clear}>Try another selection</button></div>:!report?<div className="empty"><h2>Your land report appears here.</h2><p>The multimodal result shows a suitability percentage, the evidence streams used, and SHAP drivers for the selected site.</p><div className="empty-steps"><span><b>1</b>Select a point or area</span><span><b>2</b>Watch the evidence fuse</span><span><b>3</b>Inspect SHAP drivers</span></div></div>:report.prediction.status!=="available"?<div className="empty error"><h2>Analysis unavailable</h2><p>{report.prediction.reason||"The model could not produce a stable result. Choose another model or selection."}</p><button onClick={clear}>Choose another location</button></div>:<>
-            <div className="score-panel"><div className="score-number"><strong>{fmt(score,0)}<small>%</small></strong><span>model suitability</span></div><div className="score-copy"><span className={`status status-${Math.floor((score||0)/25)}`}>{report.outcome}</span><h2>{report.district}</h2><p>{report.reason}</p></div><div className="score-track"><i style={{width:`${score}%`}}/></div><div className="score-scale"><span>More constraints</span><span>More favourable</span></div></div>
-            {report.location.selection_type==="polygon"&&<div className="spatial"><div><span>Area</span><strong>{fmt(report.location.area_m2,0)} m²</strong></div><div><span>Sampled</span><strong>{report.prediction.spatial_summary.samples} points</strong></div><div><span>Variation</span><strong>{fmt(report.prediction.spatial_summary.minimum_percent,0)}–{fmt(report.prediction.spatial_summary.maximum_percent,0)}%</strong></div></div>}
-            <FusionTrace data={report.prediction.multimodal}/>
-            <div className="report-body"><div className="summary-head"><div><h3>What shaped this score</h3><p>SHAP attributes the difference from the model’s statewide reference score.</p></div><button onClick={download}>Export JSON</button></div>
-              <div className="factor-columns"><FactorList title="Supported suitability" items={positive}/><FactorList title="Reduced suitability" items={negative}/></div>
-              <h3 className="section-title">Influence by evidence group</h3><div className="group-list">{explanation.groups.slice(0,7).map((g)=><div key={g.group}><span>{g.group}</span><div><i className={g.contribution>=0?"up":"down"} style={{width:`${Math.min(100,Math.abs(g.contribution)*5)}%`}}/></div><strong>{g.contribution>0?"+":""}{fmt(g.contribution)} pp</strong></div>)}</div>
-              <details><summary>How to read this result</summary><p>The score is an ordinal model index: class probabilities are weighted from 8% for “screen out” to 90% for “higher suitability.” It is not the probability that construction is safe.</p><p>{explanation.method}. {explanation.meaning}</p></details>
-            </div>
-            <div className="model-strip"><span>{modelNames[report.prediction.model]}</span><span>Reference {fmt(explanation.base_value,0)}% → result {fmt(explanation.output_value,0)}%</span></div>
+
+        <aside ref={reportElement} className="report-column" aria-live="polite">
+          <div className="report-toolbar"><div><strong>{workspace === "find" ? "Land matcher" : "Suitability assessment"}</strong><span>{workspace === "find" ? "Safety filters + personal preference fit" : "Satellite + mapped evidence fusion"}</span></div><span className="fixed-model">One calibrated model</span></div>
+          {workspace === "find" ? <>
+            <Requirements query={query} setQuery={setQuery} requirements={requirements} setRequirements={setRequirements} interpreting={interpreting} onInterpret={interpret} recording={recording} onRecord={record} />
+            <div className="search-scope"><span>Search area</span><strong>{searchGeometry ? "Custom drawn boundary" : district || "25 km around the map centre"}</strong></div>
+            <button className="primary" disabled={searching} onClick={search}><Icon type="search" />{searching ? "Screening candidate zones…" : "Find best-fit zones"}</button>
+            {error && <div className="inline-error">{error}</div>}
+            {searchResult && <div className="candidate-results"><div className="result-head"><div><strong>{searchResult.candidates.length} candidate zones</strong><span>screened from {fmt(searchResult.searched_points, 0)} indexed points</span></div><small>Suitability and personal fit stay separate</small></div>
+              {searchResult.candidates.length ? searchResult.candidates.map((candidate) => <article className="candidate" key={candidate.point_id}>
+                <div className="candidate-main"><span className="rank">{candidate.rank}</span><div><strong>{candidate.district}</strong><span>{candidate.advantages.join(" · ") || "Public-data candidate"}</span></div><button aria-label="Save candidate" className={saved.some((item) => item.point_id === candidate.point_id) ? "saved" : ""} onClick={() => saveCandidate(candidate)}><Icon type="bookmark" /></button></div>
+                <div className="candidate-score"><div><strong>{fmt(candidate.suitability_percent, 0)}%</strong><span>model suitability</span></div><div><strong>{fmt(candidate.preference_fit_percent, 0)}%</strong><span>preference fit</span></div><div><strong>{fmt(candidate.overall_fit_percent, 0)}%</strong><span>combined rank</span></div></div>
+                {candidate.constraints.length > 0 && <p>Review: {candidate.constraints.join(" · ")}</p>}
+                <button className="candidate-open" onClick={() => selectCandidate(candidate)}>Verify with TerraMind satellite evidence →</button>
+              </article>) : <div className="empty compact"><h2>No indexed zones matched</h2><p>{searchResult.message}</p></div>}
+              <p className="candidate-limit">{searchResult.limitation}</p>
+            </div>}
+          </> : <>
+            {searchResult && <button className="back-link" onClick={() => setWorkspace("find")}>← Back to candidate list</button>}
+            {loading && <Stage stage={stage} />}
+            {error ? <div className="empty error"><h2>Assessment stopped</h2><p>{error}</p><button onClick={() => { setError(""); setStage(""); }}>Choose another location</button></div> : !report ? <div className="empty"><h2>Your land report appears here.</h2><p>Nilam first returns mapped evidence, then adds seasonal TerraMind satellite analysis and SHAP explanation.</p><div className="empty-steps"><span><b>1</b>Select a point or area</span><span><b>2</b>See the score immediately</span><span><b>3</b>Inspect model evidence</span></div></div> : report.prediction.status !== "available" ? <div className="empty error"><h2>Analysis unavailable</h2><p>{report.prediction.reason}</p></div> : <>
+              <div className="score-panel"><div className="score-number"><strong>{fmt(score, 0)}<small>%</small></strong><span>model suitability</span></div><div className="score-copy"><span className={`status status-${Math.floor((score || 0) / 25)}`}>{report.outcome}</span><h2>{report.district}</h2><p>{report.reason}</p></div><div className="score-track"><i style={{ width: `${score}%` }} /></div><div className="score-scale"><span>More constraints</span><span>More favourable</span></div></div>
+              <div className="score-actions"><button onClick={showStreetView}><Icon type="street" />Street View</button><button onClick={download}>Export evidence</button></div>
+              {report.location.selection_type === "polygon" && <div className="spatial"><div><span>Area</span><strong>{fmt(report.location.area_m2, 0)} m²</strong></div><div><span>Sampled</span><strong>{report.prediction.spatial_summary.samples} points</strong></div><div><span>Range</span><strong>{fmt(report.prediction.spatial_summary.minimum_percent, 0)}–{fmt(report.prediction.spatial_summary.maximum_percent, 0)}%</strong></div></div>}
+              <FusionTrace data={report.prediction.multimodal} />
+              <div className="report-body"><div className="summary-head"><div><h3>Why the score changed</h3><p>{explanation?.status === "ready" ? "SHAP shows mapped features that moved the combined estimate from its reference." : "The conditional SHAP explanation is still being calculated."}</p></div></div>
+                {explanation?.status === "ready" ? <><div className="factor-columns"><FactorList title="Raised suitability" items={positive} kind="up" /><FactorList title="Reduced suitability" items={negative} kind="down" /></div>{caution.length > 0 && <div className="caution-factors"><FactorList title="Evidence gaps affecting the model" items={caution} kind="caution" /><p>“Not mapped” is not evidence of low landslide risk. This learned association stays visible for audit, but must be verified independently.</p></div>}<h3 className="section-title">Influence by evidence group</h3><div className="group-list">{explanation.groups.slice(0, 7).map((group) => <div key={group.group}><span>{group.group}{group.group === "Natural hazards" && caution.length ? " *" : ""}</span><div><i className={group.contribution >= 0 ? "up" : "down"} style={{ width: `${Math.min(100, Math.abs(group.contribution) * 5)}%` }} /></div><strong>{group.contribution > 0 ? "+" : ""}{fmt(group.contribution)} pp</strong></div>)}</div>{caution.length > 0 && <p className="group-caveat">* Includes an unmapped-data association; do not interpret it as hazard clearance.</p>}</> : <div className="explanation-pending"><span /><div><strong>Model explanation in progress</strong><p>The score is usable now. SHAP follows without re-running TerraMind.</p></div></div>}
+                <details><summary>How to read the percentage</summary><p>The value is an ordinal suitability index made from four model-class probabilities. It is not the probability that a building is safe or legally approvable.</p><p>{report.prediction.limitation}</p></details>
+                <div className="unknowns"><h3>Needs on-site verification</h3><p>{(report.unknowns || ["Soil bearing capacity", "Legal and planning compliance", "Drainage and access"]).slice(0, 4).join(" · ")}</p></div>
+              </div>
+            </>}
           </>}
         </aside>
       </section>
-      <section className="research"><div><h2>Built as a spatial ML study.</h2><p>Multimodal v2 combines TerraMind satellite representations with mapped evidence and cross-attention. It reached {fmt((config?.multimodal_evaluation?.results?.test?.fusion?.macro_f1||0)*100,1)}% macro-F1 across three unseen test districts.</p></div><div><strong>24</strong><span>seasonal spectral channels</span></div><div><strong>38</strong><span>mapped features</span></div><div><strong>5</strong><span>held-out districts</span></div></section>
+      <section className="research"><div><h2>One model, measured honestly.</h2><p>TabPFN leads the score because it performed better on unseen districts. TerraMind contributes seasonal satellite evidence through a validation-calibrated 8% gate.</p></div><div><strong>0.847</strong><span>fusion test macro-F1</span></div><div><strong>38</strong><span>mapped features</span></div><div><strong>5</strong><span>held-out districts</span></div></section>
     </main>
-    <footer><strong>nilam</strong><span>Research screening for Kerala · not engineering or legal approval</span></footer>
-    <dialog ref={dialog} className="methods"><button className="dialog-close" onClick={()=>dialog.current?.close()} aria-label="Close">×</button><h2>Research method</h2><p>Multimodal v2 processes two 12-band Sentinel-2 seasonal composites with TerraMind Base, combines them with a frozen feature transformer, and learns cross-attention between image and site evidence. Entire districts remain held out during validation and testing.</p><div className="method-grid"><div><strong>1,400</strong><span>statewide samples</span></div><div><strong>0.829</strong><span>test macro-F1</span></div><div><strong>SHAP</strong><span>conditional attribution</span></div></div><h3>Scientific limit</h3><p>The target is generated from transparent public-data rules because verified construction outcomes and expert labels are not yet available. The satellite branch improved calibration, but its test macro-F1 gain was not statistically significant. Scores do not certify bearing capacity, legal compliance or buildability.</p></dialog>
+    <footer><strong>nilam</strong><span>Research screening for Kerala · not engineering, legal or purchase approval</span></footer>
+
+    <dialog ref={methodsDialog} className="methods"><button className="dialog-close" onClick={() => methodsDialog.current?.close()} aria-label="Close">×</button><p className="eyebrow">Research method</p><h2>TerraMind + TabPFN adaptive fusion</h2><p>TabPFN evaluates 38 public-data features. TerraMind encodes dry- and monsoon-season 12-band Sentinel-2 chips. Their four-class probabilities are combined by a validation-calibrated agreement gate.</p><div className="method-grid"><div><strong>1,400</strong><span>statewide study points</span></div><div><strong>0.847</strong><span>fusion test macro-F1</span></div><div><strong>0.850</strong><span>TabPFN test macro-F1</span></div></div><h3>Why TerraMind has 8% influence</h3><p>The vision branch adds independent land-cover context, but it did not beat TabPFN on held-out test districts. The quality gate therefore keeps TabPFN dominant. The difference is small and the targets are weak labels, so neither number is a safety validation.</p><h3>Semantic and voice tools</h3><p>Laya interprets local preference requests. Distil-Whisper transcribes English speech locally. GLiNER2.5-Decide can be enabled as an experimental semantic comparator.</p><h3>Scientific limit</h3><p>The target was generated from transparent public-data rules because verified construction outcomes and expert labels are not yet available. A geotechnical investigation and planning review remain essential.</p></dialog>
+    <dialog ref={streetDialog} className="street-dialog"><button className="dialog-close" onClick={() => streetDialog.current?.close()} aria-label="Close">×</button><div><p className="eyebrow">Ground context</p><h2>Nearby Street View</h2><p>Visual context only. Imagery date and road position may differ from the selected land.</p></div><div ref={streetElement} className="street-view" /></dialog>
   </>;
 }
-function FactorList({title,items}){return <section className="factor-list"><h4>{title}</h4>{items.length?items.map((item)=><div className="factor" key={item.feature}><div><strong>{names[item.feature]||item.feature}</strong><span>{item.group} · {valueLabel(item)}</span></div><b className={item.contribution>=0?"up-text":"down-text"}>{item.contribution>0?"+":""}{fmt(item.contribution)} pp</b></div>):<p>No major driver in this direction.</p>}</section>}
-createRoot(document.getElementById("root")).render(<App/>);
+
+createRoot(document.getElementById("root")).render(<App />);

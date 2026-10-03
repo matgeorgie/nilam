@@ -4,24 +4,37 @@ import json
 import os
 from pathlib import Path
 from functools import lru_cache
-from threading import Lock
+from contextlib import asynccontextmanager
+from threading import Lock, Thread
+import tempfile
+from typing import Literal
 import geopandas as gpd
 import numpy as np
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from shapely.geometry import Point, mapping, shape
 from kerala_land_lab.earth import load_env, initialize, statewide_point_features, statewide_points_features, STATEWIDE_FEATURES, STATEWIDE_CATALOG
 from kerala_land_lab.current_hazards import attach_flood_levels, attach_gsi_landslide
-from kerala_land_lab.places import nearby_places
 from kerala_land_lab.weak_labels import LABEL_NAMES
+from kerala_land_lab.fusion import FusionConfig, combine_probabilities
+from kerala_land_lab.search import SearchArea, rank_candidates, select_area
+from kerala_land_lab.semantic import interpret_request, semantic_status
 
 ROOT=Path(__file__).resolve().parents[2]
 DATA=ROOT/'data/processed'
 load_env()
-app=FastAPI(title='Nilam · Kerala Land Lab',version='0.2.0')
 earth_lock=Lock();model_lock=Lock();satellite_lock=Lock();earth_ready=False
+
+
+@asynccontextmanager
+async def lifespan(_:FastAPI):
+    Thread(target=_warm_models,daemon=True).start()
+    yield
+
+
+app=FastAPI(title='Nilam · Kerala Land Lab',version='0.3.0',lifespan=lifespan)
 
 
 @lru_cache(maxsize=1)
@@ -39,25 +52,48 @@ class Location(BaseModel):
     lat:float=Field(ge=8,le=13)
     lon:float=Field(ge=74,le=78)
     radius_m:int=Field(default=150,ge=50,le=500)
-    model:str=Field(default='multimodal',pattern='^(multimodal|extra_trees|feature_transformer|tabpfn)$')
+    detail:Literal['preview','full','explain']='full'
 
 
 class AreaSelection(BaseModel):
     geometry:dict
-    model:str=Field(default='multimodal',pattern='^(multimodal|extra_trees|feature_transformer|tabpfn)$')
+    detail:Literal['preview','full','explain']='full'
+
+
+class SearchAreaInput(BaseModel):
+    district:str|None=None
+    center_lat:float|None=Field(default=None,ge=8,le=13)
+    center_lon:float|None=Field(default=None,ge=74,le=78)
+    radius_km:float|None=Field(default=None,gt=0,le=250)
+    geometry:dict|None=None
+
+
+class CandidateSearch(BaseModel):
+    area:SearchAreaInput
+    requirements:dict=Field(default_factory=dict)
+    query:str=''
+    limit:int=Field(default=10,ge=1,le=20)
+
+
+class PreferenceText(BaseModel):
+    text:str=Field(min_length=1,max_length=2000)
 
 
 @app.get('/api/config')
 def config():
     evaluation=ROOT/'models/statewide/evaluation.json'
     multimodal_evaluation=ROOT/'models/multimodal_v2/evaluation.json'
-    return {'mapbox_token':os.environ.get('MAPBOX_PUBLIC_TOKEN',''),
+    fusion_evaluation=ROOT/'models/terramind_tabpfn/evaluation.json'
+    google_key=os.environ.get('GOOGLE_MAPS_API_KEY') or os.environ.get('GOOGLE_PLACES_API_KEY','')
+    return {'google_maps_api_key':google_key,
             'evaluation':json.loads(evaluation.read_text()) if evaluation.exists() else None,
             'multimodal_evaluation':json.loads(multimodal_evaluation.read_text()) if multimodal_evaluation.exists() else None,
-            'multimodal_available':(ROOT/'models/multimodal_v2/terramind_tabular_fusion.pt').exists(),
-            'default_model':'multimodal' if (ROOT/'models/multimodal_v2/terramind_tabular_fusion.pt').exists() else 'tabpfn',
+            'fusion_evaluation':json.loads(fusion_evaluation.read_text()) if fusion_evaluation.exists() else None,
+            'fusion_available':(ROOT/'models/multimodal_v2/terramind_tabular_fusion.pt').exists() and (ROOT/'models/statewide/tabpfn.tabpfn_fit').exists(),
+            'product_model':'TerraMind + TabPFN adaptive fusion',
             'earth_project_configured':bool(os.environ.get('PROJECT_ID')),
-            'google_places_configured':bool(os.environ.get('GOOGLE_PLACES_API_KEY')),
+            'google_maps_configured':bool(google_key),
+            'semantic':semantic_status(),
             'research_status':'Statewide public-data screening model; expert construction suitability not validated'}
 
 
@@ -82,9 +118,18 @@ def intersecting(frame,geometry):
 @lru_cache(maxsize=256)
 def measurements(lon,lat):
     global earth_ready
+    cache_dir=ROOT/'data/cache/earth'
+    cache_dir.mkdir(parents=True,exist_ok=True)
+    cache_file=cache_dir/f'{float(lat):.4f}_{float(lon):.4f}.json'
+    if cache_file.exists():
+        return json.loads(cache_file.read_text())
     with earth_lock:
         if not earth_ready:initialize();earth_ready=True
-        return statewide_point_features(lon,lat)
+        values=statewide_point_features(lon,lat)
+    temporary=cache_file.with_suffix('.tmp')
+    temporary.write_text(json.dumps(values))
+    temporary.replace(cache_file)
+    return values
 
 
 def nearest_distance(frame, point):
@@ -94,7 +139,7 @@ def nearest_distance(frame, point):
 
 
 def statewide_values(lon,lat,point):
-    values=measurements(round(lon,6),round(lat,6))
+    values=measurements(round(lon,4),round(lat,4))
     point_frame=gpd.GeoDataFrame({'point_id':['request']},geometry=[Point(lon,lat)],crs=4326)
     point_frame=attach_gsi_landslide(point_frame,ROOT/'data')
     point_frame=attach_flood_levels(point_frame,ROOT/'data')
@@ -146,57 +191,38 @@ FEATURE_GROUPS={
 }
 
 
-def prediction(values,selected,coordinates=None):
-    import joblib
-    import shap
-    file=ROOT/'models/statewide/baseline.joblib'
-    if not file.exists():return {'status':'unavailable','reason':'Training has not finished'}
+def _tabular_arrays(value_rows):
     bundle=load_statewide_baseline()
-    value_rows=values if isinstance(values,list) else [values]
-    if selected=='multimodal':
-        if not coordinates:return {'status':'unavailable','reason':'Satellite coordinates were not supplied'}
-        return multimodal_prediction(value_rows,coordinates)
     raw=np.array([[row.get(name,np.nan) for name in bundle['features']] for row in value_rows],dtype=np.float32)
-    x=bundle['imputer'].transform(raw).astype(np.float32)
-    background=statewide_background()
+    imputed=bundle['imputer'].transform(raw).astype(np.float32)
+    return bundle,raw,imputed
+
+
+def _tabpfn_probabilities(imputed):
     with model_lock:
-        if selected=='feature_transformer':
-            import torch
-            from kerala_land_lab.model import FeatureTransformer
-            preprocessing=joblib.load(ROOT/'models/statewide/transformer_preprocessing.joblib');scaler=preprocessing['scaler']
-            network=FeatureTransformer(len(bundle['features']),n_classes=4);network.load_state_dict(torch.load(ROOT/'models/statewide/feature_transformer.pt',map_location='cpu',weights_only=True));network.eval()
-            def predict(a):
-                with torch.no_grad():return torch.softmax(network(torch.tensor(scaler.transform(a),dtype=torch.float32)),dim=1).numpy()
-            all_probs=predict(x); method='Permutation SHAP · statewide suitability score · 8 representative training medoids'
-            predict_proba=predict
-        elif selected=='tabpfn':
-            estimator=load_statewide_tabpfn()
-            all_probs=estimator.predict_proba(x); predict_proba=estimator.predict_proba
-            method='Permutation SHAP · statewide suitability score · 8 representative training medoids'
-        else:
-            estimator=bundle['estimator'];all_probs=estimator.predict_proba(x);predict_proba=estimator.predict_proba
-            method='Permutation SHAP · statewide suitability score · 8 representative training medoids'
-        sample_scores=all_probs@SCORE_ANCHORS
-        median=float(np.median(sample_scores));representative=int(np.argmin(np.abs(sample_scores-median)))
-        probs=all_probs[representative]
-        def predict_score(a):return predict_proba(a)@SCORE_ANCHORS
-        references=representative_background()
-        exp=shap.Explainer(predict_score,references,algorithm='permutation',seed=42)(x[representative:representative+1],max_evals=2*len(bundle['features'])+1)
-        contributions=np.asarray(exp.values[0])*100;base=float(np.asarray(exp.base_values).reshape(-1)[0]*100)
-    items=[];groups={}
-    for i,name in enumerate(bundle['features']):
-        contribution=float(contributions[i]);group=FEATURE_GROUPS.get(name,'Other')
-        groups[group]=groups.get(group,0)+contribution
-        items.append({'feature':name,'group':group,'value':None if np.isnan(raw[representative,i]) else float(raw[representative,i]),'contribution':contribution})
-    score=float(sample_scores[representative]*100)
-    return {'status':'available','model':selected,'class_index':int(np.argmax(probs)),
-            'class_names':['Screen out','Low','Moderate','Higher'],'class_scores':probs.tolist(),
-            'suitability_percent':round(score,1),
-            'spatial_summary':{'samples':len(value_rows),'minimum_percent':round(float(sample_scores.min()*100),1),'maximum_percent':round(float(sample_scores.max()*100),1),'median_percent':round(float(np.median(sample_scores)*100),1)},
-            'explanation':{'method':method,'base_value':round(base,2),'output_value':round(score,2),
-                'contributions':items,'groups':[{'group':key,'contribution':round(value,2)} for key,value in sorted(groups.items(),key=lambda item:abs(item[1]),reverse=True)],
-                'meaning':'SHAP values are percentage-point effects on the displayed suitability score. Positive values raise the score; negative values lower it. Effects describe this model, not physical causation.'},
-            'limitation':'Model reproduces transparent public-data weak labels. It is not expert ground truth, a permit decision, or proof that construction is safe.'}
+        return load_statewide_tabpfn().predict_proba(imputed).astype(np.float32)
+
+
+def prediction(values,coordinates=None,detail='full'):
+    value_rows=values if isinstance(values,list) else [values]
+    if not (ROOT/'models/statewide/tabpfn.tabpfn_fit').exists():
+        return {'status':'unavailable','reason':'The trained TabPFN artifact is unavailable'}
+    bundle,raw,imputed=_tabular_arrays(value_rows)
+    tabpfn_probs=_tabpfn_probabilities(imputed)
+    if detail=='preview':
+        sample_scores=tabpfn_probs@SCORE_ANCHORS
+        representative=int(np.argmin(np.abs(sample_scores-np.median(sample_scores))))
+        score=float(sample_scores[representative]*100);probs=tabpfn_probs[representative]
+        return {'status':'available','model':'terramind_tabpfn','analysis_stage':'mapped','class_index':int(np.argmax(probs)),
+                'class_names':['Screen out','Low','Moderate','Higher'],'class_scores':probs.tolist(),'suitability_percent':round(score,1),
+                'spatial_summary':{'samples':len(value_rows),'minimum_percent':round(float(sample_scores.min()*100),1),'maximum_percent':round(float(sample_scores.max()*100),1),'median_percent':round(float(np.median(sample_scores)*100),1)},
+                'multimodal':{'version':'v3','architecture':'TerraMind + TabPFN adaptive late fusion','stage':'mapped','branch_scores':{'tabpfn':round(score,1),'fused':round(score,1)},'routing_weights':{'tabpfn':100.0,'terramind':0.0},
+                    'meaning':'This fast preview uses mapped TabPFN evidence while the TerraMind satellite expert is loading.'},
+                'explanation':{'status':'pending','contributions':[],'groups':[],'meaning':'Detailed SHAP attribution loads after the combined satellite result.'},
+                'limitation':'Preview only. The final combined result follows after TerraMind satellite analysis.'}
+    if not coordinates:
+        return {'status':'unavailable','reason':'Satellite coordinates were not supplied'}
+    return terramind_tabpfn_prediction(value_rows,coordinates,raw,imputed,tabpfn_probs,explain=detail=='explain')
 
 
 @lru_cache(maxsize=1)
@@ -226,63 +252,79 @@ def live_satellite_chips(coordinates):
     with earth_lock:
         if not earth_ready:initialize();earth_ready=True
     with satellite_lock:
-        return [sentinel2_chip(round(float(lon),6),round(float(lat),6)) for lon,lat in coordinates]
+        return [sentinel2_chip(round(float(lon),4),round(float(lat),4)) for lon,lat in coordinates]
 
 
-def multimodal_prediction(value_rows,coordinates):
-    import shap
+def _terramind_probabilities(coordinates,scaled):
     import torch
     from kerala_land_lab.multimodal import normalize_chip
+    bundle=load_multimodal_bundle();network=bundle['network'];device=bundle['device']
+    keys=[(round(float(lon),4),round(float(lat),4)) for lon,lat in coordinates]
+    unique=[]
+    for key in keys:
+        if key not in unique:unique.append(key)
+    cache_dir=ROOT/'data/cache/terramind';cache_dir.mkdir(parents=True,exist_ok=True)
+    probabilities={};missing=[]
+    for key in unique:
+        path=cache_dir/f'{key[1]:.4f}_{key[0]:.4f}.json'
+        if path.exists():probabilities[key]=np.asarray(json.loads(path.read_text())['probabilities'],dtype=np.float32)
+        else:missing.append(key)
+    if missing:
+        chips=torch.stack([normalize_chip(chip) for chip in live_satellite_chips(missing)])
+        indices=[keys.index(key) for key in missing]
+        tabular=torch.tensor(scaled[indices],dtype=torch.float32,device=device)
+        with model_lock,torch.inference_mode():
+            result=network(chips.to(device),tabular)
+            values=torch.softmax(result['vision'],dim=1).cpu().numpy()
+        for key,value in zip(missing,values):
+            probabilities[key]=value.astype(np.float32)
+            path=cache_dir/f'{key[1]:.4f}_{key[0]:.4f}.json';temporary=path.with_suffix('.tmp')
+            temporary.write_text(json.dumps({'probabilities':value.tolist(),'model':'TerraMind Base vision head','seasons':['dry','monsoon']}));temporary.replace(path)
+    return np.stack([probabilities[key] for key in keys])
 
+
+def terramind_tabpfn_prediction(value_rows,coordinates,raw,imputed,tabpfn_probs,explain=False):
     if len(value_rows)!=len(coordinates):raise ValueError('Every feature row needs satellite coordinates')
-    bundle=load_multimodal_bundle();network=bundle['network'];device=bundle['device'];preprocessing=bundle['preprocessing'];features=bundle['features']
-    raw=np.array([[row.get(name,np.nan) for name in features] for row in value_rows],dtype=np.float32)
-    imputed=preprocessing['imputer'].transform(raw).astype(np.float32)
+    preprocessing=load_multimodal_bundle()['preprocessing'];features=load_multimodal_bundle()['features']
     scaled=preprocessing['scaler'].transform(imputed).astype(np.float32)
-    chips=torch.stack([normalize_chip(chip) for chip in live_satellite_chips(coordinates)])
-
-    def forward(tabular_values,chips_tensor):
-        with torch.inference_mode():
-            result=network(chips_tensor.to(device),torch.tensor(tabular_values,dtype=torch.float32,device=device))
-            probabilities={name:torch.softmax(result[name],dim=1).cpu().numpy() for name in ('fusion','vision','tabular','cross')}
-            probabilities['gate']=result['gate'].cpu().numpy()
-            return probabilities
-
-    with model_lock:
-        output_parts=[forward(scaled[start:start+2],chips[start:start+2]) for start in range(0,len(scaled),2)]
-        output={name:np.concatenate([part[name] for part in output_parts],axis=0) for name in ('fusion','vision','tabular','cross','gate')}
-        sample_scores=output['fusion']@SCORE_ANCHORS
-        median=float(np.median(sample_scores));representative=int(np.argmin(np.abs(sample_scores-median)))
-        fixed_chip=chips[representative:representative+1]
-
+    vision_probs=_terramind_probabilities(coordinates,scaled)
+    fusion_config=FusionConfig.load(ROOT/'models/terramind_tabpfn/fusion.json')
+    fused_probs,vision_weights=combine_probabilities(tabpfn_probs,vision_probs,fusion_config)
+    sample_scores=fused_probs@SCORE_ANCHORS
+    representative=int(np.argmin(np.abs(sample_scores-np.median(sample_scores))))
+    score=float(sample_scores[representative]*100);probs=fused_probs[representative]
+    explanation={'status':'pending','contributions':[],'groups':[],'meaning':'Detailed SHAP attribution is loading.'}
+    if explain:
+        import shap
+        fixed_vision=vision_probs[representative:representative+1]
         def predict_score(a):
-            transformed=preprocessing['scaler'].transform(a).astype(np.float32);parts=[]
-            for start in range(0,len(transformed),4):
-                batch=transformed[start:start+4];repeated=fixed_chip.repeat(len(batch),1,1,1,1)
-                parts.append(forward(batch,repeated)['fusion']@SCORE_ANCHORS)
-            return np.concatenate(parts)
-
+            tabular=_tabpfn_probabilities(np.asarray(a,dtype=np.float32))
+            vision=np.repeat(fixed_vision,len(tabular),axis=0)
+            fused,_=combine_probabilities(tabular,vision,fusion_config)
+            return fused@SCORE_ANCHORS
         references=representative_background()[::2]
         exp=shap.Explainer(predict_score,references,algorithm='permutation',seed=42)(imputed[representative:representative+1],max_evals=2*len(features)+1)
         contributions=np.asarray(exp.values[0])*100;base=float(np.asarray(exp.base_values).reshape(-1)[0]*100)
-
-    items=[];groups={}
-    for index,name in enumerate(features):
-        contribution=float(contributions[index]);group=FEATURE_GROUPS.get(name,'Other');groups[group]=groups.get(group,0)+contribution
-        items.append({'feature':name,'group':group,'value':None if np.isnan(raw[representative,index]) else float(raw[representative,index]),'contribution':contribution})
-    branch_scores={'satellite':round(float(np.median(output['vision']@SCORE_ANCHORS)*100),1),'tabular':round(float(np.median(output['tabular']@SCORE_ANCHORS)*100),1),'cross_attention':round(float(np.median(output['cross']@SCORE_ANCHORS)*100),1),'fused':round(float(sample_scores[representative]*100),1)}
-    mean_gate=output['gate'].mean(axis=0)*100;score=float(sample_scores[representative]*100);probs=output['fusion'][representative]
-    return {'status':'available','model':'multimodal','class_index':int(np.argmax(probs)),
+        items=[];groups={}
+        for index,name in enumerate(features):
+            contribution=float(contributions[index]);group=FEATURE_GROUPS.get(name,'Other');groups[group]=groups.get(group,0)+contribution
+            items.append({'feature':name,'group':group,'value':None if np.isnan(raw[representative,index]) else float(raw[representative,index]),'contribution':contribution})
+        explanation={'status':'ready','method':'Conditional permutation SHAP · TerraMind satellite evidence held fixed · TabPFN perturbed against 4 training medoids','base_value':round(base,2),'output_value':round(score,2),'contributions':items,
+            'groups':[{'group':key,'contribution':round(value,2)} for key,value in sorted(groups.items(),key=lambda item:abs(item[1]),reverse=True)],
+            'meaning':'SHAP values are percentage-point effects of mapped evidence on the combined score while TerraMind evidence is held fixed. Positive values raise the score; negative values lower it.'}
+    tabular_score=tabpfn_probs@SCORE_ANCHORS;vision_score=vision_probs@SCORE_ANCHORS
+    branch_scores={'terramind':round(float(np.median(vision_score)*100),1),'tabpfn':round(float(np.median(tabular_score)*100),1),'fused':round(score,1)}
+    vision_weight=float(np.mean(vision_weights)*100)
+    return {'status':'available','model':'terramind_tabpfn','analysis_stage':'explained' if explain else 'satellite','class_index':int(np.argmax(probs)),
             'class_names':['Screen out','Low','Moderate','Higher'],'class_scores':probs.tolist(),'suitability_percent':round(score,1),
             'spatial_summary':{'samples':len(value_rows),'minimum_percent':round(float(sample_scores.min()*100),1),'maximum_percent':round(float(sample_scores.max()*100),1),'median_percent':round(float(np.median(sample_scores)*100),1)},
-            'multimodal':{'version':'v2','architecture':'TerraMind Base + feature transformer + cross-attention','satellite_source':'Sentinel-2 L2A · 2023–2025 median composites','seasons':['Dry · Jan–Mar','Monsoon · Jun–Sep'],'spectral_bands':12,
-                'satellite_contexts':len({(round(float(lon),6),round(float(lat),6)) for lon,lat in coordinates}),
-                'routing_weights':{'satellite':round(float(mean_gate[0]),1),'tabular':round(float(mean_gate[1]),1),'cross_attention':round(float(mean_gate[2]),1)},'branch_scores':branch_scores,
-                'meaning':'Routing weights show how the fusion network combined its branches for this assessment. They are not causal feature importance.'},
-            'explanation':{'method':'Conditional permutation SHAP · fused score · selected Sentinel-2 chip held fixed · 4 training medoids','base_value':round(base,2),'output_value':round(score,2),'contributions':items,
-                'groups':[{'group':key,'contribution':round(value,2)} for key,value in sorted(groups.items(),key=lambda item:abs(item[1]),reverse=True)],
-                'meaning':'SHAP values are percentage-point effects of tabular evidence on the fused score while this location’s satellite chip is held fixed. Positive values raise the score; negative values lower it.'},
-            'limitation':'Multimodal v2 predicts experimental weak labels. Satellite contribution improved held-out calibration, but its test macro-F1 gain over the tabular expert was not statistically significant.'}
+            'multimodal':{'version':'v3','architecture':'TerraMind Base + TabPFN 3.5 adaptive late fusion','stage':'explained' if explain else 'satellite','satellite_source':'Sentinel-2 L2A · dry and monsoon composites','seasons':['Dry · Jan–Mar','Monsoon · Jun–Sep'],'spectral_bands':12,
+                'satellite_contexts':len(set((round(float(lon),4),round(float(lat),4)) for lon,lat in coordinates)),
+                'routing_weights':{'terramind':round(vision_weight,1),'tabpfn':round(100-vision_weight,1)},'branch_scores':branch_scores,
+                'quality_gate_passed':fusion_config.quality_gate_passed,
+                'meaning':'TerraMind reads seasonal satellite structure. TabPFN evaluates 38 mapped features. A validation-calibrated agreement gate combines their class probabilities.'},
+            'explanation':explanation,
+            'limitation':'The fusion predicts experimental weak labels. It is public-data screening, not expert ground truth, a permit decision, or proof that construction is safe.'}
 
 
 @lru_cache(maxsize=1)
@@ -323,7 +365,7 @@ def representative_background():
 
 def score_outcome(estimate):
     if estimate.get('status')!='available':
-        return 'Analysis unavailable','The model could not complete this assessment. Try again or choose another model.'
+        return 'Analysis unavailable','The combined model could not complete this assessment. Try the location again.'
     score=estimate['suitability_percent']
     if score<25:return 'Very low suitability','The public-data model found several strong constraints at this location.'
     if score<50:return 'Low suitability','Mapped conditions contain material constraints that need specialist review.'
@@ -339,6 +381,77 @@ def sample_polygon(polygon,max_points=9):
             candidate=Point(float(x),float(y))
             if polygon.covers(candidate) and all(candidate.distance(existing)>.5 for existing in points):points.append(candidate)
     return points[:max_points]
+
+
+@lru_cache(maxsize=1)
+def candidate_index():
+    import pandas as pd
+    parquet=DATA/'kerala_search_index.parquet'
+    csv=DATA/'kerala_search_index.csv'
+    frame=pd.read_parquet(parquet) if parquet.exists() else pd.read_csv(csv if csv.exists() else DATA/'kerala_statewide_features.csv')
+    frame['gsi_landslide_code']=frame.gsi_landslide_susceptibility.map({'Not mapped':0,'Low':1,'Moderate':2,'High':3})
+    return frame
+
+
+def indexed_values_near(coordinates):
+    """Return nearest precomputed rows for an immediate, clearly marked preview."""
+    frame=candidate_index()
+    latitudes=frame.lat.to_numpy(dtype=float);longitudes=frame.lng.to_numpy(dtype=float)
+    rows=[]
+    for lon,lat in coordinates:
+        distance=(latitudes-float(lat))**2+(longitudes-float(lon))**2
+        rows.append(frame.iloc[int(np.argmin(distance))].to_dict())
+    return rows
+
+
+@app.post('/api/preferences/interpret')
+def interpret_preferences(request:PreferenceText):
+    return interpret_request(request.text)
+
+
+@app.post('/api/search')
+def search_candidates(request:CandidateSearch):
+    interpreted=interpret_request(request.query) if request.query.strip() else {'requirements':{},'semantic':{'engine':'form'}}
+    requirements={**interpreted.get('requirements',{}),**request.requirements}
+    area=SearchArea(**request.area.model_dump())
+    selected=select_area(candidate_index(),area)
+    if selected.empty:
+        return {'candidates':[],'searched_points':0,'message':'No precomputed candidate points fall inside this search area. Draw a larger area or build the dense search index.','requirements':requirements,'semantic':interpreted.get('semantic',{})}
+    _,_,imputed=_tabular_arrays(selected.to_dict('records'))
+    probabilities=_tabpfn_probabilities(imputed)
+    suitability=probabilities@SCORE_ANCHORS*100
+    candidates=rank_candidates(selected,suitability,requirements,request.limit)
+    return {'candidates':candidates,'searched_points':len(selected),'eligible_points':len(candidates),'requirements':requirements,'semantic':interpreted.get('semantic',{}),
+            'method':'Stage 1 uses the local candidate index and TabPFN. Selecting a candidate starts TerraMind satellite verification.',
+            'limitation':'Candidate zones are public-data screening locations, not parcels, sale listings, legal clearance, or proof of vacant/buildable land.'}
+
+
+@lru_cache(maxsize=1)
+def speech_pipeline():
+    try:
+        import torch
+        from transformers import pipeline
+    except ImportError as exc:
+        raise RuntimeError('Install the optional local-ai dependencies to use voice input') from exc
+    device='mps' if torch.backends.mps.is_available() else 'cpu'
+    return pipeline('automatic-speech-recognition',model='distil-whisper/distil-small.en',device=device)
+
+
+@app.post('/api/transcribe')
+async def transcribe(request:Request):
+    content=await request.body()
+    if not content:raise HTTPException(422,'Record a short English request first')
+    suffix='.webm' if 'webm' in request.headers.get('content-type','') else '.wav'
+    path=None
+    try:
+        with tempfile.NamedTemporaryFile(suffix=suffix,delete=False) as handle:
+            handle.write(content);path=Path(handle.name)
+        result=speech_pipeline()(str(path))
+        return {'text':result.get('text','').strip(),'model':'distil-whisper/distil-small.en','processing':'local'}
+    except RuntimeError as exc:
+        raise HTTPException(503,str(exc)) from exc
+    finally:
+        if path and path.exists():path.unlink()
 
 
 @app.post('/api/analyze')
@@ -365,14 +478,12 @@ def analyze(location:Location):
     road_indices,road_distance=geo['roads'].sindex.nearest(point,return_distance=True,return_all=False)
     road=geo['roads'].iloc[int(road_indices[1,0])]
     terrain={};errors=[]
-    try:terrain=statewide_values(location.lon,location.lat,point)
+    try:
+        terrain=(indexed_values_near([(location.lon,location.lat)])[0]
+                 if location.detail=='preview' else statewide_values(location.lon,location.lat,point))
     except Exception as exc:errors.append({'source':'Earth Engine','type':type(exc).__name__,'message':'Measurements unavailable; do not infer safety from missing data'})
-    try:estimate=prediction(terrain,location.model,[(location.lon,location.lat)])
+    try:estimate=prediction(terrain,[(location.lon,location.lat)],location.detail)
     except Exception as exc:estimate={'status':'unavailable','reason':f'Model inference unavailable ({type(exc).__name__})'}
-    google_places=[]
-    if os.environ.get('GOOGLE_PLACES_API_KEY'):
-        try:google_places=nearby_places(location.lon,location.lat,max(3000,location.radius_m*4))
-        except Exception as exc:errors.append({'source':'Google Places','type':type(exc).__name__,'message':'Live Google Maps places are temporarily unavailable; OpenStreetMap results remain visible'})
     outcome,reason=score_outcome(estimate)
     outline=gpd.GeoSeries([area],crs=32643).to_crs(4326).iloc[0]
     return {'location':location.model_dump(),'district':district.iloc[0]['name'] if len(district) else 'Kerala boundary area',
@@ -381,7 +492,7 @@ def analyze(location:Location):
             'current_hazards':{'gsi_landslide_susceptibility':terrain.get('gsi_landslide_susceptibility'),
                 'flood_levels_m':{str(period):terrain.get(f'flood_level_{period}yr_m') for period in (10,25,50,100,200,500)},
                 'source':'GSI 2022 and KSDMA/UNEP historical flood-return rasters'},
-            'nearby':nearby,'google_places':google_places,'road':{'distance_m':round(float(road_distance[0])),'kind':road.kind,'mapped_access':road.access,'caveat':'Mapped road proximity does not prove legal or emergency access'},
+            'nearby':nearby,'google_places':[],'road':{'distance_m':round(float(road_distance[0])),'kind':road.kind,'mapped_access':road.access,'caveat':'Mapped road proximity does not prove legal or emergency access'},
             'prediction':estimate,'errors':errors,
             'unknowns':['Soil bearing capacity and foundation design','Title, zoning, CRZ and wetland compliance','Drinking-water quality and seasonal supply','Electricity, sewage, broadband and waste-service connections','Crime, noise and site-specific air quality','Land price and construction cost'],
             'next_steps':['Have a geotechnical professional inspect soil and slope stability','Verify plot records and applicable restrictions with the local authority','Check monsoon drainage and physical/legal access on site'],
@@ -402,10 +513,11 @@ def analyze_area(selection:AreaSelection):
     point_series=gpd.GeoSeries(points,crs=32643).to_crs(4326)
     coordinates=[(float(item.x),float(item.y)) for item in point_series]
     errors=[];rows=[]
-    try:rows=statewide_values_many(coordinates,points)
+    try:
+        rows=indexed_values_near(coordinates) if selection.detail=='preview' else statewide_values_many(coordinates,points)
     except Exception as exc:errors.append({'source':'Earth Engine','type':type(exc).__name__,'message':'Measurements unavailable; try again shortly'})
     satellite_coordinates=[coordinates[0]]*len(coordinates) if coordinates else []
-    try:estimate=prediction(rows,selection.model,satellite_coordinates) if rows else {'status':'unavailable','reason':'Measurements unavailable'}
+    try:estimate=prediction(rows,satellite_coordinates,selection.detail) if rows else {'status':'unavailable','reason':'Measurements unavailable'}
     except Exception as exc:estimate={'status':'unavailable','reason':f'Model inference unavailable ({type(exc).__name__})'}
     outcome,reason=score_outcome(estimate)
     representative=rows[0] if rows else {}
@@ -418,11 +530,18 @@ def analyze_area(selection:AreaSelection):
         nearby.append({'kind':kind,'name':item['name'],'distance_m':round(float(distance[0])),'source':'OpenStreetMap','distance_type':'Straight-line from area centre'})
     road_indices,road_distance=geo['roads'].sindex.nearest(centroid,return_distance=True,return_all=False);road=geo['roads'].iloc[int(road_indices[1,0])]
     centroid_wgs=gpd.GeoSeries([centroid],crs=32643).to_crs(4326).iloc[0]
-    return {'location':{'lat':centroid_wgs.y,'lon':centroid_wgs.x,'area_m2':round(polygon.area),'selection_type':'polygon','sample_count':len(points),'model':selection.model},
+    return {'location':{'lat':centroid_wgs.y,'lon':centroid_wgs.x,'area_m2':round(polygon.area),'selection_type':'polygon','sample_count':len(points),'model':'terramind_tabpfn','detail':selection.detail},
             'district':', '.join(sorted(districts.name.unique())) if len(districts) else 'Kerala boundary area','outcome':outcome,'reason':reason,'area':mapping(polygon_wgs),'hazards':[],
             'terrain':[{'feature':name,'value':representative.get(name),**STATEWIDE_CATALOG[name]} for name in STATEWIDE_FEATURES],
             'nearby':nearby,'google_places':[],'road':{'distance_m':round(float(road_distance[0])),'kind':road.kind,'mapped_access':road.access,'caveat':'Mapped road proximity does not prove legal access'},
             'prediction':estimate,'errors':errors,'scope':f'{round(polygon.area):,} m² polygon sampled at {len(points)} locations; not a cadastral survey or construction clearance'}
+
+
+def _warm_models():
+    try:
+        load_statewide_tabpfn();load_multimodal_bundle()
+    except Exception:
+        pass
 
 
 if (ROOT/'web/dist').exists():

@@ -1,0 +1,25 @@
+{
+  "model": "TerraMind Base vision head + TabPFN 3.5 adaptive late fusion",
+  "calibration_districts": ["Ernakulam", "Wayanad"],
+  "test_districts": ["Alappuzha", "Idukki", "Kasaragod"],
+  "vision_weight": 0.08,
+  "validation": {
+    "macro_f1": 0.9129672668398856,
+    "accuracy": 0.935,
+    "log_loss": 0.2415982037782669,
+    "samples": 200
+  },
+  "test": {
+    "macro_f1": 0.8466594737781179,
+    "accuracy": 0.8866666666666667,
+    "log_loss": 0.29558035731315613,
+    "samples": 300
+  },
+  "tabpfn_test": {
+    "macro_f1": 0.8503563252452935,
+    "accuracy": 0.89,
+    "log_loss": 0.28978946805000305
+  },
+  "quality_gate": "Accept only when fusion macro-F1 is within 0.005 of TabPFN and log loss is within 0.03 on the untouched test districts.",
+  "warning": "Experimental weak-label evaluation, not observed construction outcomes"
+}

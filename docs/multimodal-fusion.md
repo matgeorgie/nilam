@@ -1,5 +1,12 @@
 # Multimodal satellite and tabular experiment
 
+> The cross-attention network below is the trained multimodal experiment. The
+> production application now uses its TerraMind vision head as one expert and
+> the stronger fitted TabPFN 3.5 model as the other. Their class probabilities
+> are combined by `scripts/calibrate_terramind_tabpfn.py`. This late-fusion
+> product path preserves the academic cross-attention ablation while preventing
+> the weaker learned tabular branch from replacing TabPFN.
+
 ## Model choice
 
 Nilam uses `ibm-esa-geospatial/TerraMind-1.0-base` as its primary satellite encoder. TerraMind is a geospatial foundation model trained on the multimodal TerraMesh corpus, and the selected checkpoint accepts the complete 12-band Sentinel-2 L2A input rather than an RGB rendering. The base backbone has 87,313,920 parameters and a 768-dimensional representation. Frozen-backbone training followed by selective unfreezing of the final two blocks fits the 16 GB Apple M4 using batch size one and gradient accumulation.
@@ -94,3 +101,21 @@ PYTORCH_ENABLE_MPS_FALLBACK=1 \
 ```
 
 Outputs are written under `models/multimodal_v2/`: the best checkpoint, training history, and held-out evaluation. Raw chips and weights remain local and are ignored by Git. The original representation-level fusion is retained as a v1 ablation because its gate saturated on the vision branch during the first experiment.
+
+## Product fusion calibration
+
+After multimodal training, calibrate the TerraMind vision head against the
+fitted TabPFN artifact:
+
+```bash
+PYTORCH_ENABLE_MPS_FALLBACK=1 \
+.venv-multimodal/bin/python scripts/calibrate_terramind_tabpfn.py --batch-size 1
+```
+
+The calibration searches transparent TerraMind mixture weights on Ernakulam
+and Wayanad, then applies the selected value once to the untouched Alappuzha,
+Idukki, and Kasaragod test districts. The accepted configuration gives
+TerraMind 8% and TabPFN 92% influence. It obtained 0.847 test macro-F1 versus
+0.850 for TabPFN alone, within the declared 0.005 macro-F1 and 0.03 log-loss
+tolerance. This narrow gate treats satellite evidence as a measured secondary
+signal; it does not claim a statistically significant improvement.

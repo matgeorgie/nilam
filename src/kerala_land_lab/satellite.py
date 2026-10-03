@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from functools import lru_cache
 import io
+from pathlib import Path
 import zipfile
 
 import ee
@@ -11,6 +12,9 @@ import rasterio
 import requests
 
 from kerala_land_lab.multimodal import EE_S2_BANDS
+
+
+CACHE_DIR = Path(__file__).resolve().parents[2] / "data" / "cache" / "satellite"
 
 
 def mask_s2(image):
@@ -49,7 +53,16 @@ def geotiff_array(content: bytes) -> np.ndarray:
 
 @lru_cache(maxsize=128)
 def sentinel2_chip(lon: float, lat: float, patch_m: int = 2240) -> np.ndarray:
-    """Fetch one immutable two-season chip; rounded coordinates provide request caching."""
+    """Fetch one immutable two-season chip with memory and persistent local caching."""
+    CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    key = f"{float(lat):.4f}_{float(lon):.4f}_{patch_m}.npz"
+    cached = CACHE_DIR / key
+    if cached.exists():
+        with np.load(cached) as archive:
+            chip = archive["chips"].astype(np.uint16, copy=False)
+        if chip.shape == (2, 12, 224, 224):
+            chip.flags.writeable = False
+            return chip
     region = ee.Geometry.Point([float(lon), float(lat)]).buffer(patch_m / 2).bounds()
     image = source_image(region)
     url = image.getDownloadURL({"name": "nilam-live", "region": region, "dimensions": "224x224", "crs": "EPSG:32643", "format": "GEO_TIFF"})
@@ -62,5 +75,8 @@ def sentinel2_chip(lon: float, lat: float, patch_m: int = 2240) -> np.ndarray:
     chip = array.reshape(2, 12, 224, 224).astype(np.uint16)
     if float(np.any(chip > 0, axis=(0, 1)).mean()) < 0.70:
         raise ValueError("Sentinel-2 composite has insufficient clear pixels")
+    temporary = cached.with_suffix(".tmp.npz")
+    np.savez_compressed(temporary, chips=chip)
+    temporary.replace(cached)
     chip.flags.writeable = False
     return chip
