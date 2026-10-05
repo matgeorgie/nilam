@@ -156,6 +156,18 @@ def search_points_features(points):
     open_probability = (dynamic_world.select(["grass", "crops", "shrub_and_scrub", "bare"])
                         .mean().reduce(ee.Reducer.max()).rename("open_probability"))
     local_kernel = ee.Kernel.circle(45, "meters")
+    slope_neighbourhood_mean = terrain.select("slope").reduceNeighborhood(
+        ee.Reducer.mean(), local_kernel
+    ).rename("slope_mean_45m")
+    slope_neighbourhood_max = terrain.select("slope").reduceNeighborhood(
+        ee.Reducer.max(), local_kernel
+    ).rename("slope_max_45m")
+    slope_neighbourhood_p90 = terrain.select("slope").reduceNeighborhood(
+        ee.Reducer.percentile([90]), local_kernel
+    ).rename("slope_p90_45m")
+    elevation_variation = dem.reduceNeighborhood(
+        ee.Reducer.stdDev(), local_kernel
+    ).rename("elevation_stddev_45m")
     built_neighbourhood = built_probability.reduceNeighborhood(
         ee.Reducer.mean(), local_kernel
     ).rename("built_probability_45m")
@@ -169,6 +181,8 @@ def search_points_features(points):
         water.gt(0).fastDistanceTransform(2048).sqrt().multiply(30).rename("distance_to_water"),
         dynamic_world.select("label").mode().rename("land_cover_class"),
         built_probability, open_probability, built_neighbourhood, open_neighbourhood,
+        slope_neighbourhood_mean, slope_neighbourhood_max,
+        slope_neighbourhood_p90, elevation_variation,
     ]).unmask(-9999, sameFootprint=False)
     features = [
         ee.Feature(ee.Geometry.Point([lon, lat]), {"sample_id": index})
@@ -182,6 +196,8 @@ def search_points_features(points):
         "flood_occurrence", "distance_to_water", "land_cover_class",
         "built_probability", "open_probability",
         "built_probability_45m", "open_probability_45m",
+        "slope_mean_45m", "slope_max_45m", "slope_p90_45m",
+        "elevation_stddev_45m",
     ]
     rows = [None] * len(points)
     for feature in result.get("features", []):

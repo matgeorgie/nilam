@@ -20,7 +20,13 @@ from kerala_land_lab.earth import load_env, initialize, statewide_point_features
 from kerala_land_lab.current_hazards import attach_flood_levels, attach_gsi_landslide
 from kerala_land_lab.weak_labels import LABEL_NAMES
 from kerala_land_lab.fusion import FusionConfig, combine_probabilities
-from kerala_land_lab.search import candidate_grid, rank_candidates
+from kerala_land_lab.search import (
+    NON_BUILDABLE_COVER_CLASSES,
+    OPEN_LAND_CLASSES,
+    candidate_grid,
+    eligible_candidate_mask,
+    rank_candidates,
+)
 from kerala_land_lab.semantic import interpret_request, semantic_status
 
 ROOT=Path(__file__).resolve().parents[2]
@@ -73,7 +79,7 @@ class CandidateSearch(BaseModel):
     area:SearchAreaInput
     requirements:dict=Field(default_factory=dict)
     query:str=''
-    limit:int=Field(default=10,ge=1,le=20)
+    limit:int=Field(default=20,ge=1,le=40)
 
 
 class PreferenceText(BaseModel):
@@ -263,30 +269,58 @@ def live_search_frame(center_lat,center_lon,radius_km):
     keep=np.array([state.covers(point) for point in projected.geometry],dtype=bool)
     points=points.loc[keep].reset_index(drop=True);projected=projected.loc[keep].reset_index(drop=True)
     initial_grid_points=len(points)
-    tree=building_tree()
-    if tree is not None and len(points)>240:
-        xy=np.column_stack([projected.geometry.x.to_numpy(),projected.geometry.y.to_numpy()])
-        building_distances=tree.query(xy,k=1)[0]
-        eligible=np.flatnonzero(building_distances>=15)
-        pool=eligible if len(eligible)>=80 else np.arange(len(points))
-        farthest=pool[np.argsort(building_distances[pool])[::-1][:160]]
-        generator=np.random.default_rng(42)
-        remainder=np.setdiff1d(pool,farthest,assume_unique=False)
-        exploratory=generator.choice(remainder,size=min(80,len(remainder)),replace=False) if len(remainder) else np.array([],dtype=int)
-        chosen=np.unique(np.concatenate([farthest,exploratory]))
-        points=points.iloc[chosen].reset_index(drop=True);projected=projected.iloc[chosen].reset_index(drop=True)
     coordinates=list(zip(points.lng.astype(float),points.lat.astype(float)))
     global earth_ready
     with earth_lock:
         if not earth_ready:initialize();earth_ready=True
         fresh_rows=search_points_features(coordinates)
+
+    # Screen the complete radius with satellite and terrain evidence before
+    # spending time on the tabular model and detailed proximity calculations.
+    # The previous building-first sample could skip a small visible clearing.
+    fresh=__import__('pandas').DataFrame(fresh_rows)
+    tree=building_tree()
+    building_distances=np.full(len(points),np.nan)
+    if tree is not None and len(points):
+        xy=np.column_stack([projected.geometry.x.to_numpy(),projected.geometry.y.to_numpy()])
+        building_distances=tree.query(xy,k=1)[0]
+    def numeric(name,default):
+        values=fresh[name] if name in fresh else __import__('pandas').Series(default,index=fresh.index)
+        return __import__('pandas').to_numeric(values,errors='coerce').fillna(default).to_numpy(dtype=float)
+    cover=numeric('land_cover_class',-1)
+    slope=numeric('slope',90);mean_slope=numeric('slope_mean_45m',90)
+    robust_slope=numeric('slope_p90_45m',90);height_variation=numeric('elevation_stddev_45m',90)
+    open_probability=numeric('open_probability_45m',0)
+    built=numeric('built_probability',1);built_near=numeric('built_probability_45m',1)
+    cover_open=np.isin(cover,list(OPEN_LAND_CLASSES))
+    clear=(
+        (slope<=8)&(mean_slope<=7)&(robust_slope<=10)&(height_variation<=5)&
+        ~np.isin(cover,list(NON_BUILDABLE_COVER_CLASSES))&
+        (open_probability>=.12)&(cover_open|(open_probability>=.18))&
+        (built<=.35)&(built_near<=.30)
+    )
+    if tree is not None:clear &= building_distances>=30
+    satellite_candidates=np.flatnonzero(clear)
+    if len(satellite_candidates)>500:
+        flat_score=(.4*np.clip(1-mean_slope/7,0,1)+.35*np.clip(1-robust_slope/10,0,1)+.25*np.clip(1-height_variation/5,0,1))
+        open_score=.55*np.clip(open_probability/.45,0,1)+.25*(1-built_near)+.20*np.clip(building_distances/150,0,1)
+        priority=.55*flat_score+.45*open_score
+        satellite_candidates=satellite_candidates[np.argsort(priority[satellite_candidates])[::-1][:500]]
+    points=points.iloc[satellite_candidates].reset_index(drop=True)
+    projected=projected.iloc[satellite_candidates].reset_index(drop=True)
+    fresh_rows=[fresh_rows[index] for index in satellite_candidates]
+    coordinates=list(zip(points.lng.astype(float),points.lat.astype(float)))
+    if not coordinates:
+        frame=points.drop(columns='geometry').reset_index(drop=True)
+        frame.attrs.update(initial_grid_points=initial_grid_points,earth_measured_points=initial_grid_points,satellite_candidate_points=0)
+        return frame
     rows=interpolated_statewide_rows(coordinates)
     for row,fresh in zip(rows,fresh_rows):row.update(fresh)
     rows=enrich_search_rows(rows,coordinates,list(projected.geometry))
     frame=points.drop(columns='geometry').reset_index(drop=True)
     measured=__import__('pandas').DataFrame(rows)
     for column in measured.columns:frame[column]=measured[column]
-    frame.attrs['initial_grid_points']=initial_grid_points
+    frame.attrs.update(initial_grid_points=initial_grid_points,earth_measured_points=initial_grid_points,satellite_candidate_points=len(satellite_candidates))
     return frame
 
 
@@ -525,7 +559,8 @@ def interpret_preferences(request:PreferenceText):
 @app.post('/api/search')
 def search_candidates(request:CandidateSearch):
     interpreted=interpret_request(request.query) if request.query.strip() else {'requirements':{},'semantic':{'engine':'form'}}
-    requirements={'prefer_open_land':True,'avoid_high_flood':True,'avoid_high_landslide':True,**interpreted.get('requirements',{}),**request.requirements}
+    requirements={'prefer_open_land':True,'avoid_high_flood':True,'avoid_high_landslide':True,'max_slope':8,**interpreted.get('requirements',{}),**request.requirements}
+    requirements['max_slope']=min(float(requirements.get('max_slope',8)),8)
     if request.area.center_lat is None or request.area.center_lon is None or request.area.radius_km is None:
         raise HTTPException(422,'Select a search centre and radius on the map')
     center_wgs=Point(request.area.center_lon,request.area.center_lat)
@@ -536,12 +571,13 @@ def search_candidates(request:CandidateSearch):
     except Exception as exc:
         raise HTTPException(503,f'Live land screening could not finish ({type(exc).__name__}). Try this area again.') from exc
     if selected.empty:
-        return {'candidates':[],'searched_points':0,'message':'No candidate cells fall inside Kerala in this radius.','requirements':requirements,'semantic':interpreted.get('semantic',{})}
+        return {'candidates':[],'searched_points':selected.attrs.get('initial_grid_points',0),'measured_points':selected.attrs.get('earth_measured_points',0),'satellite_candidate_points':0,'eligible_points':0,'message':'No flat, open cells passed the satellite and terrain screen in this radius.','requirements':requirements,'semantic':interpreted.get('semantic',{})}
     _,_,imputed=_tabular_arrays(selected.to_dict('records'))
     probabilities=_tabpfn_probabilities(imputed)
     suitability=probabilities@SCORE_ANCHORS*100
+    eligible_points=int(eligible_candidate_mask(selected,requirements).sum())
     candidates=rank_candidates(selected,suitability,requirements,request.limit)
-    return {'candidates':candidates,'searched_points':selected.attrs.get('initial_grid_points',len(selected)),'measured_points':len(selected),'eligible_points':len(candidates),'requirements':requirements,'semantic':interpreted.get('semantic',{}),
+    return {'candidates':candidates,'searched_points':selected.attrs.get('initial_grid_points',len(selected)),'measured_points':selected.attrs.get('earth_measured_points',len(selected)),'satellite_candidate_points':selected.attrs.get('satellite_candidate_points',len(selected)),'model_ranked_points':len(selected),'eligible_points':eligible_points,'requirements':requirements,'semantic':interpreted.get('semantic',{}),
             'search':{'center_lat':request.area.center_lat,'center_lon':request.area.center_lon,'radius_km':request.area.radius_km,
                       'fresh_grid':True,'earth_engine':'Dynamic World 10 m open/built probability','buildings':'OpenStreetMap mapped building centres'},
             'method':'Fresh cells inside the selected radius are measured with Earth Engine, screened for mapped buildings and hazards, then ranked by TabPFN and the interpreted preferences.',

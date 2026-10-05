@@ -2,7 +2,7 @@
 
 Nilam is a local-first Kerala residential land-screening research project. It has two workflows:
 
-1. **Assess a site** by searching, clicking a point, or drawing a polygon on Google Maps.
+1. **Assess a site** by searching, clicking a point, drawing a polygon, or using the device's current location on Google Maps.
 2. **Find matching land** by choosing a centre and radius, then optionally describing a preferred home location in text or English speech.
 
 Nilam is a research screening tool. Its score is not construction clearance, a legal opinion, a property listing, proof that land is vacant, or the probability that a house is safe. Soil bearing capacity, title, zoning, wetland/CRZ status, drainage, utilities, legal access, and price still require primary records and professional inspection.
@@ -34,7 +34,7 @@ The table combines:
 
 `scripts/label_statewide_dataset.py` adds a transparent four-class weak target and rule trace. These labels represent public-data screening rules, not observed building outcomes or expert ground truth. See [`docs/statewide-dataset-card.json`](docs/statewide-dataset-card.json).
 
-The 1,400 points remain the controlled academic training/evaluation cohort. They are not the search catalogue. Every land search creates roughly 900 fresh cells inside the selected circle, checks nearly three million mapped OSM building centres, and sends the 240 most promising and exploratory cells to Earth Engine. Dynamic World tests both the exact pixel and its 45 m neighbourhood for recent built-up and open-land signals before TabPFN ranks the surviving cells. Slow-changing soil and climate fields are interpolated from the statewide cohort. This keeps model training, geographic evaluation, and interactive search candidates separate.
+The 1,400 points remain the controlled academic training/evaluation cohort. They are not the search catalogue. Every land search creates roughly 1,600 fresh cells inside the selected circle. Earth Engine measures all of them with recent Dynamic World evidence plus SRTM terrain, including mean slope, 90th-percentile slope, and height variation across a 45 m neighbourhood. Cells must be flat, visibly open, low in built-up probability, and at least 30 m from one of nearly three million mapped OSM building centres before the heavier hazard, amenity, and TabPFN ranking runs. Slow-changing soil and climate fields are interpolated from the statewide cohort. This keeps model training, geographic evaluation, and interactive search candidates separate.
 
 ## Local semantic and voice tools
 
@@ -43,7 +43,7 @@ The 1,400 points remain the controlled academic training/evaluation cohort. They
 - **Distil-Whisper small.en** transcribes English requests locally. Its weights download on first voice use.
 - Candidate search keeps safety constraints separate from preferences. It will not trade a mapped high flood or high landslide condition for a shorter commute.
 
-Google Maps provides the basemap, address search, and Street View from both workflows. Open-land evidence comes from Dynamic World built probability, recent land cover, and the local OSM building index.
+Google Maps provides the basemap, address search, device-location context, and Street View from both workflows. The Street View camera is aimed from the nearest outdoor panorama within 300 m toward the selected cell. Open-land evidence comes from Dynamic World built probability, recent land cover, SRTM neighbourhood flatness, and the local OSM building index.
 
 The first Laya interpretation downloads its local checkpoint (about 846 MB)
 from Hugging Face. Later requests use the local cache. GLiNER and Distil-Whisper

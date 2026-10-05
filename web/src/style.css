@@ -42,6 +42,7 @@ gmp-place-autocomplete { width: 100%; color-scheme: light; }
 .tool-group button:last-child { border-right: 0; }
 .tool-group button:hover { color: var(--ink); background: var(--surface-soft); }
 .tool-group button.active { background: var(--green-soft); color: var(--green); }
+.tool-group button:disabled { cursor: wait; opacity: .55; }
 .tool-group svg { width: 15px; height: 15px; }
 .map-style button { padding-inline: 10px; }
 .search-mode-label { height: 42px; display: flex; align-items: center; gap: 7px; padding: 0 11px; border: 1px solid #b9d1c6; border-radius: 9px; background: var(--green-soft); color: var(--green); font-size: 11px; font-weight: 700; white-space: nowrap; }

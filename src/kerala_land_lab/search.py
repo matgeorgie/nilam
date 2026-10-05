@@ -25,7 +25,7 @@ def _haversine_km(lat: np.ndarray, lon: np.ndarray, center_lat: float, center_lo
     return 6371.0088 * 2 * np.arctan2(np.sqrt(value), np.sqrt(1 - value))
 
 
-def candidate_grid(center_lat: float, center_lon: float, radius_km: float, max_points: int = 900) -> pd.DataFrame:
+def candidate_grid(center_lat: float, center_lon: float, radius_km: float, max_points: int = 1600) -> pd.DataFrame:
     """Create a fresh, deterministic search grid inside a user-selected circle."""
 
     radius_m = float(radius_km) * 1000
@@ -51,6 +51,50 @@ def _closer_score(values: pd.Series, preferred_km: float | None, fallback_km: fl
     return np.clip(1 - values.fillna(values.median()).to_numpy(dtype=float) / (target * 2), 0, 1)
 
 
+def eligible_candidate_mask(frame: pd.DataFrame, requirements: dict[str, Any]) -> np.ndarray:
+    """Apply the non-negotiable terrain, open-ground and safety gates."""
+
+    hard = np.ones(len(frame), dtype=bool)
+    hard &= frame.land_cover_class.fillna(-1).to_numpy() != 0
+    max_slope = min(float(requirements.get("max_slope", 8)), 8)
+    hard &= frame.slope.fillna(90).to_numpy() <= max_slope
+    if "slope_mean_45m" in frame:
+        hard &= frame.slope_mean_45m.fillna(90).to_numpy(dtype=float) <= 7
+    if "slope_p90_45m" in frame:
+        hard &= frame.slope_p90_45m.fillna(90).to_numpy(dtype=float) <= 10
+    elif "slope_max_45m" in frame:
+        hard &= frame.slope_max_45m.fillna(90).to_numpy(dtype=float) <= 12
+    if "elevation_stddev_45m" in frame:
+        hard &= frame.elevation_stddev_45m.fillna(90).to_numpy(dtype=float) <= 5
+    if requirements.get("avoid_high_flood", True):
+        hard &= frame.flood_level_100yr_m.fillna(0).to_numpy() <= 1.5
+    if requirements.get("avoid_high_landslide", True):
+        hard &= frame.gsi_landslide_susceptibility.fillna("Not mapped").to_numpy() != "High"
+    if requirements.get("prefer_open_land", True):
+        hard &= ~frame.land_cover_class.fillna(-1).isin(NON_BUILDABLE_COVER_CLASSES).to_numpy()
+        cover_open = frame.land_cover_class.isin(OPEN_LAND_CLASSES).to_numpy()
+        if "open_probability_45m" in frame:
+            open_probability = frame.open_probability_45m.fillna(0).to_numpy(dtype=float)
+            hard &= open_probability >= .12
+            hard &= cover_open | (open_probability >= .18)
+        else:
+            hard &= cover_open
+        if "built_probability" in frame:
+            hard &= frame.built_probability.fillna(1).to_numpy(dtype=float) <= .35
+        if "built_probability_45m" in frame:
+            hard &= frame.built_probability_45m.fillna(1).to_numpy(dtype=float) <= .30
+        if "building_distance_m" in frame and frame.building_distance_m.notna().any():
+            hard &= frame.building_distance_m.fillna(0).to_numpy(dtype=float) >= 30
+    exact_limits = {
+        "max_hospital_km": "dist_nearest_hospital", "max_school_km": "dist_nearest_school",
+        "max_road_km": "dist_nearest_road", "max_transit_km": "dist_nearest_bus_stop",
+    }
+    for key, column in exact_limits.items():
+        if requirements.get(key) is not None:
+            hard &= frame[column].fillna(np.inf).to_numpy(dtype=float) <= float(requirements[key]) * 1000
+    return hard
+
+
 def rank_candidates(
     frame: pd.DataFrame,
     suitability: np.ndarray,
@@ -61,36 +105,7 @@ def rank_candidates(
         raise ValueError("Candidate rows and suitability scores must align")
     work = frame.copy()
     work["model_suitability"] = np.asarray(suitability, dtype=float)
-    hard = np.ones(len(work), dtype=bool)
-    hard &= work.land_cover_class.fillna(-1).to_numpy() != 0
-    hard &= work.slope.fillna(90).to_numpy() <= float(requirements.get("max_slope", 30))
-    if requirements.get("avoid_high_flood", True):
-        hard &= work.flood_level_100yr_m.fillna(0).to_numpy() <= 1.5
-    if requirements.get("avoid_high_landslide", True):
-        hard &= work.gsi_landslide_susceptibility.fillna("Not mapped").to_numpy() != "High"
-    if requirements.get("prefer_open_land", True):
-        hard &= ~work.land_cover_class.fillna(-1).isin(NON_BUILDABLE_COVER_CLASSES).to_numpy()
-        cover_open=work.land_cover_class.isin(OPEN_LAND_CLASSES).to_numpy()
-        if "open_probability_45m" in work:
-            open_probability=work.open_probability_45m.fillna(0).to_numpy(dtype=float)
-            hard &= open_probability>=.12
-            hard &= cover_open|(open_probability>=.18)
-        else:
-            hard &= cover_open
-        if "built_probability" in work:
-            hard &= work.built_probability.fillna(1).to_numpy(dtype=float) <= .35
-        if "built_probability_45m" in work:
-            hard &= work.built_probability_45m.fillna(1).to_numpy(dtype=float) <= .30
-        if "building_distance_m" in work and work.building_distance_m.notna().any():
-            hard &= work.building_distance_m.fillna(0).to_numpy(dtype=float) >= 30
-    exact_limits = {
-        "max_hospital_km": "dist_nearest_hospital", "max_school_km": "dist_nearest_school",
-        "max_road_km": "dist_nearest_road", "max_transit_km": "dist_nearest_bus_stop",
-    }
-    for key, column in exact_limits.items():
-        if requirements.get(key) is not None:
-            hard &= work[column].fillna(np.inf).to_numpy(dtype=float) <= float(requirements[key]) * 1000
-    work = work.loc[hard].copy()
+    work = work.loc[eligible_candidate_mask(work, requirements)].copy()
     if work.empty:
         return []
     scores = []
@@ -131,10 +146,21 @@ def rank_candidates(
     else:
         open_land_score = .75 * built_score + .25 * cover_score
     work["open_land_score"] = open_land_score
+    mean_slope=work.get("slope_mean_45m",work.slope).fillna(90).to_numpy(dtype=float)
+    robust_high_slope=work.get("slope_p90_45m",work.get("slope_max_45m",work.slope)).fillna(90).to_numpy(dtype=float)
+    elevation_variation=work.get("elevation_stddev_45m",work.get("terrain_ruggedness_index",pd.Series(0,index=work.index))).fillna(90).to_numpy(dtype=float)
+    flat_land_score=(
+        .45*np.clip(1-mean_slope/7,0,1)+
+        .30*np.clip(1-robust_high_slope/10,0,1)+
+        .25*np.clip(1-elevation_variation/5,0,1)
+    )*100
+    surface_score=.55*open_land_score+.45*flat_land_score
+    work["flat_land_score"]=flat_land_score
+    work["surface_score"]=surface_score
     if preference_requested:
-        work["overall_fit"] = .52 * work.model_suitability + .20 * open_land_score + .28 * preference_fit
+        work["overall_fit"] = .47 * work.model_suitability + .28 * surface_score + .25 * preference_fit
     else:
-        work["overall_fit"] = .62 * work.model_suitability + .23 * open_land_score + .15 * preference_fit
+        work["overall_fit"] = .55 * work.model_suitability + .35 * surface_score + .10 * preference_fit
     work = work.sort_values(["overall_fit", "model_suitability"], ascending=False).head(limit)
     candidates = []
     def optional_number(value, digits=1):
@@ -142,8 +168,8 @@ def rank_candidates(
     for rank, row in enumerate(work.itertuples(), 1):
         advantages = []
         constraints = []
-        if row.slope <= 10: advantages.append("gentle mapped slope")
-        elif row.slope >= 20: constraints.append("steeper terrain")
+        if getattr(row,"slope_mean_45m",row.slope)<=4 and getattr(row,"slope_p90_45m",getattr(row,"slope_max_45m",row.slope))<=7:advantages.append("flat terrain across the sampled cell")
+        elif row.slope <= 8: advantages.append("gentle mapped slope")
         if row.flood_level_100yr_m <= 0: advantages.append("outside mapped 100-year flood depth")
         elif row.flood_level_100yr_m > .5: constraints.append("mapped flood-depth evidence")
         if row.dist_nearest_road <= 1000: advantages.append("mapped road nearby")
@@ -159,11 +185,17 @@ def rank_candidates(
             "preference_fit_percent": round(float(row.preference_fit), 1),
             "overall_fit_percent": round(float(row.overall_fit), 1),
             "open_land_percent": round(float(row.open_land_score), 1),
+            "flat_land_percent": round(float(row.flat_land_score), 1),
+            "surface_percent": round(float(row.surface_score), 1),
             "apparently_open": int(row.land_cover_class) in OPEN_LAND_CLASSES,
             "advantages": advantages[:3],
             "constraints": constraints[:3],
             "evidence": {
                 "slope": round(float(row.slope), 1),
+                "mean_slope_45m": optional_number(getattr(row,"slope_mean_45m",np.nan)),
+                "max_slope_45m": optional_number(getattr(row,"slope_max_45m",np.nan)),
+                "p90_slope_45m": optional_number(getattr(row,"slope_p90_45m",np.nan)),
+                "elevation_variation_45m": optional_number(getattr(row,"elevation_stddev_45m",np.nan)),
                 "flood_level_100yr_m": round(float(row.flood_level_100yr_m), 2),
                 "landslide": row.gsi_landslide_susceptibility,
                 "road_distance_m": round(float(row.dist_nearest_road)),

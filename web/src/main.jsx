@@ -60,6 +60,7 @@ function Icon({ type }) {
     shop: "M4 9l2-5h12l2 5M5 10v10h14V10M9 20v-6h6v6",
     bus: "M6 4h12a2 2 0 012 2v10H4V6a2 2 0 012-2zM4 10h16M7 19v2M17 19v2M7 15h.01M17 15h.01",
     pharmacy: "M12 4v16M4 12h16",
+    locate: "M12 2v3M12 19v3M2 12h3M19 12h3M12 7a5 5 0 100 10 5 5 0 000-10z",
   };
   return <svg viewBox="0 0 24 24" aria-hidden="true"><path d={paths[type] || paths.point} /></svg>;
 }
@@ -104,6 +105,17 @@ function ExplainList({ title, items, direction }) {
 }
 
 const distanceLabel = (metres) => metres == null ? "—" : metres >= 1000 ? `${fmt(metres / 1000)} km` : `${fmt(metres, 0)} m`;
+const geoDistance = (from, to) => {
+  const radians = (value) => value * Math.PI / 180;
+  const dLat = radians(to.lat - from.lat), dLon = radians(to.lng - from.lng);
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(radians(from.lat)) * Math.cos(radians(to.lat)) * Math.sin(dLon / 2) ** 2;
+  return 6371008.8 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+};
+const bearingTo = (from, to) => {
+  const radians = (value) => value * Math.PI / 180, degrees = (value) => value * 180 / Math.PI;
+  const dLon = radians(to.lng - from.lng), fromLat = radians(from.lat), toLat = radians(to.lat);
+  return (degrees(Math.atan2(Math.sin(dLon) * Math.cos(toLat), Math.cos(fromLat) * Math.sin(toLat) - Math.sin(fromLat) * Math.cos(toLat) * Math.cos(dLon))) + 360) % 360;
+};
 
 function AnalysisWaiting({ report, stage }) {
   const terrain = Object.fromEntries((report?.terrain || []).map((item) => [item.feature, item.value]));
@@ -184,12 +196,12 @@ function LayaActivity({ phase, interpretation }) {
 }
 
 function CandidateDetails({ candidate, onAssess, onStreetView, searched = false }) {
-  if (!candidate) return <div className="candidate-empty"><span><Icon type={searched ? "search" : "point"} /></span><h3>{searched ? "No strong open-land match here" : "Results will appear on the map"}</h3><p>{searched ? "Increase the radius or move the centre. Every sampled cell here was screened out by mapped buildings, water, slope, flood, or landslide evidence." : "Run the search, then select a result card on the map to inspect that location."}</p></div>;
+  if (!candidate) return <div className="candidate-empty"><span><Icon type={searched ? "search" : "point"} /></span><h3>{searched ? "No flat, open match here" : "Results will appear on the map"}</h3><p>{searched ? "Increase the radius or move the centre. The scan rejected cells with uneven terrain, mapped buildings, weak open-land evidence, water, flood, or landslide constraints." : "Run the search, then select a result card on the map to inspect that location."}</p></div>;
   const evidence = candidate.evidence || {};
   return <section className="candidate-detail">
     <div className="candidate-title"><span>#{candidate.rank}</span><div><p>Selected result</p><h2>{candidate.district}</h2><small>{candidate.lat.toFixed(5)}, {candidate.lon.toFixed(5)}</small></div><strong>{fmt(candidate.overall_fit_percent, 0)}%</strong></div>
-    <div className="candidate-scores"><div><strong>{fmt(candidate.suitability_percent, 0)}%</strong><span>Land score</span></div><div><strong>{fmt(candidate.open_land_percent, 0)}%</strong><span>Open-land signal</span></div><div><strong>{fmt(candidate.preference_fit_percent, 0)}%</strong><span>Preference match</span></div></div>
-    <div className="detail-grid"><div><span>Slope</span><strong>{fmt(evidence.slope)}°</strong></div><div><span>100-year flood depth</span><strong>{fmt(evidence.flood_level_100yr_m)} m</strong></div><div><span>Nearest mapped building</span><strong>{distanceLabel(evidence.building_distance_m)}</strong></div><div><span>Built-up around 45 m</span><strong>{fmt(evidence.nearby_built_probability)}%</strong></div><div><span>Satellite open-land signal</span><strong>{fmt(evidence.satellite_open_probability)}%</strong></div><div><span>Nearest road</span><strong>{distanceLabel(evidence.road_distance_m)}</strong></div><div><span>Hospital</span><strong>{distanceLabel(evidence.hospital_distance_m)}</strong></div><div><span>School</span><strong>{distanceLabel(evidence.school_distance_m)}</strong></div></div>
+    <div className="candidate-scores"><div><strong>{fmt(candidate.suitability_percent, 0)}%</strong><span>Land score</span></div><div><strong>{fmt(candidate.surface_percent, 0)}%</strong><span>Flat & open</span></div><div><strong>{fmt(candidate.preference_fit_percent, 0)}%</strong><span>Preference match</span></div></div>
+    <div className="detail-grid"><div><span>Mean slope across 45 m</span><strong>{fmt(evidence.mean_slope_45m)}°</strong></div><div><span>90% of terrain below</span><strong>{fmt(evidence.p90_slope_45m)}°</strong></div><div><span>Ground-height variation</span><strong>{fmt(evidence.elevation_variation_45m)} m</strong></div><div><span>Satellite open-land signal</span><strong>{fmt(evidence.satellite_open_probability)}%</strong></div><div><span>Nearest mapped building</span><strong>{distanceLabel(evidence.building_distance_m)}</strong></div><div><span>Built-up around 45 m</span><strong>{fmt(evidence.nearby_built_probability)}%</strong></div><div><span>Nearest road</span><strong>{distanceLabel(evidence.road_distance_m)}</strong></div><div><span>100-year flood depth</span><strong>{fmt(evidence.flood_level_100yr_m)} m</strong></div></div>
     {candidate.advantages.length > 0 && <div className="candidate-reasons">{candidate.advantages.map((item) => <span key={item}>✓ {item}</span>)}</div>}
     <div className="candidate-actions"><button className="secondary-action" onClick={() => onStreetView(candidate)}><Icon type="street" />Street View</button><button className="primary-action" onClick={() => onAssess(candidate)}>Full assessment <Icon type="arrow" /></button></div>
   </section>;
@@ -210,12 +222,14 @@ function App() {
   const [searchRadius, setSearchRadius] = useState(3);
   const [query, setQuery] = useState("");
   const [recording, setRecording] = useState(false);
+  const [locating, setLocating] = useState(false);
   const [voiceStatus, setVoiceStatus] = useState("");
   const [searching, setSearching] = useState(false);
   const [searchResult, setSearchResult] = useState(null);
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   const [searchPhase, setSearchPhase] = useState("");
   const [interpretation, setInterpretation] = useState(null);
+  const [streetNote, setStreetNote] = useState("Explore the road-level surroundings of the selected point.");
   const mapElement = useRef(null), placeSearchElement = useRef(null), reportElement = useRef(null);
   const map = useRef(null), boundaries = useRef(null), AdvancedMarker = useRef(null), pointMarker = useRef(null), searchMarker = useRef(null), searchCircle = useRef(null), areaPolygon = useRef(null), candidateMarkers = useRef([]), polygonPath = useRef([]);
   const latest = useRef({}), request = useRef(null), media = useRef(null), mediaChunks = useRef([]), streetDialog = useRef(null), streetElement = useRef(null);
@@ -267,6 +281,16 @@ function App() {
     const marker = new Marker({ map: map.current, position: { lat, lng }, title: "Selected location", gmpClickable: false }); marker.append(dot); pointMarker.current = marker;
   };
   const analyzePoint = (lat, lng) => { areaPolygon.current?.setMap(null); areaPolygon.current = null; addPointMarker(lat, lng); runProgressive("/api/analyze", { lat, lon: lng, radius_m: 150 }); };
+
+  const assessCurrentLocation = () => {
+    if (!navigator.geolocation) { setError("Current location is not supported by this browser."); return; }
+    setLocating(true); setError("");
+    navigator.geolocation.getCurrentPosition(({ coords }) => {
+      setLocating(false); map.current?.panTo({ lat: coords.latitude, lng: coords.longitude }); map.current?.setZoom(17); analyzePoint(coords.latitude, coords.longitude);
+    }, (reason) => {
+      setLocating(false); setError(reason.code === 1 ? "Location permission was not granted." : "Your current location could not be determined. Try again outdoors or enable precise location.");
+    }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 });
+  };
 
   const addPolygonPoint = (lat, lng) => {
     polygonPath.current = [...polygonPath.current, { lat, lng }]; setPolygonPoints(polygonPath.current.length);
@@ -374,7 +398,7 @@ function App() {
     if (!searchCenter) { setError("Click the map or search for a place to choose the centre first."); return; }
     setSearching(true); setError(""); setSelectedCandidate(null); setSearchResult(null); clearCandidateMarkers();
     try {
-      let requirements = { avoid_high_flood: true, avoid_high_landslide: true, prefer_open_land: true, max_slope: 30 };
+      let requirements = { avoid_high_flood: true, avoid_high_landslide: true, prefer_open_land: true, max_slope: 8 };
       if (query.trim()) {
         setSearchPhase("laya");
         const understood = await post("/api/preferences/interpret", { text: query });
@@ -382,7 +406,7 @@ function App() {
       } else setInterpretation(null);
       setSearchPhase("screening");
       const area = { center_lat: searchCenter.lat, center_lon: searchCenter.lng, radius_km: searchRadius };
-      const result = await post("/api/search", { area, query: "", requirements, limit: 10 }); setSearchResult(result); setSelectedCandidate(result.candidates[0] || null); showCandidates(result.candidates);
+      const result = await post("/api/search", { area, query: "", requirements, limit: 20 }); setSearchResult(result); setSelectedCandidate(result.candidates[0] || null); showCandidates(result.candidates);
     } catch (reason) { setError(reason.message); }
     finally { setSearching(false); setSearchPhase(""); }
   };
@@ -392,9 +416,14 @@ function App() {
   };
 
   const showStreetViewAt = async (selection) => {
-    if (!selection || !window.google) return; streetDialog.current?.showModal(); const location = { lat: selection.lat, lng: selection.lon };
-    try { const result = await new window.google.maps.StreetViewService().getPanorama({ location, radius: 500 }); new window.google.maps.StreetViewPanorama(streetElement.current, { position: result.data.location.latLng, pov: { heading: 0, pitch: 0 }, zoom: 1, addressControl: true }); }
-    catch { streetElement.current.innerHTML = '<div class="street-empty"><strong>No Street View nearby</strong><span>Try satellite view for visual context.</span></div>'; }
+    if (!selection || !window.google) return; streetDialog.current?.showModal(); const location = { lat: selection.lat, lng: selection.lon }; setStreetNote("Finding the nearest covered road and pointing the camera toward the selected land…");
+    try {
+      const result = await new window.google.maps.StreetViewService().getPanorama({ location, radius: 300, preference: window.google.maps.StreetViewPreference.NEAREST, sources: [window.google.maps.StreetViewSource.OUTDOOR] });
+      const pano = result.data.location.latLng, camera = { lat: pano.lat(), lng: pano.lng() }, distance = geoDistance(camera, location);
+      setStreetNote(`Nearest road-level panorama · ${distanceLabel(distance)} from the selected cell · camera aimed toward the land`);
+      new window.google.maps.StreetViewPanorama(streetElement.current, { pano: result.data.location.pano, pov: { heading: bearingTo(camera, location), pitch: 0 }, zoom: 1, addressControl: true });
+    }
+    catch { setStreetNote("No outdoor Street View panorama was found within 300 m."); streetElement.current.innerHTML = '<div class="street-empty"><strong>No Street View nearby</strong><span>Use satellite view for visual context.</span></div>'; }
   };
   const showStreetView = () => report && showStreetViewAt({ lat: report.location.lat, lon: report.location.lon });
 
@@ -402,13 +431,13 @@ function App() {
   return <div className="app-shell">
     <header className="topbar"><a className="brand" href="#">nilam<span>Kerala land intelligence</span></a><nav><button className={workspace === "assess" ? "active" : ""} onClick={() => switchWorkspace("assess")}>Assess a site</button><button className={workspace === "find" ? "active" : ""} onClick={() => switchWorkspace("find")}>Find suitable land</button></nav></header>
     <main>
-      <section className="hero"><p>Land decisions, made clearer</p><h1>{workspace === "assess" ? "Understand a specific site." : "Find promising open land nearby."}</h1><span>{workspace === "assess" ? "Click or draw anywhere in Kerala for a detailed suitability report." : "Choose a centre and radius, then let the models screen fresh locations for land that fits your needs."}</span></section>
+      <section className="hero"><p>Land decisions, made clearer</p><h1>{workspace === "assess" ? "Understand a specific site." : "Find flat, open land nearby."}</h1><span>{workspace === "assess" ? "Click, draw, search, or use your current location for a detailed suitability report." : "Choose a centre and radius, then screen satellite-visible open ground for flatness, access, hazards, and your needs."}</span></section>
       <section className="workspace">
         <div className="map-side">
           <div className="map-toolbar">
             <div ref={placeSearchElement} className="place-search"><span>Loading place search…</span></div>
             {workspace === "assess" && <select aria-label="Select district" value={district} onChange={(event) => flyDistrict(event.target.value)}><option value="">All Kerala</option>{DISTRICTS.map((name) => <option key={name}>{name}</option>)}</select>}
-            {workspace === "assess" ? <div className="tool-group"><button className={mode === "point" ? "active" : ""} onClick={() => { clearSelection(); setMode("point"); }}><Icon type="point" />Point</button><button className={mode === "area" ? "active" : ""} onClick={() => { clearSelection(); setMode("area"); }}><Icon type="area" />Draw site</button></div> : <div className="search-mode-label"><Icon type="point" />Click map for centre</div>}
+            {workspace === "assess" ? <div className="tool-group"><button className={mode === "point" ? "active" : ""} onClick={() => { clearSelection(); setMode("point"); }}><Icon type="point" />Point</button><button className={mode === "area" ? "active" : ""} onClick={() => { clearSelection(); setMode("area"); }}><Icon type="area" />Draw site</button><button disabled={locating} onClick={assessCurrentLocation}><Icon type="locate" />{locating ? "Locating…" : "My location"}</button></div> : <div className="search-mode-label"><Icon type="point" />Click map for centre</div>}
             <div className="tool-group map-style"><button className={mapStyle === "roadmap" ? "active" : ""} onClick={() => setMapStyle("roadmap")}>Map</button><button className={mapStyle === "hybrid" ? "active" : ""} onClick={() => setMapStyle("hybrid")}><Icon type="satellite" />Satellite</button></div>
           </div>
           <div className="map-wrap"><div ref={mapElement} className="map" />
@@ -424,14 +453,14 @@ function App() {
             <LayaActivity phase={searchPhase} interpretation={interpretation} />
             <button className="search-action" disabled={searching || !searchCenter} onClick={findLand}><Icon type="search" />{searching ? searchPhase === "laya" ? "Understanding your request…" : "Screening fresh land cells…" : !searchCenter ? "Choose a centre on the map" : "Find the best matches"}</button>
             {error && <div className="inline-error">{error}</div>}
-            {searchResult && <div className="search-summary"><strong>{searchResult.candidates.length ? `${searchResult.candidates.length} best matches on the map` : "No cells passed every screen"}</strong><span>{searchResult.searched_points} fresh cells screened inside the circle{searchResult.candidates.length ? " · click a result for details" : ""}</span></div>}
+            {searchResult && <div className="search-summary"><strong>{searchResult.candidates.length ? `${searchResult.candidates.length} best flat, open matches on the map` : "No cells passed every screen"}</strong><span>{searchResult.searched_points} cells checked by satellite · {searchResult.satellite_candidate_points || 0} flat/open cells found · {searchResult.eligible_points || 0} passed your needs{searchResult.candidates.length ? " · click a result for details" : ""}</span></div>}
             <CandidateDetails candidate={selectedCandidate} searched={Boolean(searchResult)} onAssess={assessCandidate} onStreetView={showStreetViewAt} />
           </div>}
         </aside>
       </section>
     </main>
     <footer><strong>nilam</strong><span>Kerala land intelligence</span></footer>
-    <dialog ref={streetDialog} className="street-dialog"><button className="dialog-close" onClick={() => streetDialog.current?.close()} aria-label="Close"><Icon type="close" /></button><div className="street-head"><h2>Nearby Street View</h2><p>Explore the road-level surroundings of the selected point.</p></div><div ref={streetElement} className="street-view" /></dialog>
+    <dialog ref={streetDialog} className="street-dialog"><button className="dialog-close" onClick={() => streetDialog.current?.close()} aria-label="Close"><Icon type="close" /></button><div className="street-head"><h2>Street View toward the selected land</h2><p>{streetNote}</p></div><div ref={streetElement} className="street-view" /></dialog>
   </div>;
 }
 

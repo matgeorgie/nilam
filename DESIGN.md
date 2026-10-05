@@ -30,13 +30,15 @@ world. Color explains state and direction; it does not decorate empty space.
 
 Two permanent navigation choices keep the workflows separate:
 
-- **Assess a site** supports Google place search, point selection, a drawn site
-  boundary, normal/satellite maps, an informative fusion wait state, nearby
+- **Assess a site** supports Google place search, point selection, device
+  location, a drawn site boundary, normal/satellite maps, an informative fusion wait state, nearby
   essentials, Street View, and a simple SHAP explanation.
 - **Find suitable land** uses a clicked or searched centre and a 1–15 km
   radius. It captures typed or spoken requirements, shows Laya's interpretation,
-  ranked result cards and sampled-cell footprints directly on the map, and opens
-  site details or nearby Street View when a result is selected.
+  ranked result cards and sampled-cell footprints directly on the map. It first
+  screens every generated cell for 45 m terrain flatness and recent open-ground
+  evidence, then opens site details or camera-aligned nearby Street View when a
+  result is selected.
 
 The desktop workspace keeps the map and evidence panel together. Below 880px it
 stacks in task order. A completed assessment scrolls the evidence panel into

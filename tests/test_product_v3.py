@@ -147,3 +147,23 @@ def test_dense_tree_cover_is_not_reported_as_open_land():
         "building_distance_m": 500,
     }])
     assert rank_candidates(rows, np.array([90]), {"prefer_open_land": True}) == []
+
+
+def test_flat_point_is_rejected_when_the_surrounding_cell_is_steep():
+    common = {
+        "lat": 10.0, "lng": 76.0, "district": "Thrissur", "land_cover_class": 5,
+        "slope": 3, "flood_level_100yr_m": 0, "gsi_landslide_susceptibility": "Low",
+        "dist_nearest_hospital": 2000, "dist_nearest_school": 1000,
+        "dist_nearest_road": 300, "dist_nearest_bus_stop": 700,
+        "dist_nearest_industrial": 5000, "dist_nearest_quarry": 5000,
+        "ndvi": .5, "built_probability": .03, "built_probability_45m": .04,
+        "open_probability_45m": .35, "building_distance_m": 100,
+    }
+    rows = pd.DataFrame([
+        # One steep edge pixel is tolerated when 90% of the sampled cell is flat.
+        {**common, "point_id": "flat", "slope_mean_45m": 3, "slope_max_45m": 16, "slope_p90_45m": 6, "elevation_stddev_45m": 1.2},
+        {**common, "point_id": "uneven", "lng": 76.01, "slope_mean_45m": 6, "slope_max_45m": 18, "slope_p90_45m": 14, "elevation_stddev_45m": 7},
+    ])
+    candidates = rank_candidates(rows, np.array([75, 95]), {"prefer_open_land": True})
+    assert [candidate["point_id"] for candidate in candidates] == ["flat"]
+    assert candidates[0]["flat_land_percent"] > 50
