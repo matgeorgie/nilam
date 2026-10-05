@@ -54,6 +54,12 @@ function Icon({ type }) {
     street: "M4 20V7l8-4 8 4v13M8 20v-8h8v8M9 8h6",
     close: "M5 5l14 14M19 5L5 19",
     arrow: "M5 12h14M14 7l5 5-5 5",
+    hospital: "M9 3h6v6h6v6h-6v6H9v-6H3V9h6z",
+    school: "M3 9l9-5 9 5-9 5zM6 12v5c3 2 9 2 12 0v-5M21 10v6",
+    park: "M12 3l5 7h-3l4 6h-5v5h-2v-5H6l4-6H7z",
+    shop: "M4 9l2-5h12l2 5M5 10v10h14V10M9 20v-6h6v6",
+    bus: "M6 4h12a2 2 0 012 2v10H4V6a2 2 0 012-2zM4 10h16M7 19v2M17 19v2M7 15h.01M17 15h.01",
+    pharmacy: "M12 4v16M4 12h16",
   };
   return <svg viewBox="0 0 24 24" aria-hidden="true"><path d={paths[type] || paths.point} /></svg>;
 }
@@ -97,6 +103,34 @@ function ExplainList({ title, items, direction }) {
   </div>) : <p>No strong effects in this direction.</p>}</section>;
 }
 
+const distanceLabel = (metres) => metres == null ? "—" : metres >= 1000 ? `${fmt(metres / 1000)} km` : `${fmt(metres, 0)} m`;
+
+function AnalysisWaiting({ report, stage }) {
+  const terrain = Object.fromEntries((report?.terrain || []).map((item) => [item.feature, item.value]));
+  const facts = [
+    terrain.elevation != null && ["Elevation", `${fmt(terrain.elevation, 0)} m`],
+    terrain.slope != null && ["Mapped slope", `${fmt(terrain.slope)}°`],
+    report?.road?.distance_m != null && ["Nearest road", distanceLabel(report.road.distance_m)],
+    report?.nearby?.[0] && ["Nearby", `${report.nearby[0].name} · ${distanceLabel(report.nearby[0].distance_m)}`],
+  ].filter(Boolean).slice(0, 3);
+  const copy = stage === "mapped" ? ["Locating the site", "Reading mapped terrain and access around your selection."]
+    : stage === "satellite" ? ["Reading the seasons", "TerraMind is comparing dry and monsoon satellite patterns."]
+      : ["Combining the evidence", "TabPFN and TerraMind are being calibrated into one final result."];
+  return <div className="analysis-waiting">
+    <div className="scan-orbit"><i /><span /><b /></div>
+    <p>Assessment in progress</p><h2>{copy[0]}</h2><small>{copy[1]}</small>
+    <Progress stage={stage} />
+    {report?.district && <div className="site-glimpse"><strong>{report.district}</strong><span>A quick look while the final model finishes</span>{facts.map(([label, value]) => <div key={label}><small>{label}</small><b>{value}</b></div>)}</div>}
+  </div>;
+}
+
+function NearbyAmenities({ items = [] }) {
+  const labels = { hospital: "Hospital", school: "School", pharmacy: "Pharmacy", shop: "Shops", park: "Park", bus_stop: "Bus stop", bank: "Bank" };
+  const visible = items.filter((item) => labels[item.kind]).slice(0, 7);
+  if (!visible.length) return null;
+  return <section className="amenities"><div className="section-heading"><div><h3>What’s nearby</h3><p>Nearest mapped everyday essentials</p></div></div><div className="amenity-grid">{visible.map((item) => <div className="amenity" key={`${item.kind}-${item.name}`}><span><Icon type={item.kind === "bus_stop" ? "bus" : item.kind} /></span><div><small>{labels[item.kind]}</small><strong>{item.name}</strong></div><b>{distanceLabel(item.distance_m)}</b></div>)}</div></section>;
+}
+
 function AssessmentPanel({ report, stage, error, onStreetView, onClear }) {
   const explanation = report?.prediction?.explanation;
   const factors = useMemo(() => explanation?.contributions ? [...explanation.contributions]
@@ -106,11 +140,11 @@ function AssessmentPanel({ report, stage, error, onStreetView, onClear }) {
   const reduced = factors.filter((item) => item.contribution < 0).slice(0, 4);
   const loading = Boolean(stage && stage !== "complete");
   if (error) return <div className="panel-empty error"><h2>Couldn’t assess this location</h2><p>{error}</p><button onClick={onClear}>Choose another point</button></div>;
+  if (loading) return <AnalysisWaiting report={report} stage={stage} />;
   if (!report) return <div className="panel-empty"><span className="empty-icon"><Icon type="point" /></span><h2>Select a location</h2><p>Search for a place, click the map, or draw a site boundary.</p></div>;
   if (report.prediction.status !== "available") return <div className="panel-empty error"><h2>Analysis unavailable</h2><p>{report.prediction.reason}</p></div>;
   const score = report.prediction.suitability_percent;
   return <>
-    {loading && <Progress stage={stage} />}
     <section className="score-card">
       <div className="score-top"><div className="score"><strong>{fmt(score, 0)}</strong><span>%</span></div><div><p>{report.outcome}</p><h2>{report.district}</h2><small>{report.location.selection_type === "polygon" ? `${fmt(report.location.area_m2, 0)} m² selected area` : `${Number(report.location.lat).toFixed(5)}, ${Number(report.location.lon).toFixed(5)}`}</small></div></div>
       <div className="score-bar"><i style={{ width: `${score}%` }} /></div>
@@ -119,6 +153,7 @@ function AssessmentPanel({ report, stage, error, onStreetView, onClear }) {
     </section>
     {report.location.selection_type === "polygon" && <div className="area-stats"><div><span>Samples</span><strong>{report.prediction.spatial_summary.samples}</strong></div><div><span>Lowest</span><strong>{fmt(report.prediction.spatial_summary.minimum_percent, 0)}%</strong></div><div><span>Highest</span><strong>{fmt(report.prediction.spatial_summary.maximum_percent, 0)}%</strong></div></div>}
     <ModelSignals data={report.prediction.multimodal} />
+    <NearbyAmenities items={report.nearby} />
     <section className="explanation">
       <div className="section-heading"><div><h3>What influenced this score</h3><p>Measured change in the final score</p></div></div>
       {explanation?.status === "ready" ? <><ExplainList title="Helped the score" items={helped} direction="positive" /><ExplainList title="Reduced the score" items={reduced} direction="negative" /></> : <div className="explain-loading"><i /><span>Preparing the simple explanation…</span></div>}
@@ -136,15 +171,27 @@ function PreferenceInput({ query, setQuery, recording, voiceStatus, onRecord }) 
   </section>;
 }
 
-function CandidateDetails({ candidate, onAssess }) {
-  if (!candidate) return <div className="candidate-empty"><span><Icon type="point" /></span><h3>Results will appear on the map</h3><p>Run the search, then select a result card on the map to inspect that location.</p></div>;
+function LayaActivity({ phase, interpretation }) {
+  if (!phase && !interpretation) return null;
+  const requirements = interpretation?.requirements || {};
+  const labels = [
+    requirements.prefer_quiet && "quiet", requirements.prefer_green && "green",
+    requirements.prefer_hospital && "near healthcare", requirements.prefer_school && "near schools",
+    requirements.prefer_road && "road access", requirements.prefer_transit && "public transport",
+    requirements.prefer_park && "near parks", requirements.prefer_shops && "near shops",
+  ].filter(Boolean);
+  return <div className={`laya-activity ${phase ? "working" : "ready"}`}><span className="laya-pulse"><i /><b /></span><div><strong>{phase === "laya" ? "Laya is reading your request" : phase === "screening" ? "Laya understood it — screening the circle" : "Laya understood your preferences"}</strong><small>{phase ? "System 1 preference routing is active" : labels.length ? labels.join(" · ") : "Your request will influence the ranking"}</small></div></div>;
+}
+
+function CandidateDetails({ candidate, onAssess, onStreetView, searched = false }) {
+  if (!candidate) return <div className="candidate-empty"><span><Icon type={searched ? "search" : "point"} /></span><h3>{searched ? "No strong open-land match here" : "Results will appear on the map"}</h3><p>{searched ? "Increase the radius or move the centre. Every sampled cell here was screened out by mapped buildings, water, slope, flood, or landslide evidence." : "Run the search, then select a result card on the map to inspect that location."}</p></div>;
   const evidence = candidate.evidence || {};
   return <section className="candidate-detail">
     <div className="candidate-title"><span>#{candidate.rank}</span><div><p>Selected result</p><h2>{candidate.district}</h2><small>{candidate.lat.toFixed(5)}, {candidate.lon.toFixed(5)}</small></div><strong>{fmt(candidate.overall_fit_percent, 0)}%</strong></div>
-    <div className="candidate-scores"><div><strong>{fmt(candidate.suitability_percent, 0)}%</strong><span>Land score</span></div><div><strong>{fmt(candidate.preference_fit_percent, 0)}%</strong><span>Preference match</span></div></div>
-    <div className="detail-grid"><div><span>Slope</span><strong>{fmt(evidence.slope)}°</strong></div><div><span>100-year flood depth</span><strong>{fmt(evidence.flood_level_100yr_m)} m</strong></div><div><span>Nearest road</span><strong>{fmt(evidence.road_distance_m, 0)} m</strong></div><div><span>Hospital</span><strong>{evidence.hospital_distance_m >= 1000 ? `${fmt(evidence.hospital_distance_m / 1000)} km` : `${fmt(evidence.hospital_distance_m, 0)} m`}</strong></div><div><span>School</span><strong>{evidence.school_distance_m >= 1000 ? `${fmt(evidence.school_distance_m / 1000)} km` : `${fmt(evidence.school_distance_m, 0)} m`}</strong></div><div><span>Land cover</span><strong>{candidate.apparently_open ? "Apparently open" : "Mixed / built"}</strong></div></div>
+    <div className="candidate-scores"><div><strong>{fmt(candidate.suitability_percent, 0)}%</strong><span>Land score</span></div><div><strong>{fmt(candidate.open_land_percent, 0)}%</strong><span>Open-land signal</span></div><div><strong>{fmt(candidate.preference_fit_percent, 0)}%</strong><span>Preference match</span></div></div>
+    <div className="detail-grid"><div><span>Slope</span><strong>{fmt(evidence.slope)}°</strong></div><div><span>100-year flood depth</span><strong>{fmt(evidence.flood_level_100yr_m)} m</strong></div><div><span>Nearest mapped building</span><strong>{distanceLabel(evidence.building_distance_m)}</strong></div><div><span>Built-up around 45 m</span><strong>{fmt(evidence.nearby_built_probability)}%</strong></div><div><span>Satellite open-land signal</span><strong>{fmt(evidence.satellite_open_probability)}%</strong></div><div><span>Nearest road</span><strong>{distanceLabel(evidence.road_distance_m)}</strong></div><div><span>Hospital</span><strong>{distanceLabel(evidence.hospital_distance_m)}</strong></div><div><span>School</span><strong>{distanceLabel(evidence.school_distance_m)}</strong></div></div>
     {candidate.advantages.length > 0 && <div className="candidate-reasons">{candidate.advantages.map((item) => <span key={item}>✓ {item}</span>)}</div>}
-    <button className="primary-action" onClick={() => onAssess(candidate)}>Assess this exact point <Icon type="arrow" /></button>
+    <div className="candidate-actions"><button className="secondary-action" onClick={() => onStreetView(candidate)}><Icon type="street" />Street View</button><button className="primary-action" onClick={() => onAssess(candidate)}>Full assessment <Icon type="arrow" /></button></div>
   </section>;
 }
 
@@ -159,18 +206,20 @@ function App() {
   const [error, setError] = useState("");
   const [mapError, setMapError] = useState("");
   const [polygonPoints, setPolygonPoints] = useState(0);
-  const [searchDrawing, setSearchDrawing] = useState(false);
-  const [searchGeometry, setSearchGeometry] = useState(null);
+  const [searchCenter, setSearchCenter] = useState(null);
+  const [searchRadius, setSearchRadius] = useState(3);
   const [query, setQuery] = useState("");
   const [recording, setRecording] = useState(false);
   const [voiceStatus, setVoiceStatus] = useState("");
   const [searching, setSearching] = useState(false);
   const [searchResult, setSearchResult] = useState(null);
   const [selectedCandidate, setSelectedCandidate] = useState(null);
+  const [searchPhase, setSearchPhase] = useState("");
+  const [interpretation, setInterpretation] = useState(null);
   const mapElement = useRef(null), placeSearchElement = useRef(null), reportElement = useRef(null);
-  const map = useRef(null), boundaries = useRef(null), AdvancedMarker = useRef(null), pointMarker = useRef(null), areaPolygon = useRef(null), candidateMarkers = useRef([]), polygonPath = useRef([]);
+  const map = useRef(null), boundaries = useRef(null), AdvancedMarker = useRef(null), pointMarker = useRef(null), searchMarker = useRef(null), searchCircle = useRef(null), areaPolygon = useRef(null), candidateMarkers = useRef([]), polygonPath = useRef([]);
   const latest = useRef({}), request = useRef(null), media = useRef(null), mediaChunks = useRef([]), streetDialog = useRef(null), streetElement = useRef(null);
-  latest.current = { workspace, mode, searchDrawing };
+  latest.current = { workspace, mode, searchRadius };
 
   useEffect(() => { api("/api/config").then(setConfig).catch((reason) => setError(reason.message)); }, []);
   useEffect(() => { if (report && window.innerWidth < 900) reportElement.current?.scrollIntoView({ behavior: "smooth", block: "start" }); }, [report?.prediction?.analysis_stage]);
@@ -182,6 +231,23 @@ function App() {
     areaPolygon.current?.setMap(null); areaPolygon.current = null; polygonPath.current = []; setPolygonPoints(0);
     setReport(null); setStage(""); setError("");
   };
+
+  const chooseSearchCenter = (lat, lng, zoom = true) => {
+    if (!AdvancedMarker.current || !map.current) return;
+    removeMarker(searchMarker.current); searchCircle.current?.setMap(null);
+    const Marker = AdvancedMarker.current;
+    const pin = document.createElement("div"); pin.className = "search-centre-pin"; pin.innerHTML = "<i></i><span>Search centre</span>";
+    const marker = new Marker({ map: map.current, position: { lat, lng }, title: "Search centre", gmpClickable: false }); marker.append(pin); searchMarker.current = marker;
+    searchCircle.current = new window.google.maps.Circle({ map: map.current, center: { lat, lng }, radius: latest.current.searchRadius * 1000, clickable: false, strokeColor: "#17694f", strokeWeight: 2, strokeOpacity: .9, fillColor: "#258866", fillOpacity: .1 });
+    setSearchCenter({ lat, lng }); setSearchResult(null); setSelectedCandidate(null); setInterpretation(null); clearCandidateMarkers();
+    if (zoom) map.current.fitBounds(searchCircle.current.getBounds(), 55);
+  };
+
+  useEffect(() => {
+    if (!searchCenter || !searchCircle.current) return;
+    searchCircle.current.setRadius(searchRadius * 1000); map.current?.fitBounds(searchCircle.current.getBounds(), 55);
+    setSearchResult(null); setSelectedCandidate(null); clearCandidateMarkers();
+  }, [searchRadius]);
 
   const runProgressive = async (path, body) => {
     request.current?.abort(); const controller = new AbortController(); request.current = controller;
@@ -215,8 +281,7 @@ function App() {
     areaPolygon.current = new window.google.maps.Polygon({ map: map.current, paths: path, strokeColor: "#12664c", strokeWeight: 3, fillColor: "#1f8a66", fillOpacity: .18, clickable: false });
     const geometry = { type: "Polygon", coordinates: [[...path.map((point) => [point.lng, point.lat]), [path[0].lng, path[0].lat]]] };
     polygonPath.current = []; setPolygonPoints(0);
-    if (workspace === "find") { setSearchGeometry(geometry); setSearchDrawing(false); }
-    else runProgressive("/api/analyze-area", { geometry });
+    runProgressive("/api/analyze-area", { geometry });
   };
 
   useEffect(() => {
@@ -229,7 +294,7 @@ function App() {
       map.current = new window.google.maps.Map(mapElement.current, { center: KERALA_CENTER, zoom: 7, minZoom: 6, maxZoom: 20, mapTypeId: "roadmap", mapId: "DEMO_MAP_ID", streetViewControl: false, fullscreenControl: false, mapTypeControl: false, clickableIcons: false, gestureHandling: "greedy", restriction: { latLngBounds: { north: 13.2, south: 7.8, west: 74.6, east: 78.2 }, strictBounds: false } });
       map.current.addListener("click", (event) => {
         const lat = event.latLng.lat(), lng = event.latLng.lng();
-        if (latest.current.workspace === "find") { if (latest.current.searchDrawing) addPolygonPoint(lat, lng); return; }
+        if (latest.current.workspace === "find") { chooseSearchCenter(lat, lng); return; }
         if (latest.current.mode === "area") addPolygonPoint(lat, lng); else analyzePoint(lat, lng);
       });
       try {
@@ -244,6 +309,7 @@ function App() {
           const place = event.placePrediction.toPlace(); await place.fetchFields({ fields: ["location", "viewport"] }); if (!place.location) return;
           if (place.viewport) map.current.fitBounds(place.viewport); else { map.current.panTo(place.location); map.current.setZoom(16); }
           if (latest.current.workspace === "assess") analyzePoint(place.location.lat(), place.location.lng());
+          else chooseSearchCenter(place.location.lat(), place.location.lng(), false);
         });
       } catch { setMapError("Place search is temporarily unavailable."); }
     }).catch((reason) => setMapError(reason.message));
@@ -253,7 +319,7 @@ function App() {
   useEffect(() => { map.current?.setMapTypeId(mapStyle); }, [mapStyle]);
 
   const flyDistrict = (name) => {
-    setDistrict(name); setSearchGeometry(null); setSearchDrawing(false); areaPolygon.current?.setMap(null); areaPolygon.current = null;
+    setDistrict(name); areaPolygon.current?.setMap(null); areaPolygon.current = null;
     if (!name || !boundaries.current) { map.current?.setCenter(KERALA_CENTER); map.current?.setZoom(7); return; }
     const feature = boundaries.current.features.find((item) => item.properties.name === name); if (!feature) return;
     const bounds = new window.google.maps.LatLngBounds();
@@ -261,13 +327,11 @@ function App() {
   };
 
   const switchWorkspace = (next) => {
-    request.current?.abort(); setWorkspace(next); setError(""); setStage(""); setReport(null); setSearchDrawing(false); polygonPath.current = []; setPolygonPoints(0); removeMarker(pointMarker.current); pointMarker.current = null;
+    request.current?.abort(); setWorkspace(next); setError(""); setStage(""); setReport(null); polygonPath.current = []; setPolygonPoints(0); removeMarker(pointMarker.current); pointMarker.current = null;
+    areaPolygon.current?.setMap(null); areaPolygon.current = null;
     clearCandidateMarkers(); setSelectedCandidate(null); setSearchResult(null);
-  };
-
-  const startSearchArea = () => {
-    clearCandidateMarkers(); setSearchResult(null); setSelectedCandidate(null); setSearchGeometry(null); setDistrict(""); setError("");
-    areaPolygon.current?.setMap(null); areaPolygon.current = null; polygonPath.current = []; setPolygonPoints(0); setSearchDrawing(true);
+    if (next === "find") setMapStyle("hybrid");
+    if (next === "assess") { removeMarker(searchMarker.current); searchMarker.current = null; searchCircle.current?.setMap(null); searchCircle.current = null; setSearchCenter(null); }
   };
 
   const record = async () => {
@@ -280,7 +344,7 @@ function App() {
       media.current.onstop = async () => {
         setRecording(false); stream.getTracks().forEach((track) => track.stop());
         const blob = new Blob(mediaChunks.current, { type: media.current.mimeType || "audio/webm" });
-        try { const result = await api("/api/transcribe", { method: "POST", headers: { "Content-Type": blob.type }, body: blob }); if (!result.text) throw new Error("No speech was detected"); setQuery(result.text); setVoiceStatus("Voice added to your request."); }
+        try { const result = await api("/api/transcribe", { method: "POST", headers: { "Content-Type": blob.type }, body: blob }); if (!result.text) throw new Error("No speech was detected"); setQuery(result.text); setInterpretation(null); setVoiceStatus("Voice added to your request."); }
         catch (reason) { setVoiceStatus(reason.message); }
       };
       media.current.start(); setRecording(true); setVoiceStatus("Listening… tap again when finished");
@@ -291,63 +355,77 @@ function App() {
     clearCandidateMarkers(); if (!AdvancedMarker.current || !map.current) return;
     const Marker = AdvancedMarker.current;
     const bounds = new window.google.maps.LatLngBounds();
-    candidateMarkers.current = candidates.map((candidate) => {
+    const overlays = [];
+    candidates.forEach((candidate) => {
       const position = { lat: candidate.lat, lng: candidate.lon }; bounds.extend(position);
+      const half = Math.max(35, (candidate.evidence?.cell_size_m || 80) / 2);
+      const latDelta = half / 111320, lngDelta = half / (111320 * Math.max(.2, Math.cos(candidate.lat * Math.PI / 180)));
+      const footprint = new window.google.maps.Rectangle({ map: map.current, bounds: { north: candidate.lat + latDelta, south: candidate.lat - latDelta, east: candidate.lon + lngDelta, west: candidate.lon - lngDelta }, clickable: true, strokeColor: "#17694f", strokeOpacity: .7, strokeWeight: 1, fillColor: "#42a57e", fillOpacity: .11, zIndex: 2 });
       const card = document.createElement("button"); card.className = "map-result"; card.innerHTML = `<strong>${Math.round(candidate.overall_fit_percent)}%</strong><span>${candidate.district}</span>`;
-      const marker = new Marker({ map: map.current, position, title: `${candidate.overall_fit_percent}% match in ${candidate.district}`, gmpClickable: true }); marker.append(card);
-      marker.addListener("click", () => { setSelectedCandidate(candidate); map.current.panTo(position); }); return marker;
+      const marker = new Marker({ map: map.current, position, title: `${candidate.overall_fit_percent}% match in ${candidate.district}`, gmpClickable: true, zIndex: 100 - candidate.rank, ...(window.google.maps.CollisionBehavior ? { collisionBehavior: window.google.maps.CollisionBehavior.OPTIONAL_AND_HIDES_LOWER_PRIORITY } : {}) }); marker.append(card);
+      const select = () => { setSelectedCandidate(candidate); map.current.panTo(position); };
+      marker.addListener("click", select); footprint.addListener("click", select); overlays.push(footprint, marker);
     });
+    candidateMarkers.current = overlays;
     if (candidates.length) { map.current.fitBounds(bounds, 80); window.google.maps.event.addListenerOnce(map.current, "idle", () => { if (map.current.getZoom() > 14) map.current.setZoom(14); }); }
   };
 
   const findLand = async () => {
-    setSearching(true); setError(""); setSelectedCandidate(null);
+    if (!searchCenter) { setError("Click the map or search for a place to choose the centre first."); return; }
+    setSearching(true); setError(""); setSelectedCandidate(null); setSearchResult(null); clearCandidateMarkers();
     try {
-      const center = map.current?.getCenter();
-      const area = searchGeometry ? { geometry: searchGeometry } : district ? { district } : { center_lat: center?.lat() || KERALA_CENTER.lat, center_lon: center?.lng() || KERALA_CENTER.lng, radius_km: 25 };
-      const requirements = { avoid_high_flood: true, avoid_high_landslide: true, prefer_open_land: true, max_slope: 30 };
-      const result = await post("/api/search", { area, query, requirements, limit: 10 }); setSearchResult(result); showCandidates(result.candidates);
+      let requirements = { avoid_high_flood: true, avoid_high_landslide: true, prefer_open_land: true, max_slope: 30 };
+      if (query.trim()) {
+        setSearchPhase("laya");
+        const understood = await post("/api/preferences/interpret", { text: query });
+        setInterpretation(understood); requirements = { ...requirements, ...understood.requirements };
+      } else setInterpretation(null);
+      setSearchPhase("screening");
+      const area = { center_lat: searchCenter.lat, center_lon: searchCenter.lng, radius_km: searchRadius };
+      const result = await post("/api/search", { area, query: "", requirements, limit: 10 }); setSearchResult(result); setSelectedCandidate(result.candidates[0] || null); showCandidates(result.candidates);
     } catch (reason) { setError(reason.message); }
-    finally { setSearching(false); }
+    finally { setSearching(false); setSearchPhase(""); }
   };
 
   const assessCandidate = (candidate) => {
     switchWorkspace("assess"); setMode("point"); map.current?.panTo({ lat: candidate.lat, lng: candidate.lon }); map.current?.setZoom(17); analyzePoint(candidate.lat, candidate.lon);
   };
 
-  const showStreetView = async () => {
-    if (!report || !window.google) return; streetDialog.current?.showModal(); const location = { lat: report.location.lat, lng: report.location.lon };
-    try { const result = await new window.google.maps.StreetViewService().getPanorama({ location, radius: 100 }); new window.google.maps.StreetViewPanorama(streetElement.current, { position: result.data.location.latLng, pov: { heading: 0, pitch: 0 }, zoom: 1, addressControl: true }); }
+  const showStreetViewAt = async (selection) => {
+    if (!selection || !window.google) return; streetDialog.current?.showModal(); const location = { lat: selection.lat, lng: selection.lon };
+    try { const result = await new window.google.maps.StreetViewService().getPanorama({ location, radius: 500 }); new window.google.maps.StreetViewPanorama(streetElement.current, { position: result.data.location.latLng, pov: { heading: 0, pitch: 0 }, zoom: 1, addressControl: true }); }
     catch { streetElement.current.innerHTML = '<div class="street-empty"><strong>No Street View nearby</strong><span>Try satellite view for visual context.</span></div>'; }
   };
+  const showStreetView = () => report && showStreetViewAt({ lat: report.location.lat, lon: report.location.lon });
 
-  const areaLabel = searchGeometry ? "Drawn boundary" : district || "25 km around the visible map centre";
+  const areaLabel = searchCenter ? `${searchRadius} km around ${searchCenter.lat.toFixed(4)}, ${searchCenter.lng.toFixed(4)}` : "No search centre selected";
   return <div className="app-shell">
     <header className="topbar"><a className="brand" href="#">nilam<span>Kerala land intelligence</span></a><nav><button className={workspace === "assess" ? "active" : ""} onClick={() => switchWorkspace("assess")}>Assess a site</button><button className={workspace === "find" ? "active" : ""} onClick={() => switchWorkspace("find")}>Find suitable land</button></nav></header>
     <main>
-      <section className="hero"><p>Land decisions, made clearer</p><h1>{workspace === "assess" ? "Understand a specific site." : "Find places that fit your needs."}</h1><span>{workspace === "assess" ? "Click or draw anywhere in Kerala for a detailed suitability report." : "Choose where to search, add preferences if you have them, and explore the best matches on the map."}</span></section>
+      <section className="hero"><p>Land decisions, made clearer</p><h1>{workspace === "assess" ? "Understand a specific site." : "Find promising open land nearby."}</h1><span>{workspace === "assess" ? "Click or draw anywhere in Kerala for a detailed suitability report." : "Choose a centre and radius, then let the models screen fresh locations for land that fits your needs."}</span></section>
       <section className="workspace">
         <div className="map-side">
           <div className="map-toolbar">
             <div ref={placeSearchElement} className="place-search"><span>Loading place search…</span></div>
-            <select aria-label="Select district" value={district} onChange={(event) => flyDistrict(event.target.value)}><option value="">All Kerala</option>{DISTRICTS.map((name) => <option key={name}>{name}</option>)}</select>
-            {workspace === "assess" ? <div className="tool-group"><button className={mode === "point" ? "active" : ""} onClick={() => { clearSelection(); setMode("point"); }}><Icon type="point" />Point</button><button className={mode === "area" ? "active" : ""} onClick={() => { clearSelection(); setMode("area"); }}><Icon type="area" />Draw site</button></div> : <div className="tool-group"><button className={!searchGeometry && !district && !searchDrawing ? "active" : ""} onClick={() => { setSearchGeometry(null); setDistrict(""); setSearchDrawing(false); areaPolygon.current?.setMap(null); }}><Icon type="point" />Map area</button><button className={searchDrawing || searchGeometry ? "active" : ""} onClick={startSearchArea}><Icon type="area" />Draw area</button></div>}
+            {workspace === "assess" && <select aria-label="Select district" value={district} onChange={(event) => flyDistrict(event.target.value)}><option value="">All Kerala</option>{DISTRICTS.map((name) => <option key={name}>{name}</option>)}</select>}
+            {workspace === "assess" ? <div className="tool-group"><button className={mode === "point" ? "active" : ""} onClick={() => { clearSelection(); setMode("point"); }}><Icon type="point" />Point</button><button className={mode === "area" ? "active" : ""} onClick={() => { clearSelection(); setMode("area"); }}><Icon type="area" />Draw site</button></div> : <div className="search-mode-label"><Icon type="point" />Click map for centre</div>}
             <div className="tool-group map-style"><button className={mapStyle === "roadmap" ? "active" : ""} onClick={() => setMapStyle("roadmap")}>Map</button><button className={mapStyle === "hybrid" ? "active" : ""} onClick={() => setMapStyle("hybrid")}><Icon type="satellite" />Satellite</button></div>
           </div>
           <div className="map-wrap"><div ref={mapElement} className="map" />
-            {!report && !searchResult && !mapError && <div className="map-hint"><Icon type={workspace === "find" ? searchDrawing ? "area" : "search" : mode} /><div><strong>{workspace === "find" ? searchDrawing ? "Click to draw your search boundary" : "Choose the area you want to search" : mode === "area" ? "Click to draw the site boundary" : "Click any point for its suitability"}</strong><span>{workspace === "find" ? searchDrawing ? "Add at least three corners, then finish the area" : "Use a district, the visible map area, or draw a boundary" : "You can also search for an address above"}</span></div></div>}
-            {polygonPoints >= 3 && <button className="finish-drawing" onClick={finishPolygon}>Finish boundary · {polygonPoints} points</button>}
+            {!report && !searchResult && !mapError && <div className="map-hint"><Icon type={workspace === "find" ? "search" : mode} /><div><strong>{workspace === "find" ? searchCenter ? "Search circle ready" : "Click the centre of your search" : mode === "area" ? "Click to draw the site boundary" : "Click any point for its suitability"}</strong><span>{workspace === "find" ? searchCenter ? `The models will screen ${searchRadius} km around this point` : "You can also search for a place above" : "You can also search for an address above"}</span></div></div>}
+            {workspace === "assess" && polygonPoints >= 3 && <button className="finish-drawing" onClick={finishPolygon}>Finish boundary · {polygonPoints} points</button>}
             {mapError && <div className="map-message">{mapError}</div>}
           </div>
         </div>
         <aside ref={reportElement} className="side-panel" aria-live="polite">
           {workspace === "assess" ? <AssessmentPanel report={report} stage={stage} error={error} onStreetView={showStreetView} onClear={clearSelection} /> : <div className="find-panel">
-            <section className="area-choice"><label>1. Search within</label><div className="area-value"><Icon type="area" /><div><strong>{areaLabel}</strong><span>{searchGeometry ? "Custom area ready" : district ? "District boundary" : "Move the map to change the centre"}</span></div>{searchGeometry && <button onClick={startSearchArea}>Redraw</button>}</div></section>
-            <PreferenceInput query={query} setQuery={setQuery} recording={recording} voiceStatus={voiceStatus} onRecord={record} />
-            <button className="search-action" disabled={searching || searchDrawing} onClick={findLand}><Icon type="search" />{searching ? "Finding suitable places…" : searchDrawing ? "Finish drawing the area first" : "Find suitable places"}</button>
+            <section className="area-choice"><label>1. Choose a search centre and radius</label><div className={`area-value ${searchCenter ? "ready" : ""}`}><Icon type="point" /><div><strong>{areaLabel}</strong><span>{searchCenter ? "Click somewhere else on the map to move it" : "Click the map or search for a place"}</span></div></div><div className="radius-control"><div><span>Search radius</span><strong>{searchRadius} km</strong></div><input aria-label="Search radius" type="range" min="1" max="15" step="1" value={searchRadius} onChange={(event) => setSearchRadius(Number(event.target.value))} /><div className="radius-scale"><span>1 km</span><span>15 km</span></div></div></section>
+            <PreferenceInput query={query} setQuery={(value) => { setQuery(value); setInterpretation(null); }} recording={recording} voiceStatus={voiceStatus} onRecord={record} />
+            <LayaActivity phase={searchPhase} interpretation={interpretation} />
+            <button className="search-action" disabled={searching || !searchCenter} onClick={findLand}><Icon type="search" />{searching ? searchPhase === "laya" ? "Understanding your request…" : "Screening fresh land cells…" : !searchCenter ? "Choose a centre on the map" : "Find the best matches"}</button>
             {error && <div className="inline-error">{error}</div>}
-            {searchResult && <div className="search-summary"><strong>{searchResult.candidates.length} matches on the map</strong><span>Click a result card for location details</span></div>}
-            <CandidateDetails candidate={selectedCandidate} onAssess={assessCandidate} />
+            {searchResult && <div className="search-summary"><strong>{searchResult.candidates.length ? `${searchResult.candidates.length} best matches on the map` : "No cells passed every screen"}</strong><span>{searchResult.searched_points} fresh cells screened inside the circle{searchResult.candidates.length ? " · click a result for details" : ""}</span></div>}
+            <CandidateDetails candidate={selectedCandidate} searched={Boolean(searchResult)} onAssess={assessCandidate} onStreetView={showStreetViewAt} />
           </div>}
         </aside>
       </section>

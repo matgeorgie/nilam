@@ -16,11 +16,11 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from shapely.geometry import Point, mapping, shape
-from kerala_land_lab.earth import load_env, initialize, statewide_point_features, statewide_points_features, STATEWIDE_FEATURES, STATEWIDE_CATALOG
+from kerala_land_lab.earth import load_env, initialize, statewide_point_features, statewide_points_features, search_points_features, STATEWIDE_FEATURES, STATEWIDE_CATALOG
 from kerala_land_lab.current_hazards import attach_flood_levels, attach_gsi_landslide
 from kerala_land_lab.weak_labels import LABEL_NAMES
 from kerala_land_lab.fusion import FusionConfig, combine_probabilities
-from kerala_land_lab.search import SearchArea, rank_candidates, select_area
+from kerala_land_lab.search import candidate_grid, rank_candidates
 from kerala_land_lab.semantic import interpret_request, semantic_status
 
 ROOT=Path(__file__).resolve().parents[2]
@@ -139,6 +139,16 @@ def nearest_distance(frame, point):
     return float(distance[0])
 
 
+def nearest_distances(frame, points):
+    """Vectorised nearest-feature distances in the projected Kerala CRS."""
+    result=np.full(len(points),np.nan,dtype=float)
+    if frame.empty or not points:return result
+    indices,distances=frame.sindex.nearest(gpd.GeoSeries(points,crs=32643),return_distance=True,return_all=False)
+    for source,distance in zip(indices[0],distances):
+        if np.isnan(result[source]) or distance<result[source]:result[source]=float(distance)
+    return result
+
+
 def statewide_values(lon,lat,point):
     values=measurements(round(lon,4),round(lat,4))
     point_frame=gpd.GeoDataFrame({'point_id':['request']},geometry=[Point(lon,lat)],crs=4326)
@@ -176,6 +186,108 @@ def statewide_values_many(coordinates, points):
             values[f'dist_nearest_{kind}']=nearest_distance(geo['facilities'][geo['facilities'].kind==kind],point)
         values['dist_nearest_power_line']=nearest_distance(geo['power_lines'],point)
     return rows
+
+
+@lru_cache(maxsize=1)
+def building_tree():
+    path=DATA/'osm_building_centres.npz'
+    if not path.exists():return None
+    from scipy.spatial import cKDTree
+    values=np.load(path)
+    return cKDTree(np.column_stack([values['x'],values['y']]))
+
+
+@lru_cache(maxsize=1)
+def candidate_spatial_index():
+    from scipy.spatial import cKDTree
+    frame=candidate_index()
+    return cKDTree(np.column_stack([frame.lng.to_numpy(dtype=float),frame.lat.to_numpy(dtype=float)]))
+
+
+def interpolated_statewide_rows(coordinates,k=6):
+    """IDW interpolation for slow-changing soil and climate training fields."""
+    frame=candidate_index();tree=candidate_spatial_index()
+    query=np.asarray(coordinates,dtype=float)
+    distances,indices=tree.query(query,k=min(k,len(frame)))
+    if distances.ndim==1:distances=distances[:,None];indices=indices[:,None]
+    weights=1/np.maximum(distances,1e-6)**2
+    rows=[]
+    for point_indices,point_weights in zip(indices,weights):
+        neighbours=frame.iloc[np.asarray(point_indices)]
+        row={}
+        for name in STATEWIDE_FEATURES:
+            values=__import__('pandas').to_numeric(neighbours[name],errors='coerce').to_numpy(dtype=float)
+            valid=np.isfinite(values)
+            row[name]=float(np.average(values[valid],weights=point_weights[valid])) if valid.any() else None
+        rows.append(row)
+    return rows
+
+
+def enrich_search_rows(rows,coordinates,projected_points):
+    point_frame=gpd.GeoDataFrame(
+        {'point_id':[f'search-{i}' for i in range(len(coordinates))]},
+        geometry=[Point(lon,lat) for lon,lat in coordinates],crs=4326,
+    )
+    point_frame=attach_gsi_landslide(point_frame,ROOT/'data')
+    point_frame=attach_flood_levels(point_frame,ROOT/'data')
+    districts=gpd.sjoin(point_frame,geography()['districts'][['name','geometry']].to_crs(4326),predicate='within',how='left')
+    district_names=districts.groupby('point_id').name.first().to_dict()
+    geo=geography();tree=building_tree()
+    building_distances=np.full(len(coordinates),np.nan)
+    if tree is not None:
+        xy=np.array([[point.x,point.y] for point in projected_points],dtype=float)
+        building_distances=tree.query(xy,k=1)[0]
+    distance_columns={
+        'dist_nearest_road':nearest_distances(geo['roads'],projected_points),
+        'dist_nearest_highway':nearest_distances(geo['roads'][geo['roads'].major.astype(bool)],projected_points),
+        'dist_nearest_power_line':nearest_distances(geo['power_lines'],projected_points),
+    }
+    for kind in ['hospital','school','quarry','bus_stop','railway_station','pharmacy','shop','bank','park','waste_facility','industrial']:
+        distance_columns[f'dist_nearest_{kind}']=nearest_distances(geo['facilities'][geo['facilities'].kind==kind],projected_points)
+    for index,(values,(_,hazard)) in enumerate(zip(rows,point_frame.iterrows())):
+        values.update({f'flood_level_{period}yr_m':float(hazard[f'flood_level_{period}yr_m']) for period in (10,25,50,100,200,500)})
+        values['gsi_landslide_susceptibility']=hazard.gsi_landslide_susceptibility
+        values['gsi_landslide_code']={'Not mapped':0,'Low':1,'Moderate':2,'High':3}[hazard.gsi_landslide_susceptibility]
+        values['district']=district_names.get(hazard.point_id) or 'Kerala'
+        for column,distances in distance_columns.items():values[column]=float(distances[index])
+        values['building_distance_m']=float(building_distances[index])
+    return rows
+
+
+@lru_cache(maxsize=24)
+def live_search_frame(center_lat,center_lon,radius_km):
+    grid=candidate_grid(center_lat,center_lon,radius_km)
+    points=gpd.GeoDataFrame(grid.copy(),geometry=gpd.points_from_xy(grid.lng,grid.lat),crs=4326)
+    projected=points.to_crs(32643)
+    state=geography()['state'].geometry.iloc[0]
+    keep=np.array([state.covers(point) for point in projected.geometry],dtype=bool)
+    points=points.loc[keep].reset_index(drop=True);projected=projected.loc[keep].reset_index(drop=True)
+    initial_grid_points=len(points)
+    tree=building_tree()
+    if tree is not None and len(points)>240:
+        xy=np.column_stack([projected.geometry.x.to_numpy(),projected.geometry.y.to_numpy()])
+        building_distances=tree.query(xy,k=1)[0]
+        eligible=np.flatnonzero(building_distances>=15)
+        pool=eligible if len(eligible)>=80 else np.arange(len(points))
+        farthest=pool[np.argsort(building_distances[pool])[::-1][:160]]
+        generator=np.random.default_rng(42)
+        remainder=np.setdiff1d(pool,farthest,assume_unique=False)
+        exploratory=generator.choice(remainder,size=min(80,len(remainder)),replace=False) if len(remainder) else np.array([],dtype=int)
+        chosen=np.unique(np.concatenate([farthest,exploratory]))
+        points=points.iloc[chosen].reset_index(drop=True);projected=projected.iloc[chosen].reset_index(drop=True)
+    coordinates=list(zip(points.lng.astype(float),points.lat.astype(float)))
+    global earth_ready
+    with earth_lock:
+        if not earth_ready:initialize();earth_ready=True
+        fresh_rows=search_points_features(coordinates)
+    rows=interpolated_statewide_rows(coordinates)
+    for row,fresh in zip(rows,fresh_rows):row.update(fresh)
+    rows=enrich_search_rows(rows,coordinates,list(projected.geometry))
+    frame=points.drop(columns='geometry').reset_index(drop=True)
+    measured=__import__('pandas').DataFrame(rows)
+    for column in measured.columns:frame[column]=measured[column]
+    frame.attrs['initial_grid_points']=initial_grid_points
+    return frame
 
 
 SCORE_ANCHORS=np.array([0.08,0.34,0.64,0.90],dtype=np.float32)
@@ -413,18 +525,27 @@ def interpret_preferences(request:PreferenceText):
 @app.post('/api/search')
 def search_candidates(request:CandidateSearch):
     interpreted=interpret_request(request.query) if request.query.strip() else {'requirements':{},'semantic':{'engine':'form'}}
-    requirements={**interpreted.get('requirements',{}),**request.requirements}
-    area=SearchArea(**request.area.model_dump())
-    selected=select_area(candidate_index(),area)
+    requirements={'prefer_open_land':True,'avoid_high_flood':True,'avoid_high_landslide':True,**interpreted.get('requirements',{}),**request.requirements}
+    if request.area.center_lat is None or request.area.center_lon is None or request.area.radius_km is None:
+        raise HTTPException(422,'Select a search centre and radius on the map')
+    center_wgs=Point(request.area.center_lon,request.area.center_lat)
+    center=gpd.GeoSeries([center_wgs],crs=4326).to_crs(32643).iloc[0]
+    if not geography()['state'].geometry.iloc[0].covers(center):
+        raise HTTPException(422,'Choose a search centre inside Kerala')
+    try:selected=live_search_frame(request.area.center_lat,request.area.center_lon,request.area.radius_km)
+    except Exception as exc:
+        raise HTTPException(503,f'Live land screening could not finish ({type(exc).__name__}). Try this area again.') from exc
     if selected.empty:
-        return {'candidates':[],'searched_points':0,'message':'No precomputed candidate points fall inside this search area. Draw a larger area or build the dense search index.','requirements':requirements,'semantic':interpreted.get('semantic',{})}
+        return {'candidates':[],'searched_points':0,'message':'No candidate cells fall inside Kerala in this radius.','requirements':requirements,'semantic':interpreted.get('semantic',{})}
     _,_,imputed=_tabular_arrays(selected.to_dict('records'))
     probabilities=_tabpfn_probabilities(imputed)
     suitability=probabilities@SCORE_ANCHORS*100
     candidates=rank_candidates(selected,suitability,requirements,request.limit)
-    return {'candidates':candidates,'searched_points':len(selected),'eligible_points':len(candidates),'requirements':requirements,'semantic':interpreted.get('semantic',{}),
-            'method':'Stage 1 uses the local candidate index and TabPFN. Selecting a candidate starts TerraMind satellite verification.',
-            'limitation':'Candidate zones are public-data screening locations, not parcels, sale listings, legal clearance, or proof of vacant/buildable land.'}
+    return {'candidates':candidates,'searched_points':selected.attrs.get('initial_grid_points',len(selected)),'measured_points':len(selected),'eligible_points':len(candidates),'requirements':requirements,'semantic':interpreted.get('semantic',{}),
+            'search':{'center_lat':request.area.center_lat,'center_lon':request.area.center_lon,'radius_km':request.area.radius_km,
+                      'fresh_grid':True,'earth_engine':'Dynamic World 10 m open/built probability','buildings':'OpenStreetMap mapped building centres'},
+            'method':'Fresh cells inside the selected radius are measured with Earth Engine, screened for mapped buildings and hazards, then ranked by TabPFN and the interpreted preferences.',
+            'limitation':'Open-land evidence is a remote-screening signal, not a land listing or proof of ownership, availability, or legal buildability.'}
 
 
 @lru_cache(maxsize=1)
@@ -488,8 +609,8 @@ def analyze(location:Location):
         overlap=group.geometry.union_all().intersection(area).area/area.area
         evidence.append({'label':label,'area_percent':round(overlap*100,1),'source':'KSDMA / NCESS historical maps','vintage':'2010 source attribution','point_intersection':bool(group.geometry.intersects(point).any())})
     nearby=[]
-    for kind in ['hospital','pharmacy','school','grocery','bank','fire_station']:
-        facilities=geo['amenities'][geo['amenities'].kind==kind]
+    for kind in ['hospital','school','pharmacy','shop','park','bus_stop','bank']:
+        facilities=geo['facilities'][geo['facilities'].kind==kind]
         if facilities.empty:continue
         indices,distance=facilities.sindex.nearest(point,return_distance=True,return_all=False)
         item=facilities.iloc[int(indices[1,0])]
@@ -543,8 +664,8 @@ def analyze_area(selection:AreaSelection):
     representative=rows[0] if rows else {}
     centroid=polygon.representative_point();districts=intersecting(geo['districts'],polygon)
     nearby=[]
-    for kind in ['hospital','pharmacy','school','grocery','bank','fire_station']:
-        facilities=geo['amenities'][geo['amenities'].kind==kind]
+    for kind in ['hospital','school','pharmacy','shop','park','bus_stop','bank']:
+        facilities=geo['facilities'][geo['facilities'].kind==kind]
         if facilities.empty:continue
         indices,distance=facilities.sindex.nearest(centroid,return_distance=True,return_all=False);item=facilities.iloc[int(indices[1,0])]
         nearby.append({'kind':kind,'name':item['name'],'distance_m':round(float(distance[0])),'source':'OpenStreetMap','distance_type':'Straight-line from area centre'})
@@ -559,6 +680,12 @@ def analyze_area(selection:AreaSelection):
 
 def _warm_models():
     try:
+        geography();candidate_index();building_tree()
+        warm_point=gpd.GeoDataFrame({'point_id':['warmup']},geometry=[Point(76.27,9.93)],crs=4326)
+        attach_gsi_landslide(warm_point,ROOT/'data')
+        global earth_ready
+        with earth_lock:
+            if not earth_ready:initialize();earth_ready=True
         load_statewide_tabpfn();load_multimodal_bundle()
     except Exception:
         pass

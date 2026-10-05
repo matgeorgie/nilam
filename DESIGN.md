@@ -31,12 +31,12 @@ world. Color explains state and direction; it does not decorate empty space.
 Two permanent navigation choices keep the workflows separate:
 
 - **Assess a site** supports Google place search, point selection, a drawn site
-  boundary, normal/satellite maps, progressive model stages, Street View, and
-  a simple SHAP explanation.
-- **Find suitable land** supports a district, a drawn search boundary, or a
-  25 km map-centred radius. It captures typed or spoken requirements, shows
-  ranked result cards directly on the map, and opens concrete site details when
-  a result is selected.
+  boundary, normal/satellite maps, an informative fusion wait state, nearby
+  essentials, Street View, and a simple SHAP explanation.
+- **Find suitable land** uses a clicked or searched centre and a 1–15 km
+  radius. It captures typed or spoken requirements, shows Laya's interpretation,
+  ranked result cards and sampled-cell footprints directly on the map, and opens
+  site details or nearby Street View when a result is selected.
 
 The desktop workspace keeps the map and evidence panel together. Below 880px it
 stacks in task order. A completed assessment scrolls the evidence panel into
@@ -70,20 +70,20 @@ Lead with percentage, qualitative band, district, and a constraint-to-favourable
 scale. The percentage is always called a model suitability index, never a safety
 probability.
 
-Show the TerraMind and TabPFN experts immediately after the result. Branch
+Show the TerraMind and TabPFN experts after the final result. Branch
 scores and validation-calibrated fusion influence are distinct from SHAP feature
-importance. During progressive analysis, pending branches say “Pending.”
+importance. During progressive analysis, show place-specific facts and model
+activity without showing the mapped-data preview percentage.
 
 SHAP drivers include a friendly label, observed value, and percentage-point
 effect. Positive and negative effects use separate, plainly named lists.
 
 ## Candidate Components
 
-Area selection leads the right panel, followed by optional text or local voice
-preferences. Laya interpretation remains behind the direct search interaction.
-Candidate map cards show combined match; the selected detail view separates
-land suitability from preference fit. A candidate is called a location, never
-an available property, until authoritative parcel evidence exists.
+Centre and radius selection lead the right panel, followed by optional text or
+local voice preferences. Laya appears as a compact live activity, not a planner
+form. Candidate map cards show combined match; the selected detail view separates
+land suitability, open-land signal, and preference fit.
 
 ## Interaction and Accessibility
 

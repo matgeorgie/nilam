@@ -134,3 +134,61 @@ def statewide_points_features(points):
             for name in STATEWIDE_FEATURES
         }
     return [row or {name: None for name in STATEWIDE_FEATURES} for row in rows]
+
+
+def search_points_features(points):
+    """Measure fast-changing, fine-scale search evidence for fresh candidates.
+
+    Coarse climate and soil fields are interpolated locally from the statewide
+    training table. Keeping this request to terrain, water and Dynamic World
+    makes an interactive circle search several times faster than rebuilding the
+    complete 25-year feature stack for every click.
+    """
+    if not points:
+        return []
+    region = ee.Geometry.MultiPoint([[lon, lat] for lon, lat in points]).bounds().buffer(500)
+    dem = ee.Image("USGS/SRTMGL1_003").select("elevation")
+    terrain = ee.Terrain.products(dem)
+    water = ee.Image("JRC/GSW1_4/GlobalSurfaceWater").select("occurrence").unmask(0)
+    dynamic_world = (ee.ImageCollection("GOOGLE/DYNAMICWORLD/V1")
+                     .filterBounds(region).filterDate("2024-01-01", "2026-01-01"))
+    built_probability = dynamic_world.select("built").mean().rename("built_probability")
+    open_probability = (dynamic_world.select(["grass", "crops", "shrub_and_scrub", "bare"])
+                        .mean().reduce(ee.Reducer.max()).rename("open_probability"))
+    local_kernel = ee.Kernel.circle(45, "meters")
+    built_neighbourhood = built_probability.reduceNeighborhood(
+        ee.Reducer.mean(), local_kernel
+    ).rename("built_probability_45m")
+    open_neighbourhood = open_probability.reduceNeighborhood(
+        ee.Reducer.mean(), local_kernel
+    ).rename("open_probability_45m")
+    image = dem.addBands([
+        terrain.select("slope"), terrain.select("aspect"),
+        dem.reduceNeighborhood(ee.Reducer.stdDev(), ee.Kernel.square(1)).rename("terrain_ruggedness_index"),
+        water.rename("flood_occurrence"),
+        water.gt(0).fastDistanceTransform(2048).sqrt().multiply(30).rename("distance_to_water"),
+        dynamic_world.select("label").mode().rename("land_cover_class"),
+        built_probability, open_probability, built_neighbourhood, open_neighbourhood,
+    ]).unmask(-9999, sameFootprint=False)
+    features = [
+        ee.Feature(ee.Geometry.Point([lon, lat]), {"sample_id": index})
+        for index, (lon, lat) in enumerate(points)
+    ]
+    result = image.sampleRegions(
+        collection=ee.FeatureCollection(features), scale=30, geometries=False, tileScale=4,
+    ).getInfo()
+    names = [
+        "elevation", "slope", "aspect", "terrain_ruggedness_index",
+        "flood_occurrence", "distance_to_water", "land_cover_class",
+        "built_probability", "open_probability",
+        "built_probability_45m", "open_probability_45m",
+    ]
+    rows = [None] * len(points)
+    for feature in result.get("features", []):
+        properties = feature.get("properties", {})
+        index = int(properties["sample_id"])
+        rows[index] = {
+            name: None if properties.get(name) == -9999 else properties.get(name)
+            for name in names
+        }
+    return [row or {name: None for name in names} for row in rows]

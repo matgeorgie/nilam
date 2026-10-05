@@ -11,12 +11,12 @@ React frontend with a Python API. Google Maps provides the basemap, place search
 People evaluating a known site in Kerala for building a house, and people who know their household needs but still need to find promising candidate areas. The creator also needs a technically substantial academic demonstration of multimodal training, geographic evaluation, and explainability.
 
 ## Product Purpose
-Support two clearly separated decisions across Kerala's 14 districts: assess a known point or drawn site boundary, or describe desired surroundings and rank candidate zones within a district, drawn search area, or the visible map region.
+Support two clearly separated decisions across Kerala's 14 districts: assess a known point or drawn site boundary, or choose a centre and radius and rank fresh candidate cells that match desired surroundings.
 
 ## Capabilities and Constraints
-The assessment workspace accepts a Google place result, map click, point, or drawn polygon. It returns mapped TabPFN evidence first, then seasonal TerraMind satellite evidence, calibrated fusion, and conditional SHAP explanation as each stage becomes available. Street View is optional visual context, never assessment evidence.
+The assessment workspace accepts a Google place result, map click, point, or drawn polygon. It shows local terrain and amenity facts while TabPFN and seasonal TerraMind run, then reveals only the calibrated fused percentage and conditional SHAP explanation. Street View is optional visual context, never assessment evidence.
 
-The land-matcher workspace accepts typed or locally transcribed English requests. Laya interprets those preferences as part of the search without exposing an extra planner step. Search may use a district, a custom drawn boundary, or 25 km around the map centre. Ranked candidates appear as percentage cards on the map; selecting one opens its site details and can start a full TerraMind assessment.
+The land-matcher workspace starts with a point and a 1–15 km radius. It accepts typed or locally transcribed English requests, while an inline Laya activity state shows when System 1 interpretation is active. Each run screens roughly 900 fresh cells with a local 2.95-million-point OSM building index, measures 240 selected cells with recent Earth Engine terrain and 45 m Dynamic World neighbourhood evidence, attaches official hazard and amenity distances, and ranks survivors with TabPFN plus explicit preference fit. Ranked cell footprints appear on the map; selecting one opens its site details, nearest Street View, or a full multimodal assessment.
 
 The product remains public-data-first and experimental. Expert-reviewed suitability labels may become available later. Preserve reproducible experiments and changes in matgeorgie/nilam. Do not equate historical hazard susceptibility, candidate rank, Street View imagery, or model output with permission or advice to build or buy. Soil bearing capacity, title, planning compliance, utility connections, crime, affordability, and on-site drainage still require independent evidence.
 
@@ -27,7 +27,7 @@ KSDMA historical flood layers in 14 district KMZ files and a landslide KML with 
 - Evidence and predictions have distinct labels.
 - Unknown values never silently become safe values.
 - Evaluation must separate geographic areas and avoid target leakage.
-- Progressive results label what is ready, what is still running, and what changed the final estimate.
+- Progressive assessment explains what is running without exposing an interim percentage that could be mistaken for the final fused result.
 - Suitability, personal preference fit, and combined candidate rank remain separate values.
 - Natural-language and local voice input feed the matching search directly.
 - A ranked candidate is a screening lead; users return to the assessment workspace to inspect its evidence.

@@ -3,7 +3,7 @@
 Nilam is a local-first Kerala residential land-screening research project. It has two workflows:
 
 1. **Assess a site** by searching, clicking a point, or drawing a polygon on Google Maps.
-2. **Find matching land** by describing a preferred home location in text or English speech and ranking candidate zones inside a district or map-centred search area.
+2. **Find matching land** by choosing a centre and radius, then optionally describing a preferred home location in text or English speech.
 
 Nilam is a research screening tool. Its score is not construction clearance, a legal opinion, a property listing, proof that land is vacant, or the probability that a house is safe. Soil bearing capacity, title, zoning, wetland/CRZ status, drainage, utilities, legal access, and price still require primary records and professional inspection.
 
@@ -34,16 +34,16 @@ The table combines:
 
 `scripts/label_statewide_dataset.py` adds a transparent four-class weak target and rule trace. These labels represent public-data screening rules, not observed building outcomes or expert ground truth. See [`docs/statewide-dataset-card.json`](docs/statewide-dataset-card.json).
 
-The 1,400 points remain the controlled academic training/evaluation cohort. Candidate search can use a separate dense grid produced by `scripts/build_search_index.py`; it does not alter the held-out model study.
+The 1,400 points remain the controlled academic training/evaluation cohort. They are not the search catalogue. Every land search creates roughly 900 fresh cells inside the selected circle, checks nearly three million mapped OSM building centres, and sends the 240 most promising and exploratory cells to Earth Engine. Dynamic World tests both the exact pixel and its 45 m neighbourhood for recent built-up and open-land signals before TabPFN ranks the surviving cells. Slow-changing soil and climate fields are interpolated from the statewide cohort. This keeps model training, geographic evaluation, and interactive search candidates separate.
 
 ## Local semantic and voice tools
 
-- **Laya** is the primary local typed-decision engine for intent and risk routing. Exact numeric requirements are extracted deterministically and shown to the user for review.
+- **Laya** is the local System 1 intent router. The finder shows when it is reading a request and which needs it understood; exact numeric requirements are extracted deterministically.
 - **GLiNER2.5-Decide** is an optional experimental comparison enabled with `NILAM_ENABLE_GLINER=1`. It is not on the critical prediction path.
 - **Distil-Whisper small.en** transcribes English requests locally. Its weights download on first voice use.
 - Candidate search keeps safety constraints separate from preferences. It will not trade a mapped high flood or high landslide condition for a shorter commute.
 
-Google Maps provides the basemap, address search, and optional Street View context. Google Maps does not identify vacant or legally buildable parcels; Nilam therefore returns **candidate zones**, never property availability claims.
+Google Maps provides the basemap, address search, and Street View from both workflows. Open-land evidence comes from Dynamic World built probability, recent land cover, and the local OSM building index.
 
 The first Laya interpretation downloads its local checkpoint (about 846 MB)
 from Hugging Face. Later requests use the local cache. GLiNER and Distil-Whisper
@@ -124,14 +124,12 @@ PYTORCH_ENABLE_MPS_FALLBACK=1 \
 .venv-multimodal/bin/python scripts/calibrate_terramind_tabpfn.py --batch-size 1
 ```
 
-Build the optional dense candidate index. This is a resumable, long-running local preprocessing step and does not retrain the model:
+Build the local OSM building-centre index used by the radius search. The generated NPZ is ignored by Git:
 
 ```bash
-PROJECT_ID=land-suitability-508903 \
-.venv-multimodal/bin/python scripts/build_search_index.py --spacing-m 1000
+.venv-multimodal/bin/python scripts/extract_osm_buildings.py \
+  ../southern-zone-260916.osm.pbf
 ```
-
-Without the dense index, candidate search falls back to the 1,400 controlled statewide points.
 
 ## Core files
 
@@ -144,7 +142,7 @@ Without the dense index, candidate search falls back to the 1,400 controlled sta
 - `scripts/download_satellite_chips.py` — resumable dry/monsoon chip downloader.
 - `scripts/train_multimodal.py` — TerraMind fine-tuning and multimodal ablation training.
 - `scripts/calibrate_terramind_tabpfn.py` — product fusion calibration and district holdout evaluation.
-- `scripts/build_search_index.py` — separate dense statewide candidate grid.
+- `scripts/extract_osm_buildings.py` — local index of mapped building centres for open-land screening.
 - `web/src/main.jsx` and `web/src/style.css` — Google Maps product interface.
 
 TabPFN weights have their own research/non-commercial terms. Review the installed model license before any deployment.

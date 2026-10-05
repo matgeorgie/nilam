@@ -42,13 +42,23 @@ def deterministic_preferences(text: str) -> dict[str, Any]:
 
     lower = text.lower()
     slope = re.search(r"(?:slope|gradient)[^\d]{0,18}(\d+(?:\.\d+)?)\s*(?:°|degrees?)", lower)
+    flags = {
+        "avoid_high_flood": ("low flood", "avoid flood", "flood safe", "no flooding"),
+        "avoid_high_landslide": ("avoid landslide", "low landslide", "stable slope"),
+        "prefer_quiet": ("quiet", "peaceful", "away from industry", "low noise"),
+        "prefer_green": ("green", "vegetation", "nature", "trees"),
+        "prefer_transit": ("public transport", "bus", "railway", "train"),
+        "prefer_open_land": ("open land", "clear land", "vacant", "empty plot"),
+        "prefer_hospital": ("hospital", "clinic", "medical care", "healthcare"),
+        "prefer_school": ("school", "college", "education"),
+        "prefer_road": ("good road", "main road", "road access", "near road", "highway"),
+        "prefer_park": ("park", "playground", "garden"),
+        "prefer_shops": ("shop", "grocery", "market", "pharmacy"),
+    }
+    # Omit unstated booleans. A false placeholder would overwrite the product's
+    # conservative open-land and hazard defaults when preferences are merged.
     requirements: dict[str, Any] = {
-        "avoid_high_flood": any(term in lower for term in ("low flood", "avoid flood", "flood safe", "no flooding")),
-        "avoid_high_landslide": any(term in lower for term in ("avoid landslide", "low landslide", "stable slope")),
-        "prefer_quiet": any(term in lower for term in ("quiet", "peaceful", "away from industry", "low noise")),
-        "prefer_green": any(term in lower for term in ("green", "vegetation", "nature", "trees")),
-        "prefer_transit": any(term in lower for term in ("public transport", "bus", "railway", "train")),
-        "prefer_open_land": any(term in lower for term in ("open land", "clear land", "vacant", "empty plot")),
+        name: True for name, terms in flags.items() if any(term in lower for term in terms)
     }
     if slope:
         requirements["max_slope"] = float(slope.group(1))
