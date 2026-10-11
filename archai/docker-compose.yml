@@ -1,0 +1,32 @@
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: archai
+      POSTGRES_PASSWORD: archai
+      POSTGRES_DB: archai
+    ports: ["5432:5432"]
+    volumes: ["archai-data:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U archai"]
+      interval: 5s
+      retries: 10
+  api:
+    build: ./apps/api
+    ports: ["8000:8000"]
+    environment:
+      DATABASE_URL: postgresql+psycopg://archai:archai@db:5432/archai
+      LLM_PROVIDER: ${LLM_PROVIDER:-mock}
+      LLM_API_KEY: ${LLM_API_KEY:-}
+      LLM_MODEL: ${LLM_MODEL:-gpt-4.1-mini}
+      LLM_BASE_URL: ${LLM_BASE_URL:-https://api.openai.com/v1}
+      ALLOW_DEV_AUTH: ${ALLOW_DEV_AUTH:-true}
+      CORS_ORIGINS: http://localhost:3000,http://127.0.0.1:3000
+    depends_on:
+      db: {condition: service_healthy}
+  web:
+    build: ./apps/web
+    ports: ["3000:3000"]
+    depends_on: [api]
+volumes:
+  archai-data:

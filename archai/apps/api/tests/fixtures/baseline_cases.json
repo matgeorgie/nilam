@@ -1,0 +1,52 @@
+{
+  "recorded_from": "Phase 3 rule-based demo provider and deterministic engine run; no real LLM was involved",
+  "browser_2d_render": null,
+  "browser_3d_render": null,
+  "browser_note": "Interactive workspace rendering was not verified because the isolated Next.js route hit sandbox spawn EPERM. SVG and GLB export success are separate measurements.",
+  "cases": [
+    {
+      "id": "C1_standard",
+      "prompt": "30 by 50 feet, 2 floors, 4 bedrooms, 3 attached bathrooms, 1 common bathroom, kitchen, dining, living room, parking. Kitchen connected to dining.",
+      "extracted": {"plot_width": 30.0, "plot_length": 50.0, "unit": "feet", "floors": 2, "shape": "auto", "road_location": "south", "setbacks": [0, 0, 0, 0], "rooms": {"bedroom": 4, "bathroom": 1, "kitchen": 1, "dining": 1, "living": 1}, "attached_bedrooms": 3, "parking_spaces": 1, "relationships": [{"source": "kitchen", "target": "dining", "relation": "connected"}]},
+      "result": {"valid_candidates": 24, "retained_alternatives": 5, "rooms": {"bedroom": 4, "bathroom": 1, "kitchen": 1, "dining": 1, "living": 1, "parking": 1}, "bedroom_floors": [["bedroom-4", 0], ["bedroom-1", 1], ["bedroom-2", 1], ["bedroom-3", 1]], "areas_ft2": [["bedroom-4", 114.7], ["kitchen-1", 99.6], ["dining-1", 100.6], ["living-1", 155.0], ["parking-1", 180.1], ["bedroom-1", 137.7], ["bedroom-1-bath", 58.5], ["bedroom-2", 137.7], ["bedroom-2-bath", 58.5], ["bedroom-3", 137.7], ["bedroom-3-bath", 58.5], ["bathroom-1", 61.5]], "relationships_met": [true], "svg_export_bytes": 14692, "glb_export_bytes": 70232}
+    },
+    {
+      "id": "C2_metric",
+      "prompt": "2 bedroom single floor house, 2 bathrooms, open kitchen, dining, living room, one car porch, utility room, on a 12m x 20m plot with road on the south.",
+      "extracted": {"plot_width": 12.0, "plot_length": 20.0, "unit": "meters", "floors": 1, "shape": "auto", "road_location": "south", "setbacks": [0, 0, 0, 0], "rooms": {"bedroom": 2, "bathroom": 2, "kitchen": 1, "dining": 1, "living": 1, "utility": 1}, "attached_bedrooms": 0, "parking_spaces": 1, "relationships": [], "open_kitchen": true},
+      "result": {"valid_candidates": 25, "retained_alternatives": 5, "rooms": {"bedroom": 2, "bathroom": 2, "kitchen": 1, "dining": 1, "living": 1, "utility": 1, "parking": 1}, "bedroom_floors": [["bedroom-1", 0], ["bedroom-2", 0]], "areas_ft2": [["parking-1", 878.3], ["utility-1", 103.2], ["kitchen-1", 180.6], ["living-1", 235.6], ["bedroom-1", 125.9], ["bedroom-2", 125.9], ["bathroom-2", 63.0], ["bathroom-1", 39.8], ["dining-1", 98.4]], "relationships_met": [], "svg_export_bytes": 11710, "glb_export_bytes": 46784}
+    },
+    {
+      "id": "C3_upstairs",
+      "prompt": "30 by 50 feet, 2 floors, 3 bedrooms, kitchen, dining, living room. Put all bedrooms upstairs. Kitchen next to dining.",
+      "extracted": {"plot_width": 30.0, "plot_length": 50.0, "unit": "feet", "floors": 2, "shape": "auto", "road_location": "south", "setbacks": [0, 0, 0, 0], "rooms": {"bedroom": 3, "kitchen": 1, "dining": 1, "living": 1}, "attached_bedrooms": 0, "parking_spaces": 0, "relationships": [{"source": "kitchen", "target": "dining", "relation": "connected"}], "bedroom_preferred_floors": [null, null, null]},
+      "result": {"valid_candidates": 28, "retained_alternatives": 5, "rooms": {"bedroom": 3, "kitchen": 1, "dining": 1, "living": 1}, "bedroom_floors": [["bedroom-1", 1], ["bedroom-2", 1], ["bedroom-3", 1]], "areas_ft2": [["kitchen-1", 111.5], ["dining-1", 112.3], ["living-1", 151.3], ["bedroom-1", 125.0], ["bedroom-2", 125.0], ["bedroom-3", 125.0]], "relationships_met": [true], "svg_export_bytes": 8850, "glb_export_bytes": 44616}
+    },
+    {
+      "id": "C4_setbacks",
+      "prompt": "30 by 50 feet, 2 floors, 2 bedrooms, kitchen, living room, 5 ft front setback and 3 ft side setbacks.",
+      "extracted": {"plot_width": 30.0, "plot_length": 50.0, "unit": "feet", "floors": 2, "shape": "auto", "road_location": "south", "setbacks": [0, 0, 0, 0], "rooms": {"bedroom": 2, "kitchen": 1, "living": 1}, "attached_bedrooms": 0, "parking_spaces": 0, "relationships": []},
+      "result": {"valid_candidates": 28, "retained_alternatives": 5, "rooms": {"bedroom": 2, "kitchen": 1, "living": 1}, "bedroom_floors": [["bedroom-1", 1], ["bedroom-2", 1]], "areas_ft2": [["kitchen-1", 101.5], ["living-1", 158.5], ["bedroom-1", 130.0], ["bedroom-2", 130.0]], "relationships_met": [], "svg_export_bytes": 6476, "glb_export_bytes": 34480}
+    },
+    {
+      "id": "C5_L_parking",
+      "prompt": "40 by 60 feet, 2 floors, 3 bedrooms, kitchen, dining, living room, parking, L shape, road on the north.",
+      "extracted": {"plot_width": 40.0, "plot_length": 60.0, "unit": "feet", "floors": 2, "shape": "l_shape", "road_location": "north", "setbacks": [0, 0, 0, 0], "rooms": {"bedroom": 3, "kitchen": 1, "dining": 1, "living": 1}, "attached_bedrooms": 0, "parking_spaces": 1, "relationships": []},
+      "result": {"valid_candidates": 4, "retained_alternatives": 4, "rooms": {"bedroom": 3, "kitchen": 1, "dining": 1, "living": 1, "parking": 1}, "bedroom_floors": [["bedroom-1", 1], ["bedroom-2", 1], ["bedroom-3", 1]], "areas_ft2": [["kitchen-1", 960.0], ["parking-1", 222.2], ["dining-1", 164.2], ["living-1", 213.6], ["bedroom-1", 200.0], ["bedroom-2", 200.0], ["bedroom-3", 200.0]], "relationships_met": [], "svg_export_bytes": 8904, "glb_export_bytes": 46896}
+    },
+    {
+      "id": "C6_compact",
+      "prompt": "18 by 30 feet, single floor, 2 bedrooms, kitchen, living room, parking.",
+      "extracted": {"plot_width": 18.0, "plot_length": 30.0, "unit": "feet", "floors": 1, "shape": "auto", "road_location": "south", "setbacks": [0, 0, 0, 0], "rooms": {"bedroom": 2, "kitchen": 1, "living": 1}, "attached_bedrooms": 0, "parking_spaces": 1, "relationships": []},
+      "failure": "This corridor layout requires a plot at least 20 × 22 ft. Increase the plot or reduce your requirements."
+    },
+    {
+      "id": "C7_master_explicit",
+      "prompt": "30 by 50 feet, 2 floors, 3 bedrooms, kitchen, dining, living room. Put the master bedroom on the ground floor, make it at least 200 square feet, and keep the kitchen away from bedrooms.",
+      "extracted": {"master_minimum_area": null, "master_preferred_floor": null, "relationships": [], "special_requirements": []},
+      "result": {"valid_candidates": 28, "master_floor": 1, "master_area_ft2": 125.0}
+    }
+  ],
+  "passing_checks_for_generated_cases": ["Minimum room sizes", "Building inside plot", "Setbacks respected", "No room overlaps", "Valid floor assignments", "All rooms accessible", "Doors connect valid spaces", "Windows on exterior walls"],
+  "parking_check": "Parking has road-reachable vehicle access"
+}

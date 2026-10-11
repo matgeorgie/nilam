@@ -10,9 +10,10 @@ from threading import Lock, Thread
 import tempfile
 from typing import Literal
 import geopandas as gpd
+import httpx
 import numpy as np
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from shapely.geometry import Point, mapping, shape
@@ -42,6 +43,29 @@ async def lifespan(_:FastAPI):
 
 
 app=FastAPI(title='Nilam · Kerala Land Lab',version='0.3.0',lifespan=lifespan)
+
+
+@app.api_route('/design',methods=['GET','HEAD','POST','PUT','PATCH','DELETE'])
+@app.api_route('/design/{path:path}',methods=['GET','HEAD','POST','PUT','PATCH','DELETE'])
+async def design_studio(request:Request,path:str=''):
+    """Keep the ArchAI studio under Nilam's local browser origin."""
+    target='http://127.0.0.1:3000'+request.url.path
+    if request.url.query:target+='?'+request.url.query
+    headers={key:value for key,value in request.headers.items()
+             if key.lower() not in {'host','connection','accept-encoding','content-length'}}
+    headers['x-forwarded-host']=request.headers.get('host','127.0.0.1:8000')
+    headers['x-forwarded-proto']=request.url.scheme
+    try:
+        async with httpx.AsyncClient(timeout=120,follow_redirects=False) as client:
+            upstream=await client.request(request.method,target,headers=headers,content=await request.body())
+    except httpx.RequestError:
+        raise HTTPException(503,'Home design is unavailable. Start the ArchAI web server on port 3000.')
+    response_headers={key:value for key,value in upstream.headers.items()
+                      if key.lower() not in {'content-length','content-encoding','transfer-encoding','connection'}}
+    location=response_headers.get('location','')
+    if location.startswith('http://127.0.0.1:3000'):
+        response_headers['location']=location.replace('http://127.0.0.1:3000',str(request.base_url).rstrip('/'),1)
+    return Response(content=upstream.content,status_code=upstream.status_code,headers=response_headers)
 
 
 @lru_cache(maxsize=1)

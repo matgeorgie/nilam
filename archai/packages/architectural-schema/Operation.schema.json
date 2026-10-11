@@ -1,0 +1,92 @@
+{
+  "$defs": {
+    "HouseShape": {
+      "enum": [
+        "auto",
+        "rectangle",
+        "l_shape",
+        "t_shape",
+        "u_shape",
+        "c_shape",
+        "stepped",
+        "courtyard"
+      ],
+      "title": "HouseShape",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "operation": {
+      "enum": [
+        "set_house_shape",
+        "change_shape_parameters",
+        "add_room",
+        "remove_room",
+        "resize_room",
+        "move_room",
+        "connect_rooms",
+        "disconnect_rooms",
+        "change_floor",
+        "add_door",
+        "remove_door",
+        "add_window",
+        "remove_window",
+        "add_balcony",
+        "change_style",
+        "change_plot",
+        "regenerate_layout"
+      ],
+      "title": "Operation",
+      "type": "string"
+    },
+    "target_room": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Target Room"
+    },
+    "shape": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/HouseShape"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "parameters": {
+      "additionalProperties": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "number"
+          },
+          {
+            "type": "integer"
+          },
+          {
+            "type": "boolean"
+          }
+        ]
+      },
+      "title": "Parameters",
+      "type": "object"
+    }
+  },
+  "required": [
+    "operation"
+  ],
+  "title": "Operation",
+  "type": "object"
+}

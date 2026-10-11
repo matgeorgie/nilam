@@ -1,0 +1,20 @@
+import {test,expect} from '@playwright/test';
+test('furnished 3D scene and exact 2D geometry import',async({page,request})=>{
+ test.setTimeout(120000);
+ const auth=await request.post('http://127.0.0.1:8000/api/auth/demo');const {token}=await auth.json();const headers={Authorization:`Bearer ${token}`};
+ const rooms=[{type:'bedroom',name:'Bedroom',count:2},{type:'bathroom',name:'Bathroom',count:2},...['kitchen','dining','living','utility'].map(type=>({type,name:type}))];
+ const created=await request.post('http://127.0.0.1:8000/api/projects',{headers,data:{name:'Garden House',specification:{plot_width:40,plot_length:60,floors:1,parking_spaces:1,rooms}}});const project=await created.json();
+ const generation=await request.post(`http://127.0.0.1:8000/api/projects/${project.id}/generate`,{headers});expect(generation.ok(),await generation.text()).toBeTruthy();
+ const result=await request.get(`http://127.0.0.1:8000/api/projects/${project.id}`,{headers});const saved=await result.json();
+ await page.addInitScript(value=>localStorage.setItem('archai-session',value),token);const errors:string[]=[];page.on('pageerror',error=>errors.push(error.message));
+ await page.goto('/workspace/'+project.id);await expect(page.getByRole('button',{name:'3D view',exact:true})).toBeVisible();
+ await page.getByRole('button',{name:'3D view',exact:true}).click();await expect(page.locator('.model-container canvas')).toBeVisible({timeout:60000});
+ await expect(page.getByRole('button',{name:'Cutaway walls',exact:true})).toBeVisible();
+ await page.screenshot({path:'../../viewer-full-height.png',fullPage:true});
+ await page.getByRole('button',{name:'Cutaway walls',exact:true}).click();await expect(page.getByRole('button',{name:'Full-height walls',exact:true})).toBeVisible();
+ await page.screenshot({path:'../../viewer-cutaway.png',fullPage:true});
+ const downloading=page.waitForEvent('download');await page.getByRole('button',{name:'Download furnished GLB'}).click();const download=await downloading;await download.saveAs('../../furnished-house.glb');
+ await page.getByRole('button',{name:'Import 2D plan',exact:true}).click();await page.getByLabel('Choose floor plan').setInputFiles({name:'layout.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(saved.layout))});
+ await page.getByRole('button',{name:'Build 3D from this plan'}).click();await expect(page.getByText('Imported 2D plan ? reconstruction preview',{exact:false})).toBeVisible();
+ await expect(page.locator('.model-container canvas')).toBeVisible();expect(errors).toEqual([]);
+});

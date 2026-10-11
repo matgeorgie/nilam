@@ -1,0 +1,78 @@
+[
+  {
+    "file": "rectangle-plan.svg",
+    "valid": true,
+    "score": 94.8,
+    "shape": "rectangle",
+    "footprint_area": 1500.0,
+    "room_count": 14,
+    "violations": [],
+    "warnings": []
+  },
+  {
+    "file": "l_shape-plan.svg",
+    "valid": true,
+    "score": 93.8,
+    "shape": "l_shape",
+    "footprint_area": 1125.0,
+    "room_count": 14,
+    "violations": [],
+    "warnings": []
+  },
+  {
+    "file": "t_shape-plan.svg",
+    "valid": true,
+    "score": 92.4,
+    "shape": "t_shape",
+    "footprint_area": 1320.0,
+    "room_count": 14,
+    "violations": [],
+    "warnings": []
+  },
+  {
+    "file": "u_shape-plan.svg",
+    "valid": true,
+    "score": 78.6,
+    "shape": "u_shape",
+    "footprint_area": 1320.0,
+    "room_count": 14,
+    "violations": [],
+    "warnings": [
+      {
+        "name": "kitchen connected dining",
+        "status": "WARNING",
+        "detail": "Measured from generated room boundaries and door connections."
+      }
+    ]
+  },
+  {
+    "file": "c_shape-plan.svg",
+    "valid": true,
+    "score": 91.6,
+    "shape": "c_shape",
+    "footprint_area": 1200.0,
+    "room_count": 14,
+    "violations": [],
+    "warnings": []
+  },
+  {
+    "file": "stepped-plan.svg",
+    "valid": true,
+    "score": 92.8,
+    "shape": "stepped",
+    "footprint_area": 1227.0,
+    "room_count": 14,
+    "violations": [],
+    "warnings": []
+  },
+  {
+    "file": "courtyard-plan.svg",
+    "valid": true,
+    "score": 92.8,
+    "shape": "courtyard",
+    "footprint_area": 1420.0,
+    "room_count": 14,
+    "violations": [],
+    "warnings": []
+  }
+]

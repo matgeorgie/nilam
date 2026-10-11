@@ -1,0 +1,17 @@
+fastapi>=0.115,<1
+uvicorn[standard]>=0.34,<1
+pydantic>=2.10,<3
+sqlalchemy>=2.0,<3
+psycopg[binary]>=3.2,<4
+shapely>=2.0,<3
+numpy>=2.0,<3
+httpx>=0.28,<1
+reportlab>=4.0,<5
+pillow>=11,<13
+trimesh>=4.0,<5
+alembic>=1.14,<2
+pytest>=8,<10
+torch==2.5.1
+gdown>=5,<7
+opencv-python-headless>=4.10,<6
+networkx>=3.0

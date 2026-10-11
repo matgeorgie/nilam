@@ -9,7 +9,7 @@ __pycache__/
 data/raw/
 data/processed/
 data/cache/
-models/
+/models/
 *.pbf
 *.safetensors
 *.pt

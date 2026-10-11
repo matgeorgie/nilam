@@ -1,0 +1,921 @@
+{
+  "diversity": {
+    "total": 100,
+    "categories": {
+      "c_shape": 14,
+      "courtyard": 14,
+      "l_shape": 15,
+      "rectangle": 15,
+      "stepped": 14,
+      "t_shape": 14,
+      "u_shape": 14
+    },
+    "rectangle_ratio": 0.15,
+    "passes": true
+  },
+  "valid_count": 100,
+  "failed_count": 0,
+  "failures": [],
+  "plans": [
+    {
+      "valid": true,
+      "score": 94.5,
+      "shape": "rectangle",
+      "footprint_area": 1320.0,
+      "room_count": 5,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 95.1,
+      "shape": "l_shape",
+      "footprint_area": 1224.0,
+      "room_count": 7,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 92.7,
+      "shape": "t_shape",
+      "footprint_area": 1738.88,
+      "room_count": 7,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 94.0,
+      "shape": "u_shape",
+      "footprint_area": 1787.52,
+      "room_count": 10,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 85.2,
+      "shape": "c_shape",
+      "footprint_area": 2208.0,
+      "room_count": 5,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 90.4,
+      "shape": "stepped",
+      "footprint_area": 1570.56,
+      "room_count": 7,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 88.5,
+      "shape": "courtyard",
+      "footprint_area": 2182.53,
+      "room_count": 7,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 92.6,
+      "shape": "rectangle",
+      "footprint_area": 1672.0,
+      "room_count": 10,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 92.0,
+      "shape": "l_shape",
+      "footprint_area": 1512.0,
+      "room_count": 5,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 91.8,
+      "shape": "t_shape",
+      "footprint_area": 2104.96,
+      "room_count": 7,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 94.3,
+      "shape": "u_shape",
+      "footprint_area": 1276.8,
+      "room_count": 7,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 93.8,
+      "shape": "c_shape",
+      "footprint_area": 1632.0,
+      "room_count": 10,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 88.2,
+      "shape": "stepped",
+      "footprint_area": 1989.38,
+      "room_count": 5,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 87.6,
+      "shape": "courtyard",
+      "footprint_area": 2696.06,
+      "room_count": 7,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 89.9,
+      "shape": "rectangle",
+      "footprint_area": 2024.0,
+      "room_count": 7,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 93.9,
+      "shape": "l_shape",
+      "footprint_area": 1080.0,
+      "room_count": 10,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 92.0,
+      "shape": "t_shape",
+      "footprint_area": 1555.84,
+      "room_count": 5,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 92.7,
+      "shape": "u_shape",
+      "footprint_area": 1617.28,
+      "room_count": 7,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 90.6,
+      "shape": "c_shape",
+      "footprint_area": 2016.0,
+      "room_count": 7,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 93.3,
+      "shape": "stepped",
+      "footprint_area": 2408.19,
+      "room_count": 10,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 86.7,
+      "shape": "courtyard",
+      "footprint_area": 1931.2,
+      "room_count": 5,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 91.3,
+      "shape": "rectangle",
+      "footprint_area": 1496.0,
+      "room_count": 7,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 91.8,
+      "shape": "l_shape",
+      "footprint_area": 1368.0,
+      "room_count": 7,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 90.2,
+      "shape": "t_shape",
+      "footprint_area": 1921.92,
+      "room_count": 10,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 87.8,
+      "shape": "u_shape",
+      "footprint_area": 1957.76,
+      "room_count": 5,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 92.9,
+      "shape": "c_shape",
+      "footprint_area": 1440.0,
+      "room_count": 7,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 93.4,
+      "shape": "stepped",
+      "footprint_area": 1779.97,
+      "room_count": 7,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 93.7,
+      "shape": "courtyard",
+      "footprint_area": 2439.3,
+      "room_count": 10,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 89.4,
+      "shape": "rectangle",
+      "footprint_area": 1848.0,
+      "room_count": 5,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 89.6,
+      "shape": "l_shape",
+      "footprint_area": 1656.0,
+      "room_count": 7,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 90.8,
+      "shape": "t_shape",
+      "footprint_area": 1372.8,
+      "room_count": 7,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 91.4,
+      "shape": "u_shape",
+      "footprint_area": 1447.04,
+      "room_count": 10,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 89.6,
+      "shape": "c_shape",
+      "footprint_area": 1824.0,
+      "room_count": 5,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 93.5,
+      "shape": "stepped",
+      "footprint_area": 2198.78,
+      "room_count": 7,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 91.4,
+      "shape": "courtyard",
+      "footprint_area": 2952.83,
+      "room_count": 7,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 97.8,
+      "shape": "rectangle",
+      "footprint_area": 1320.0,
+      "room_count": 10,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 89.2,
+      "shape": "l_shape",
+      "footprint_area": 1224.0,
+      "room_count": 5,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 90.1,
+      "shape": "t_shape",
+      "footprint_area": 1738.88,
+      "room_count": 7,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 87.7,
+      "shape": "u_shape",
+      "footprint_area": 1787.52,
+      "room_count": 7,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 88.1,
+      "shape": "c_shape",
+      "footprint_area": 2208.0,
+      "room_count": 10,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 92.4,
+      "shape": "stepped",
+      "footprint_area": 1570.56,
+      "room_count": 5,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 94.3,
+      "shape": "courtyard",
+      "footprint_area": 2182.53,
+      "room_count": 7,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 96.3,
+      "shape": "rectangle",
+      "footprint_area": 1672.0,
+      "room_count": 7,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 95.2,
+      "shape": "l_shape",
+      "footprint_area": 1512.0,
+      "room_count": 10,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 86.5,
+      "shape": "t_shape",
+      "footprint_area": 2104.96,
+      "room_count": 5,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 89.4,
+      "shape": "u_shape",
+      "footprint_area": 1276.8,
+      "room_count": 7,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 88.5,
+      "shape": "c_shape",
+      "footprint_area": 1632.0,
+      "room_count": 7,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 90.0,
+      "shape": "stepped",
+      "footprint_area": 1989.38,
+      "room_count": 10,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 89.6,
+      "shape": "courtyard",
+      "footprint_area": 2696.06,
+      "room_count": 5,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 94.9,
+      "shape": "rectangle",
+      "footprint_area": 2024.0,
+      "room_count": 7,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 95.6,
+      "shape": "l_shape",
+      "footprint_area": 1080.0,
+      "room_count": 7,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 95.9,
+      "shape": "t_shape",
+      "footprint_area": 1555.84,
+      "room_count": 10,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 86.6,
+      "shape": "u_shape",
+      "footprint_area": 1617.28,
+      "room_count": 5,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 87.1,
+      "shape": "c_shape",
+      "footprint_area": 2016.0,
+      "room_count": 7,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 88.8,
+      "shape": "stepped",
+      "footprint_area": 2408.19,
+      "room_count": 7,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 90.6,
+      "shape": "courtyard",
+      "footprint_area": 1931.2,
+      "room_count": 10,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 93.3,
+      "shape": "rectangle",
+      "footprint_area": 1496.0,
+      "room_count": 5,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 94.0,
+      "shape": "l_shape",
+      "footprint_area": 1368.0,
+      "room_count": 7,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 92.0,
+      "shape": "t_shape",
+      "footprint_area": 1921.92,
+      "room_count": 7,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 94.4,
+      "shape": "u_shape",
+      "footprint_area": 1957.76,
+      "room_count": 10,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 87.7,
+      "shape": "c_shape",
+      "footprint_area": 1440.0,
+      "room_count": 5,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 89.7,
+      "shape": "stepped",
+      "footprint_area": 1779.97,
+      "room_count": 7,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 88.2,
+      "shape": "courtyard",
+      "footprint_area": 2439.3,
+      "room_count": 7,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 91.7,
+      "shape": "rectangle",
+      "footprint_area": 1848.0,
+      "room_count": 10,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 91.5,
+      "shape": "l_shape",
+      "footprint_area": 1656.0,
+      "room_count": 5,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 94.8,
+      "shape": "t_shape",
+      "footprint_area": 1372.8,
+      "room_count": 7,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 93.1,
+      "shape": "u_shape",
+      "footprint_area": 1447.04,
+      "room_count": 7,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 93.1,
+      "shape": "c_shape",
+      "footprint_area": 1824.0,
+      "room_count": 10,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 87.8,
+      "shape": "stepped",
+      "footprint_area": 2198.78,
+      "room_count": 5,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 87.1,
+      "shape": "courtyard",
+      "footprint_area": 2952.83,
+      "room_count": 7,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 91.8,
+      "shape": "rectangle",
+      "footprint_area": 1320.0,
+      "room_count": 7,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 92.4,
+      "shape": "l_shape",
+      "footprint_area": 1224.0,
+      "room_count": 10,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 90.9,
+      "shape": "t_shape",
+      "footprint_area": 1738.88,
+      "room_count": 5,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 93.4,
+      "shape": "u_shape",
+      "footprint_area": 1787.52,
+      "room_count": 7,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 90.0,
+      "shape": "c_shape",
+      "footprint_area": 2208.0,
+      "room_count": 7,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 95.8,
+      "shape": "stepped",
+      "footprint_area": 1570.56,
+      "room_count": 10,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 87.2,
+      "shape": "courtyard",
+      "footprint_area": 2182.53,
+      "room_count": 5,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 90.7,
+      "shape": "rectangle",
+      "footprint_area": 1672.0,
+      "room_count": 7,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 91.0,
+      "shape": "l_shape",
+      "footprint_area": 1512.0,
+      "room_count": 7,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 89.5,
+      "shape": "t_shape",
+      "footprint_area": 2104.96,
+      "room_count": 10,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 91.8,
+      "shape": "u_shape",
+      "footprint_area": 1276.8,
+      "room_count": 5,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 92.6,
+      "shape": "c_shape",
+      "footprint_area": 1632.0,
+      "room_count": 7,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 93.2,
+      "shape": "stepped",
+      "footprint_area": 1989.38,
+      "room_count": 7,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 93.6,
+      "shape": "courtyard",
+      "footprint_area": 2696.06,
+      "room_count": 10,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 89.3,
+      "shape": "rectangle",
+      "footprint_area": 2024.0,
+      "room_count": 5,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 91.2,
+      "shape": "l_shape",
+      "footprint_area": 1080.0,
+      "room_count": 7,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 90.8,
+      "shape": "t_shape",
+      "footprint_area": 1555.84,
+      "room_count": 7,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 90.5,
+      "shape": "u_shape",
+      "footprint_area": 1617.28,
+      "room_count": 10,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 88.7,
+      "shape": "c_shape",
+      "footprint_area": 2016.0,
+      "room_count": 5,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 91.4,
+      "shape": "stepped",
+      "footprint_area": 2408.19,
+      "room_count": 7,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 93.0,
+      "shape": "courtyard",
+      "footprint_area": 1931.2,
+      "room_count": 7,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 97.1,
+      "shape": "rectangle",
+      "footprint_area": 1496.0,
+      "room_count": 10,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 88.7,
+      "shape": "l_shape",
+      "footprint_area": 1368.0,
+      "room_count": 5,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 89.3,
+      "shape": "t_shape",
+      "footprint_area": 1921.92,
+      "room_count": 7,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 87.2,
+      "shape": "u_shape",
+      "footprint_area": 1957.76,
+      "room_count": 7,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 91.4,
+      "shape": "c_shape",
+      "footprint_area": 1440.0,
+      "room_count": 10,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 90.4,
+      "shape": "stepped",
+      "footprint_area": 1779.97,
+      "room_count": 5,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 93.7,
+      "shape": "courtyard",
+      "footprint_area": 2439.3,
+      "room_count": 7,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 95.8,
+      "shape": "rectangle",
+      "footprint_area": 1848.0,
+      "room_count": 7,
+      "violations": [],
+      "warnings": []
+    },
+    {
+      "valid": true,
+      "score": 94.3,
+      "shape": "l_shape",
+      "footprint_area": 1656.0,
+      "room_count": 10,
+      "violations": [],
+      "warnings": []
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+﻿import {test,expect} from '@playwright/test';
+test('duplex has matching return stairs on both floors',async({page,request})=>{
+ test.setTimeout(120000);
+ const auth=await request.post('http://127.0.0.1:8000/api/auth/demo');const {token}=await auth.json();const headers={Authorization:`Bearer ${token}`};
+ const specification={plot_width:30,plot_length:50,floors:2,road_location:'south',parking_spaces:1,rooms:['living','dining','kitchen','bedroom','bathroom'].map(type=>({type,name:type}))};
+ const created=await request.post('http://127.0.0.1:8000/api/projects',{headers,data:{name:'Corrected stair planning',specification}});const project=await created.json();
+ const result=await request.post(`http://127.0.0.1:8000/api/projects/${project.id}/generate`,{headers});expect(result.ok(),await result.text()).toBeTruthy();
+ const saved=await result.json();expect(saved.layout.strategy).toBe('MODERN_DUPLEX');expect(saved.layout.stairs[0].kind).toBe('dogleg');expect(saved.layout.checks.filter((c:any)=>c.status==='ERROR')).toEqual([]);
+ await page.addInitScript(value=>localStorage.setItem('archai-session',value),token);const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.goto('/workspace/'+project.id);await expect(page.getByRole('button',{name:'3D view',exact:true})).toBeVisible();
+ await page.screenshot({path:'../../modern-plan-2d.png',fullPage:true});
+ await page.getByRole('button',{name:'3D view',exact:true}).click();await expect(page.locator('.model-container canvas')).toBeVisible({timeout:60000});
+ await page.getByRole('button',{name:'Cutaway walls',exact:true}).click();
+ await page.screenshot({path:'../../modern-plan-3d.png',fullPage:true});
+ await page.getByLabel('Select floor').selectOption('1');
+ await page.getByRole('button',{name:'2D plan',exact:true}).click();
+ await expect(page.getByText('DOWN',{exact:true})).toBeVisible();
+ await page.screenshot({path:'../../modern-plan-upper.png',fullPage:true});
+ expect(errors).toEqual([]);
+});

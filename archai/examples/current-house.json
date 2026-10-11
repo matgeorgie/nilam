@@ -1,0 +1,3578 @@
+{
+  "generation_info": {
+    "model": "HouseGAN++",
+    "loaded": true,
+    "used": false,
+    "attempts": 3,
+    "reason": "No learned proposal passed validation",
+    "rejections": [
+      "Empty room mask",
+      "No room overlaps, Minimum room sizes, Doors connect valid spaces, All rooms accessible",
+      "Minimum room sizes, Doors connect valid spaces, All rooms accessible"
+    ],
+    "final_engine": "LEGACY_FALLBACK"
+  },
+  "width": 30.0,
+  "length": 40.0,
+  "floors": 1,
+  "unit": "feet",
+  "footprint": {
+    "shape": "rectangle",
+    "plot_width": 30.0,
+    "plot_length": 40.0,
+    "boundary": [
+      [
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        40.0
+      ],
+      [
+        30.0,
+        40.0
+      ],
+      [
+        30.0,
+        0.0
+      ]
+    ],
+    "courtyard": null,
+    "buildable_boundary": [
+      [
+        30.0,
+        0.0
+      ],
+      [
+        30.0,
+        40.0
+      ],
+      [
+        0.0,
+        40.0
+      ],
+      [
+        0.0,
+        0.0
+      ]
+    ],
+    "bounding_box": [
+      0.0,
+      0.0,
+      30.0,
+      40.0
+    ],
+    "metrics": {
+      "W": 30.0,
+      "L": 40.0,
+      "footprint_area": 1200.0,
+      "buildable_area": 1200.0
+    }
+  },
+  "plot_boundary": [
+    [
+      0.0,
+      0.0
+    ],
+    [
+      30.0,
+      0.0
+    ],
+    [
+      30.0,
+      40.0
+    ],
+    [
+      0.0,
+      40.0
+    ]
+  ],
+  "setback_boundary": [
+    [
+      30.0,
+      0.0
+    ],
+    [
+      30.0,
+      40.0
+    ],
+    [
+      0.0,
+      40.0
+    ],
+    [
+      0.0,
+      0.0
+    ]
+  ],
+  "road_edge": [
+    [
+      0.0,
+      40.0
+    ],
+    [
+      30.0,
+      40.0
+    ]
+  ],
+  "strategy": "LEGACY_FALLBACK",
+  "rooms": [
+    {
+      "id": "hall-0-0",
+      "name": "Circulation",
+      "type": "hall",
+      "floor": 0,
+      "x": 13.0,
+      "y": 0.0,
+      "width": 4.0,
+      "height": 40.0,
+      "polygon": [
+        [
+          13.0,
+          0.0
+        ],
+        [
+          17.0,
+          0.0
+        ],
+        [
+          17.0,
+          40.0
+        ],
+        [
+          13.0,
+          40.0
+        ]
+      ],
+      "rotation": 0,
+      "attached_to": null,
+      "minimum_area": 0,
+      "preferred_area": null,
+      "privacy_level": "semi_private",
+      "accessible": true
+    },
+    {
+      "id": "dining-1",
+      "name": "Dining \u00b7 Ground floor",
+      "type": "dining",
+      "floor": 0,
+      "x": 0.0,
+      "y": 0.0,
+      "width": 13.0,
+      "height": 15.698996655518394,
+      "polygon": [
+        [
+          0.0,
+          0.0
+        ],
+        [
+          13.0,
+          0.0
+        ],
+        [
+          13.0,
+          15.698996655518394
+        ],
+        [
+          0.0,
+          15.698996655518394
+        ]
+      ],
+      "rotation": 0,
+      "attached_to": null,
+      "minimum_area": 90.0,
+      "preferred_area": null,
+      "privacy_level": "semi_private",
+      "accessible": true
+    },
+    {
+      "id": "living-1",
+      "name": "Living \u00b7 Ground floor",
+      "type": "living",
+      "floor": 0,
+      "x": 0.0,
+      "y": 15.698996655518394,
+      "width": 13.0,
+      "height": 19.301003344481607,
+      "polygon": [
+        [
+          0.0,
+          15.698996655518394
+        ],
+        [
+          13.0,
+          15.698996655518394
+        ],
+        [
+          13.0,
+          35.0
+        ],
+        [
+          0.0,
+          35.0
+        ]
+      ],
+      "rotation": 0,
+      "attached_to": null,
+      "minimum_area": 140.0,
+      "preferred_area": null,
+      "privacy_level": "semi_private",
+      "accessible": true
+    },
+    {
+      "id": "bathroom-1",
+      "name": "Bathroom \u00b7 Ground floor",
+      "type": "bathroom",
+      "floor": 0,
+      "x": 17.0,
+      "y": 0.0,
+      "width": 13.0,
+      "height": 5.681592039800995,
+      "polygon": [
+        [
+          17.0,
+          0.0
+        ],
+        [
+          30.0,
+          0.0
+        ],
+        [
+          30.0,
+          5.681592039800995
+        ],
+        [
+          17.0,
+          5.681592039800995
+        ]
+      ],
+      "rotation": 0,
+      "attached_to": null,
+      "minimum_area": 35.0,
+      "preferred_area": null,
+      "privacy_level": "semi_private",
+      "accessible": true
+    },
+    {
+      "id": "kitchen-1",
+      "name": "Kitchen \u00b7 Ground floor",
+      "type": "kitchen",
+      "floor": 0,
+      "x": 17.0,
+      "y": 5.681592039800995,
+      "width": 13.0,
+      "height": 10.233830845771145,
+      "polygon": [
+        [
+          17.0,
+          5.681592039800995
+        ],
+        [
+          30.0,
+          5.681592039800995
+        ],
+        [
+          30.0,
+          15.91542288557214
+        ],
+        [
+          17.0,
+          15.91542288557214
+        ]
+      ],
+      "rotation": 0,
+      "attached_to": null,
+      "minimum_area": 80.0,
+      "preferred_area": null,
+      "privacy_level": "semi_private",
+      "accessible": true
+    },
+    {
+      "id": "bedroom-1",
+      "name": "Ground bedroom 1",
+      "type": "bedroom",
+      "floor": 0,
+      "x": 17.0,
+      "y": 15.91542288557214,
+      "width": 13.0,
+      "height": 12.042288557213931,
+      "polygon": [
+        [
+          17.0,
+          15.91542288557214
+        ],
+        [
+          30.0,
+          15.91542288557214
+        ],
+        [
+          30.0,
+          27.95771144278607
+        ],
+        [
+          17.0,
+          27.95771144278607
+        ]
+      ],
+      "rotation": 0,
+      "attached_to": null,
+      "minimum_area": 100.0,
+      "preferred_area": null,
+      "privacy_level": "semi_private",
+      "accessible": true
+    },
+    {
+      "id": "bedroom-2",
+      "name": "Ground bedroom 2",
+      "type": "bedroom",
+      "floor": 0,
+      "x": 17.0,
+      "y": 27.95771144278607,
+      "width": 13.0,
+      "height": 12.04228855721393,
+      "polygon": [
+        [
+          17.0,
+          27.95771144278607
+        ],
+        [
+          30.0,
+          27.95771144278607
+        ],
+        [
+          30.0,
+          40.0
+        ],
+        [
+          17.0,
+          40.0
+        ]
+      ],
+      "rotation": 0,
+      "attached_to": null,
+      "minimum_area": 100.0,
+      "preferred_area": null,
+      "privacy_level": "semi_private",
+      "accessible": true
+    },
+    {
+      "id": "porch-1",
+      "name": "Entrance sit-out",
+      "type": "porch",
+      "floor": 0,
+      "x": 0.0,
+      "y": 35.0,
+      "width": 13.0,
+      "height": 5.0,
+      "polygon": [
+        [
+          0.0,
+          35.0
+        ],
+        [
+          13.0,
+          35.0
+        ],
+        [
+          13.0,
+          40.0
+        ],
+        [
+          0.0,
+          40.0
+        ]
+      ],
+      "rotation": 0,
+      "attached_to": null,
+      "minimum_area": 50.0,
+      "preferred_area": null,
+      "privacy_level": "semi_private",
+      "accessible": true
+    }
+  ],
+  "walls": [
+    {
+      "id": "wall-0",
+      "floor": 0,
+      "x1": 0.0,
+      "y1": 0.0,
+      "x2": 13.0,
+      "y2": 0.0,
+      "exterior": true,
+      "thickness": 0.5
+    },
+    {
+      "id": "wall-1",
+      "floor": 0,
+      "x1": 13.0,
+      "y1": 0.0,
+      "x2": 17.0,
+      "y2": 0.0,
+      "exterior": true,
+      "thickness": 0.5
+    },
+    {
+      "id": "wall-2",
+      "floor": 0,
+      "x1": 17.0,
+      "y1": 0.0,
+      "x2": 30.0,
+      "y2": 0.0,
+      "exterior": true,
+      "thickness": 0.5
+    },
+    {
+      "id": "wall-3",
+      "floor": 0,
+      "x1": 17.0,
+      "y1": 0.0,
+      "x2": 17.0,
+      "y2": 5.681592,
+      "exterior": false,
+      "thickness": 0.5
+    },
+    {
+      "id": "wall-4",
+      "floor": 0,
+      "x1": 17.0,
+      "y1": 5.681592,
+      "x2": 17.0,
+      "y2": 15.915423,
+      "exterior": false,
+      "thickness": 0.5
+    },
+    {
+      "id": "wall-5",
+      "floor": 0,
+      "x1": 17.0,
+      "y1": 15.915423,
+      "x2": 17.0,
+      "y2": 27.957711,
+      "exterior": false,
+      "thickness": 0.5
+    },
+    {
+      "id": "wall-6",
+      "floor": 0,
+      "x1": 17.0,
+      "y1": 27.957711,
+      "x2": 17.0,
+      "y2": 40.0,
+      "exterior": false,
+      "thickness": 0.5
+    },
+    {
+      "id": "wall-7",
+      "floor": 0,
+      "x1": 0.0,
+      "y1": 40.0,
+      "x2": 13.0,
+      "y2": 40.0,
+      "exterior": true,
+      "thickness": 0.5
+    },
+    {
+      "id": "wall-8",
+      "floor": 0,
+      "x1": 13.0,
+      "y1": 40.0,
+      "x2": 17.0,
+      "y2": 40.0,
+      "exterior": true,
+      "thickness": 0.5
+    },
+    {
+      "id": "wall-9",
+      "floor": 0,
+      "x1": 17.0,
+      "y1": 40.0,
+      "x2": 30.0,
+      "y2": 40.0,
+      "exterior": true,
+      "thickness": 0.5
+    },
+    {
+      "id": "wall-10",
+      "floor": 0,
+      "x1": 13.0,
+      "y1": 0.0,
+      "x2": 13.0,
+      "y2": 15.698997,
+      "exterior": false,
+      "thickness": 0.5
+    },
+    {
+      "id": "wall-11",
+      "floor": 0,
+      "x1": 13.0,
+      "y1": 15.698997,
+      "x2": 13.0,
+      "y2": 35.0,
+      "exterior": false,
+      "thickness": 0.5
+    },
+    {
+      "id": "wall-12",
+      "floor": 0,
+      "x1": 13.0,
+      "y1": 35.0,
+      "x2": 13.0,
+      "y2": 40.0,
+      "exterior": false,
+      "thickness": 0.5
+    },
+    {
+      "id": "wall-13",
+      "floor": 0,
+      "x1": 0.0,
+      "y1": 0.0,
+      "x2": 0.0,
+      "y2": 15.698997,
+      "exterior": true,
+      "thickness": 0.5
+    },
+    {
+      "id": "wall-14",
+      "floor": 0,
+      "x1": 0.0,
+      "y1": 15.698997,
+      "x2": 0.0,
+      "y2": 35.0,
+      "exterior": true,
+      "thickness": 0.5
+    },
+    {
+      "id": "wall-15",
+      "floor": 0,
+      "x1": 0.0,
+      "y1": 35.0,
+      "x2": 0.0,
+      "y2": 40.0,
+      "exterior": true,
+      "thickness": 0.5
+    },
+    {
+      "id": "wall-16",
+      "floor": 0,
+      "x1": 0.0,
+      "y1": 35.0,
+      "x2": 13.0,
+      "y2": 35.0,
+      "exterior": false,
+      "thickness": 0.5
+    },
+    {
+      "id": "wall-17",
+      "floor": 0,
+      "x1": 30.0,
+      "y1": 0.0,
+      "x2": 30.0,
+      "y2": 5.681592,
+      "exterior": true,
+      "thickness": 0.5
+    },
+    {
+      "id": "wall-18",
+      "floor": 0,
+      "x1": 30.0,
+      "y1": 5.681592,
+      "x2": 30.0,
+      "y2": 15.915423,
+      "exterior": true,
+      "thickness": 0.5
+    },
+    {
+      "id": "wall-19",
+      "floor": 0,
+      "x1": 30.0,
+      "y1": 15.915423,
+      "x2": 30.0,
+      "y2": 27.957711,
+      "exterior": true,
+      "thickness": 0.5
+    },
+    {
+      "id": "wall-20",
+      "floor": 0,
+      "x1": 30.0,
+      "y1": 27.957711,
+      "x2": 30.0,
+      "y2": 40.0,
+      "exterior": true,
+      "thickness": 0.5
+    },
+    {
+      "id": "wall-21",
+      "floor": 0,
+      "x1": 17.0,
+      "y1": 5.681592,
+      "x2": 30.0,
+      "y2": 5.681592,
+      "exterior": false,
+      "thickness": 0.5
+    },
+    {
+      "id": "wall-22",
+      "floor": 0,
+      "x1": 17.0,
+      "y1": 15.915423,
+      "x2": 30.0,
+      "y2": 15.915423,
+      "exterior": false,
+      "thickness": 0.5
+    },
+    {
+      "id": "wall-23",
+      "floor": 0,
+      "x1": 17.0,
+      "y1": 27.957711,
+      "x2": 30.0,
+      "y2": 27.957711,
+      "exterior": false,
+      "thickness": 0.5
+    }
+  ],
+  "doors": [
+    {
+      "id": "door-0",
+      "room_a": "dining-1",
+      "room_b": "hall-0-0",
+      "wall": "wall-10",
+      "position": 6.5494985,
+      "width": 2.6,
+      "swing_direction": "left",
+      "kind": "interior"
+    },
+    {
+      "id": "door-1",
+      "room_a": "living-1",
+      "room_b": "hall-0-0",
+      "wall": "wall-11",
+      "position": 8.3505015,
+      "width": 2.6,
+      "swing_direction": "left",
+      "kind": "interior"
+    },
+    {
+      "id": "door-2",
+      "room_a": "bathroom-1",
+      "room_b": "hall-0-0",
+      "wall": "wall-3",
+      "position": 1.540796,
+      "width": 2.6,
+      "swing_direction": "left",
+      "kind": "interior"
+    },
+    {
+      "id": "door-3",
+      "room_a": "kitchen-1",
+      "room_b": "hall-0-0",
+      "wall": "wall-4",
+      "position": 3.8169155000000003,
+      "width": 2.6,
+      "swing_direction": "left",
+      "kind": "interior"
+    },
+    {
+      "id": "door-4",
+      "room_a": "bedroom-1",
+      "room_b": "hall-0-0",
+      "wall": "wall-5",
+      "position": 4.721144,
+      "width": 2.6,
+      "swing_direction": "left",
+      "kind": "interior"
+    },
+    {
+      "id": "door-5",
+      "room_a": "bedroom-2",
+      "room_b": "hall-0-0",
+      "wall": "wall-6",
+      "position": 4.7211445,
+      "width": 2.6,
+      "swing_direction": "left",
+      "kind": "interior"
+    },
+    {
+      "id": "door-6",
+      "room_a": "porch-1",
+      "room_b": "living-1",
+      "wall": "wall-16",
+      "position": 4.9,
+      "width": 3.2,
+      "swing_direction": "left",
+      "kind": "interior"
+    },
+    {
+      "id": "door-7",
+      "room_a": "porch-1",
+      "room_b": null,
+      "wall": "wall-7",
+      "position": 4.9,
+      "width": 3.2,
+      "swing_direction": "left",
+      "kind": "entry"
+    }
+  ],
+  "windows": [
+    {
+      "id": "window-dining-1",
+      "room": "dining-1",
+      "wall": "wall-13",
+      "position": 5.8494985,
+      "width": 4.0
+    },
+    {
+      "id": "window-living-1",
+      "room": "living-1",
+      "wall": "wall-14",
+      "position": 7.650501500000001,
+      "width": 4.0
+    },
+    {
+      "id": "window-bathroom-1",
+      "room": "bathroom-1",
+      "wall": "wall-2",
+      "position": 4.5,
+      "width": 4.0
+    },
+    {
+      "id": "window-kitchen-1",
+      "room": "kitchen-1",
+      "wall": "wall-18",
+      "position": 3.1169155,
+      "width": 4.0
+    },
+    {
+      "id": "window-bedroom-1",
+      "room": "bedroom-1",
+      "wall": "wall-19",
+      "position": 4.021144,
+      "width": 4.0
+    },
+    {
+      "id": "window-bedroom-2",
+      "room": "bedroom-2",
+      "wall": "wall-9",
+      "position": 4.5,
+      "width": 4.0
+    }
+  ],
+  "stairs": [],
+  "checks": [
+    {
+      "name": "Valid building polygon",
+      "status": "PASS",
+      "detail": "GEOS topology is valid."
+    },
+    {
+      "name": "Building inside plot",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "Setbacks respected",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "All rooms inside selected footprint",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "No room overlaps",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "Valid floor assignments",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "Minimum room sizes",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "1 bathroom",
+      "status": "PASS",
+      "detail": "1 generated"
+    },
+    {
+      "name": "2 bedrooms",
+      "status": "PASS",
+      "detail": "2 generated"
+    },
+    {
+      "name": "1 dining",
+      "status": "PASS",
+      "detail": "1 generated"
+    },
+    {
+      "name": "1 living",
+      "status": "PASS",
+      "detail": "1 generated"
+    },
+    {
+      "name": "1 kitchen",
+      "status": "PASS",
+      "detail": "1 generated"
+    },
+    {
+      "name": "Ground floor: 2 bedroom",
+      "status": "PASS",
+      "detail": "2 generated on the requested floor."
+    },
+    {
+      "name": "Ground floor: 1 living",
+      "status": "PASS",
+      "detail": "1 generated on the requested floor."
+    },
+    {
+      "name": "Ground floor: 1 dining",
+      "status": "PASS",
+      "detail": "1 generated on the requested floor."
+    },
+    {
+      "name": "Ground floor: 1 kitchen",
+      "status": "PASS",
+      "detail": "1 generated on the requested floor."
+    },
+    {
+      "name": "Ground floor: 1 bathroom",
+      "status": "PASS",
+      "detail": "1 generated on the requested floor."
+    },
+    {
+      "name": "0 attached bathrooms",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "0 parking spaces",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "Doors connect valid spaces",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "Parking has road-reachable vehicle access",
+      "status": "PASS",
+      "detail": "Each vehicle bay requires an exterior gate at least 8 ft wide with an unobstructed route to the declared road edge."
+    },
+    {
+      "name": "Windows on exterior walls",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "Staircase connects floors",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "All rooms accessible",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "Road access available",
+      "status": "PASS",
+      "detail": "An exterior entrance connects the circulation graph."
+    },
+    {
+      "name": "Bathrooms avoid direct kitchen access",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "Entrance serves public space",
+      "status": "PASS",
+      "detail": "Exterior entry should lead to circulation, living, or an entry porch."
+    },
+    {
+      "name": "Road to sit-out to living route",
+      "status": "PASS",
+      "detail": "Every pedestrian entry must reach a distinct sit-out before the living room."
+    },
+    {
+      "name": "Sit-out has usable space",
+      "status": "PASS",
+      "detail": "The sit-out requires at least 50 sq ft and a 4 ft clear side."
+    },
+    {
+      "name": "Sit-out faces the road",
+      "status": "PASS",
+      "detail": "The front entry must have a clear approach from the declared road side."
+    },
+    {
+      "name": "Parking cannot bypass the sit-out",
+      "status": "PASS",
+      "detail": "A car bay must not provide a shortcut into bedrooms, bathrooms or the living room."
+    },
+    {
+      "name": "Simple-home layout unavailable",
+      "status": "WARNING",
+      "detail": "The legacy corridor-based generator was used; review circulation and room access."
+    }
+  ],
+  "score": {
+    "requirement_score": 100.0,
+    "adjacency_score": 100.0,
+    "area_score": 69.8,
+    "circulation_score": 100.0,
+    "efficiency_score": 86.7,
+    "lighting_score": 100.0,
+    "privacy_score": 100.0,
+    "ventilation_score": 100.0,
+    "structural_score": 100.0,
+    "plot_utilization_score": 100.0,
+    "strategy_score": 100.0,
+    "overall_score": 95.6
+  },
+  "generation_ms": 1435.848499997519,
+  "candidate_count": 3,
+  "chosen_candidate_id": "rectangle-PUBLIC_FRONT-0",
+  "alternatives": [
+    {
+      "candidate_id": "rectangle-PUBLIC_FRONT-0",
+      "strategy": "PUBLIC_FRONT",
+      "label": "Rectangle",
+      "rationale": "Rectangle footprint \u00b7 100% circulation \u00b7 100% daylight \u00b7 100% plot use",
+      "width": 30.0,
+      "length": 40.0,
+      "floors": 1,
+      "unit": "feet",
+      "footprint": {
+        "shape": "rectangle",
+        "plot_width": 30.0,
+        "plot_length": 40.0,
+        "boundary": [
+          [
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            40.0
+          ],
+          [
+            30.0,
+            40.0
+          ],
+          [
+            30.0,
+            0.0
+          ]
+        ],
+        "courtyard": null,
+        "buildable_boundary": [
+          [
+            30.0,
+            0.0
+          ],
+          [
+            30.0,
+            40.0
+          ],
+          [
+            0.0,
+            40.0
+          ],
+          [
+            0.0,
+            0.0
+          ]
+        ],
+        "bounding_box": [
+          0.0,
+          0.0,
+          30.0,
+          40.0
+        ],
+        "metrics": {
+          "W": 30.0,
+          "L": 40.0,
+          "footprint_area": 1200.0,
+          "buildable_area": 1200.0
+        }
+      },
+      "rooms": [
+        {
+          "id": "hall-0-0",
+          "name": "Circulation",
+          "type": "hall",
+          "floor": 0,
+          "x": 13.0,
+          "y": 0.0,
+          "width": 4.0,
+          "height": 40.0,
+          "polygon": [
+            [
+              13.0,
+              0.0
+            ],
+            [
+              17.0,
+              0.0
+            ],
+            [
+              17.0,
+              40.0
+            ],
+            [
+              13.0,
+              40.0
+            ]
+          ],
+          "rotation": 0,
+          "attached_to": null,
+          "minimum_area": 0,
+          "preferred_area": null,
+          "privacy_level": "semi_private",
+          "accessible": true
+        },
+        {
+          "id": "dining-1",
+          "name": "Dining \u00b7 Ground floor",
+          "type": "dining",
+          "floor": 0,
+          "x": 0.0,
+          "y": 0.0,
+          "width": 13.0,
+          "height": 15.698996655518394,
+          "polygon": [
+            [
+              0.0,
+              0.0
+            ],
+            [
+              13.0,
+              0.0
+            ],
+            [
+              13.0,
+              15.698996655518394
+            ],
+            [
+              0.0,
+              15.698996655518394
+            ]
+          ],
+          "rotation": 0,
+          "attached_to": null,
+          "minimum_area": 90.0,
+          "preferred_area": null,
+          "privacy_level": "semi_private",
+          "accessible": true
+        },
+        {
+          "id": "living-1",
+          "name": "Living \u00b7 Ground floor",
+          "type": "living",
+          "floor": 0,
+          "x": 0.0,
+          "y": 15.698996655518394,
+          "width": 13.0,
+          "height": 19.301003344481607,
+          "polygon": [
+            [
+              0.0,
+              15.698996655518394
+            ],
+            [
+              13.0,
+              15.698996655518394
+            ],
+            [
+              13.0,
+              35.0
+            ],
+            [
+              0.0,
+              35.0
+            ]
+          ],
+          "rotation": 0,
+          "attached_to": null,
+          "minimum_area": 140.0,
+          "preferred_area": null,
+          "privacy_level": "semi_private",
+          "accessible": true
+        },
+        {
+          "id": "bathroom-1",
+          "name": "Bathroom \u00b7 Ground floor",
+          "type": "bathroom",
+          "floor": 0,
+          "x": 17.0,
+          "y": 0.0,
+          "width": 13.0,
+          "height": 5.681592039800995,
+          "polygon": [
+            [
+              17.0,
+              0.0
+            ],
+            [
+              30.0,
+              0.0
+            ],
+            [
+              30.0,
+              5.681592039800995
+            ],
+            [
+              17.0,
+              5.681592039800995
+            ]
+          ],
+          "rotation": 0,
+          "attached_to": null,
+          "minimum_area": 35.0,
+          "preferred_area": null,
+          "privacy_level": "semi_private",
+          "accessible": true
+        },
+        {
+          "id": "kitchen-1",
+          "name": "Kitchen \u00b7 Ground floor",
+          "type": "kitchen",
+          "floor": 0,
+          "x": 17.0,
+          "y": 5.681592039800995,
+          "width": 13.0,
+          "height": 10.233830845771145,
+          "polygon": [
+            [
+              17.0,
+              5.681592039800995
+            ],
+            [
+              30.0,
+              5.681592039800995
+            ],
+            [
+              30.0,
+              15.91542288557214
+            ],
+            [
+              17.0,
+              15.91542288557214
+            ]
+          ],
+          "rotation": 0,
+          "attached_to": null,
+          "minimum_area": 80.0,
+          "preferred_area": null,
+          "privacy_level": "semi_private",
+          "accessible": true
+        },
+        {
+          "id": "bedroom-1",
+          "name": "Ground bedroom 1",
+          "type": "bedroom",
+          "floor": 0,
+          "x": 17.0,
+          "y": 15.91542288557214,
+          "width": 13.0,
+          "height": 12.042288557213931,
+          "polygon": [
+            [
+              17.0,
+              15.91542288557214
+            ],
+            [
+              30.0,
+              15.91542288557214
+            ],
+            [
+              30.0,
+              27.95771144278607
+            ],
+            [
+              17.0,
+              27.95771144278607
+            ]
+          ],
+          "rotation": 0,
+          "attached_to": null,
+          "minimum_area": 100.0,
+          "preferred_area": null,
+          "privacy_level": "semi_private",
+          "accessible": true
+        },
+        {
+          "id": "bedroom-2",
+          "name": "Ground bedroom 2",
+          "type": "bedroom",
+          "floor": 0,
+          "x": 17.0,
+          "y": 27.95771144278607,
+          "width": 13.0,
+          "height": 12.04228855721393,
+          "polygon": [
+            [
+              17.0,
+              27.95771144278607
+            ],
+            [
+              30.0,
+              27.95771144278607
+            ],
+            [
+              30.0,
+              40.0
+            ],
+            [
+              17.0,
+              40.0
+            ]
+          ],
+          "rotation": 0,
+          "attached_to": null,
+          "minimum_area": 100.0,
+          "preferred_area": null,
+          "privacy_level": "semi_private",
+          "accessible": true
+        },
+        {
+          "id": "porch-1",
+          "name": "Entrance sit-out",
+          "type": "porch",
+          "floor": 0,
+          "x": 0.0,
+          "y": 35.0,
+          "width": 13.0,
+          "height": 5.0,
+          "polygon": [
+            [
+              0.0,
+              35.0
+            ],
+            [
+              13.0,
+              35.0
+            ],
+            [
+              13.0,
+              40.0
+            ],
+            [
+              0.0,
+              40.0
+            ]
+          ],
+          "rotation": 0,
+          "attached_to": null,
+          "minimum_area": 50.0,
+          "preferred_area": null,
+          "privacy_level": "semi_private",
+          "accessible": true
+        }
+      ],
+      "walls": [
+        {
+          "id": "wall-0",
+          "floor": 0,
+          "x1": 0.0,
+          "y1": 0.0,
+          "x2": 13.0,
+          "y2": 0.0,
+          "exterior": true,
+          "thickness": 0.5
+        },
+        {
+          "id": "wall-1",
+          "floor": 0,
+          "x1": 13.0,
+          "y1": 0.0,
+          "x2": 17.0,
+          "y2": 0.0,
+          "exterior": true,
+          "thickness": 0.5
+        },
+        {
+          "id": "wall-2",
+          "floor": 0,
+          "x1": 17.0,
+          "y1": 0.0,
+          "x2": 30.0,
+          "y2": 0.0,
+          "exterior": true,
+          "thickness": 0.5
+        },
+        {
+          "id": "wall-3",
+          "floor": 0,
+          "x1": 17.0,
+          "y1": 0.0,
+          "x2": 17.0,
+          "y2": 5.681592,
+          "exterior": false,
+          "thickness": 0.5
+        },
+        {
+          "id": "wall-4",
+          "floor": 0,
+          "x1": 17.0,
+          "y1": 5.681592,
+          "x2": 17.0,
+          "y2": 15.915423,
+          "exterior": false,
+          "thickness": 0.5
+        },
+        {
+          "id": "wall-5",
+          "floor": 0,
+          "x1": 17.0,
+          "y1": 15.915423,
+          "x2": 17.0,
+          "y2": 27.957711,
+          "exterior": false,
+          "thickness": 0.5
+        },
+        {
+          "id": "wall-6",
+          "floor": 0,
+          "x1": 17.0,
+          "y1": 27.957711,
+          "x2": 17.0,
+          "y2": 40.0,
+          "exterior": false,
+          "thickness": 0.5
+        },
+        {
+          "id": "wall-7",
+          "floor": 0,
+          "x1": 0.0,
+          "y1": 40.0,
+          "x2": 13.0,
+          "y2": 40.0,
+          "exterior": true,
+          "thickness": 0.5
+        },
+        {
+          "id": "wall-8",
+          "floor": 0,
+          "x1": 13.0,
+          "y1": 40.0,
+          "x2": 17.0,
+          "y2": 40.0,
+          "exterior": true,
+          "thickness": 0.5
+        },
+        {
+          "id": "wall-9",
+          "floor": 0,
+          "x1": 17.0,
+          "y1": 40.0,
+          "x2": 30.0,
+          "y2": 40.0,
+          "exterior": true,
+          "thickness": 0.5
+        },
+        {
+          "id": "wall-10",
+          "floor": 0,
+          "x1": 13.0,
+          "y1": 0.0,
+          "x2": 13.0,
+          "y2": 15.698997,
+          "exterior": false,
+          "thickness": 0.5
+        },
+        {
+          "id": "wall-11",
+          "floor": 0,
+          "x1": 13.0,
+          "y1": 15.698997,
+          "x2": 13.0,
+          "y2": 35.0,
+          "exterior": false,
+          "thickness": 0.5
+        },
+        {
+          "id": "wall-12",
+          "floor": 0,
+          "x1": 13.0,
+          "y1": 35.0,
+          "x2": 13.0,
+          "y2": 40.0,
+          "exterior": false,
+          "thickness": 0.5
+        },
+        {
+          "id": "wall-13",
+          "floor": 0,
+          "x1": 0.0,
+          "y1": 0.0,
+          "x2": 0.0,
+          "y2": 15.698997,
+          "exterior": true,
+          "thickness": 0.5
+        },
+        {
+          "id": "wall-14",
+          "floor": 0,
+          "x1": 0.0,
+          "y1": 15.698997,
+          "x2": 0.0,
+          "y2": 35.0,
+          "exterior": true,
+          "thickness": 0.5
+        },
+        {
+          "id": "wall-15",
+          "floor": 0,
+          "x1": 0.0,
+          "y1": 35.0,
+          "x2": 0.0,
+          "y2": 40.0,
+          "exterior": true,
+          "thickness": 0.5
+        },
+        {
+          "id": "wall-16",
+          "floor": 0,
+          "x1": 0.0,
+          "y1": 35.0,
+          "x2": 13.0,
+          "y2": 35.0,
+          "exterior": false,
+          "thickness": 0.5
+        },
+        {
+          "id": "wall-17",
+          "floor": 0,
+          "x1": 30.0,
+          "y1": 0.0,
+          "x2": 30.0,
+          "y2": 5.681592,
+          "exterior": true,
+          "thickness": 0.5
+        },
+        {
+          "id": "wall-18",
+          "floor": 0,
+          "x1": 30.0,
+          "y1": 5.681592,
+          "x2": 30.0,
+          "y2": 15.915423,
+          "exterior": true,
+          "thickness": 0.5
+        },
+        {
+          "id": "wall-19",
+          "floor": 0,
+          "x1": 30.0,
+          "y1": 15.915423,
+          "x2": 30.0,
+          "y2": 27.957711,
+          "exterior": true,
+          "thickness": 0.5
+        },
+        {
+          "id": "wall-20",
+          "floor": 0,
+          "x1": 30.0,
+          "y1": 27.957711,
+          "x2": 30.0,
+          "y2": 40.0,
+          "exterior": true,
+          "thickness": 0.5
+        },
+        {
+          "id": "wall-21",
+          "floor": 0,
+          "x1": 17.0,
+          "y1": 5.681592,
+          "x2": 30.0,
+          "y2": 5.681592,
+          "exterior": false,
+          "thickness": 0.5
+        },
+        {
+          "id": "wall-22",
+          "floor": 0,
+          "x1": 17.0,
+          "y1": 15.915423,
+          "x2": 30.0,
+          "y2": 15.915423,
+          "exterior": false,
+          "thickness": 0.5
+        },
+        {
+          "id": "wall-23",
+          "floor": 0,
+          "x1": 17.0,
+          "y1": 27.957711,
+          "x2": 30.0,
+          "y2": 27.957711,
+          "exterior": false,
+          "thickness": 0.5
+        }
+      ],
+      "doors": [
+        {
+          "id": "door-0",
+          "room_a": "dining-1",
+          "room_b": "hall-0-0",
+          "wall": "wall-10",
+          "position": 6.5494985,
+          "width": 2.6,
+          "swing_direction": "left",
+          "kind": "interior"
+        },
+        {
+          "id": "door-1",
+          "room_a": "living-1",
+          "room_b": "hall-0-0",
+          "wall": "wall-11",
+          "position": 8.3505015,
+          "width": 2.6,
+          "swing_direction": "left",
+          "kind": "interior"
+        },
+        {
+          "id": "door-2",
+          "room_a": "bathroom-1",
+          "room_b": "hall-0-0",
+          "wall": "wall-3",
+          "position": 1.540796,
+          "width": 2.6,
+          "swing_direction": "left",
+          "kind": "interior"
+        },
+        {
+          "id": "door-3",
+          "room_a": "kitchen-1",
+          "room_b": "hall-0-0",
+          "wall": "wall-4",
+          "position": 3.8169155000000003,
+          "width": 2.6,
+          "swing_direction": "left",
+          "kind": "interior"
+        },
+        {
+          "id": "door-4",
+          "room_a": "bedroom-1",
+          "room_b": "hall-0-0",
+          "wall": "wall-5",
+          "position": 4.721144,
+          "width": 2.6,
+          "swing_direction": "left",
+          "kind": "interior"
+        },
+        {
+          "id": "door-5",
+          "room_a": "bedroom-2",
+          "room_b": "hall-0-0",
+          "wall": "wall-6",
+          "position": 4.7211445,
+          "width": 2.6,
+          "swing_direction": "left",
+          "kind": "interior"
+        },
+        {
+          "id": "door-6",
+          "room_a": "porch-1",
+          "room_b": "living-1",
+          "wall": "wall-16",
+          "position": 4.9,
+          "width": 3.2,
+          "swing_direction": "left",
+          "kind": "interior"
+        },
+        {
+          "id": "door-7",
+          "room_a": "porch-1",
+          "room_b": null,
+          "wall": "wall-7",
+          "position": 4.9,
+          "width": 3.2,
+          "swing_direction": "left",
+          "kind": "entry"
+        }
+      ],
+      "windows": [
+        {
+          "id": "window-dining-1",
+          "room": "dining-1",
+          "wall": "wall-13",
+          "position": 5.8494985,
+          "width": 4.0
+        },
+        {
+          "id": "window-living-1",
+          "room": "living-1",
+          "wall": "wall-14",
+          "position": 7.650501500000001,
+          "width": 4.0
+        },
+        {
+          "id": "window-bathroom-1",
+          "room": "bathroom-1",
+          "wall": "wall-2",
+          "position": 4.5,
+          "width": 4.0
+        },
+        {
+          "id": "window-kitchen-1",
+          "room": "kitchen-1",
+          "wall": "wall-18",
+          "position": 3.1169155,
+          "width": 4.0
+        },
+        {
+          "id": "window-bedroom-1",
+          "room": "bedroom-1",
+          "wall": "wall-19",
+          "position": 4.021144,
+          "width": 4.0
+        },
+        {
+          "id": "window-bedroom-2",
+          "room": "bedroom-2",
+          "wall": "wall-9",
+          "position": 4.5,
+          "width": 4.0
+        }
+      ],
+      "stairs": [],
+      "checks": [
+        {
+          "name": "Valid building polygon",
+          "status": "PASS",
+          "detail": "GEOS topology is valid."
+        },
+        {
+          "name": "Building inside plot",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "Setbacks respected",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "All rooms inside selected footprint",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "No room overlaps",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "Valid floor assignments",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "Minimum room sizes",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "1 bathroom",
+          "status": "PASS",
+          "detail": "1 generated"
+        },
+        {
+          "name": "2 bedrooms",
+          "status": "PASS",
+          "detail": "2 generated"
+        },
+        {
+          "name": "1 dining",
+          "status": "PASS",
+          "detail": "1 generated"
+        },
+        {
+          "name": "1 living",
+          "status": "PASS",
+          "detail": "1 generated"
+        },
+        {
+          "name": "1 kitchen",
+          "status": "PASS",
+          "detail": "1 generated"
+        },
+        {
+          "name": "Ground floor: 2 bedroom",
+          "status": "PASS",
+          "detail": "2 generated on the requested floor."
+        },
+        {
+          "name": "Ground floor: 1 living",
+          "status": "PASS",
+          "detail": "1 generated on the requested floor."
+        },
+        {
+          "name": "Ground floor: 1 dining",
+          "status": "PASS",
+          "detail": "1 generated on the requested floor."
+        },
+        {
+          "name": "Ground floor: 1 kitchen",
+          "status": "PASS",
+          "detail": "1 generated on the requested floor."
+        },
+        {
+          "name": "Ground floor: 1 bathroom",
+          "status": "PASS",
+          "detail": "1 generated on the requested floor."
+        },
+        {
+          "name": "0 attached bathrooms",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "0 parking spaces",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "Doors connect valid spaces",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "Parking has road-reachable vehicle access",
+          "status": "PASS",
+          "detail": "Each vehicle bay requires an exterior gate at least 8 ft wide with an unobstructed route to the declared road edge."
+        },
+        {
+          "name": "Windows on exterior walls",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "Staircase connects floors",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "All rooms accessible",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "Road access available",
+          "status": "PASS",
+          "detail": "An exterior entrance connects the circulation graph."
+        },
+        {
+          "name": "Bathrooms avoid direct kitchen access",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "Entrance serves public space",
+          "status": "PASS",
+          "detail": "Exterior entry should lead to circulation, living, or an entry porch."
+        },
+        {
+          "name": "Road to sit-out to living route",
+          "status": "PASS",
+          "detail": "Every pedestrian entry must reach a distinct sit-out before the living room."
+        },
+        {
+          "name": "Sit-out has usable space",
+          "status": "PASS",
+          "detail": "The sit-out requires at least 50 sq ft and a 4 ft clear side."
+        },
+        {
+          "name": "Sit-out faces the road",
+          "status": "PASS",
+          "detail": "The front entry must have a clear approach from the declared road side."
+        },
+        {
+          "name": "Parking cannot bypass the sit-out",
+          "status": "PASS",
+          "detail": "A car bay must not provide a shortcut into bedrooms, bathrooms or the living room."
+        }
+      ],
+      "score": {
+        "requirement_score": 100.0,
+        "adjacency_score": 100.0,
+        "area_score": 69.8,
+        "circulation_score": 100.0,
+        "efficiency_score": 86.7,
+        "lighting_score": 100.0,
+        "privacy_score": 100.0,
+        "ventilation_score": 100.0,
+        "structural_score": 100.0,
+        "plot_utilization_score": 100.0,
+        "strategy_score": 100.0,
+        "overall_score": 95.6
+      }
+    },
+    {
+      "candidate_id": "rectangle-PRIVATE_REAR-1",
+      "strategy": "PRIVATE_REAR",
+      "label": "Rectangle",
+      "rationale": "Rectangle footprint \u00b7 100% circulation \u00b7 100% daylight \u00b7 100% plot use",
+      "width": 30.0,
+      "length": 40.0,
+      "floors": 1,
+      "unit": "feet",
+      "footprint": {
+        "shape": "rectangle",
+        "plot_width": 30.0,
+        "plot_length": 40.0,
+        "boundary": [
+          [
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            40.0
+          ],
+          [
+            30.0,
+            40.0
+          ],
+          [
+            30.0,
+            0.0
+          ]
+        ],
+        "courtyard": null,
+        "buildable_boundary": [
+          [
+            30.0,
+            0.0
+          ],
+          [
+            30.0,
+            40.0
+          ],
+          [
+            0.0,
+            40.0
+          ],
+          [
+            0.0,
+            0.0
+          ]
+        ],
+        "bounding_box": [
+          0.0,
+          0.0,
+          30.0,
+          40.0
+        ],
+        "metrics": {
+          "W": 30.0,
+          "L": 40.0,
+          "footprint_area": 1200.0,
+          "buildable_area": 1200.0
+        }
+      },
+      "rooms": [
+        {
+          "id": "hall-0-0",
+          "name": "Circulation",
+          "type": "hall",
+          "floor": 0,
+          "x": 13.0,
+          "y": 0.0,
+          "width": 4.0,
+          "height": 40.0,
+          "polygon": [
+            [
+              13.0,
+              0.0
+            ],
+            [
+              17.0,
+              0.0
+            ],
+            [
+              17.0,
+              40.0
+            ],
+            [
+              13.0,
+              40.0
+            ]
+          ],
+          "rotation": 0,
+          "attached_to": null,
+          "minimum_area": 0,
+          "preferred_area": null,
+          "privacy_level": "semi_private",
+          "accessible": true
+        },
+        {
+          "id": "bedroom-2",
+          "name": "Ground bedroom 2",
+          "type": "bedroom",
+          "floor": 0,
+          "x": 0.0,
+          "y": 0.0,
+          "width": 13.0,
+          "height": 12.04228855721393,
+          "polygon": [
+            [
+              0.0,
+              0.0
+            ],
+            [
+              13.0,
+              0.0
+            ],
+            [
+              13.0,
+              12.04228855721393
+            ],
+            [
+              0.0,
+              12.04228855721393
+            ]
+          ],
+          "rotation": 0,
+          "attached_to": null,
+          "minimum_area": 100.0,
+          "preferred_area": null,
+          "privacy_level": "semi_private",
+          "accessible": true
+        },
+        {
+          "id": "bedroom-1",
+          "name": "Ground bedroom 1",
+          "type": "bedroom",
+          "floor": 0,
+          "x": 0.0,
+          "y": 12.04228855721393,
+          "width": 13.0,
+          "height": 12.04228855721393,
+          "polygon": [
+            [
+              0.0,
+              12.04228855721393
+            ],
+            [
+              13.0,
+              12.04228855721393
+            ],
+            [
+              13.0,
+              24.08457711442786
+            ],
+            [
+              0.0,
+              24.08457711442786
+            ]
+          ],
+          "rotation": 0,
+          "attached_to": null,
+          "minimum_area": 100.0,
+          "preferred_area": null,
+          "privacy_level": "semi_private",
+          "accessible": true
+        },
+        {
+          "id": "kitchen-1",
+          "name": "Kitchen \u00b7 Ground floor",
+          "type": "kitchen",
+          "floor": 0,
+          "x": 0.0,
+          "y": 24.08457711442786,
+          "width": 13.0,
+          "height": 10.233830845771145,
+          "polygon": [
+            [
+              0.0,
+              24.08457711442786
+            ],
+            [
+              13.0,
+              24.08457711442786
+            ],
+            [
+              13.0,
+              34.318407960199
+            ],
+            [
+              0.0,
+              34.318407960199
+            ]
+          ],
+          "rotation": 0,
+          "attached_to": null,
+          "minimum_area": 80.0,
+          "preferred_area": null,
+          "privacy_level": "semi_private",
+          "accessible": true
+        },
+        {
+          "id": "bathroom-1",
+          "name": "Bathroom \u00b7 Ground floor",
+          "type": "bathroom",
+          "floor": 0,
+          "x": 0.0,
+          "y": 34.318407960199,
+          "width": 13.0,
+          "height": 5.6815920398009965,
+          "polygon": [
+            [
+              0.0,
+              34.318407960199
+            ],
+            [
+              13.0,
+              34.318407960199
+            ],
+            [
+              13.0,
+              40.0
+            ],
+            [
+              0.0,
+              40.0
+            ]
+          ],
+          "rotation": 0,
+          "attached_to": null,
+          "minimum_area": 35.0,
+          "preferred_area": null,
+          "privacy_level": "semi_private",
+          "accessible": true
+        },
+        {
+          "id": "dining-1",
+          "name": "Dining \u00b7 Ground floor",
+          "type": "dining",
+          "floor": 0,
+          "x": 17.0,
+          "y": 0.0,
+          "width": 13.0,
+          "height": 15.698996655518394,
+          "polygon": [
+            [
+              17.0,
+              0.0
+            ],
+            [
+              30.0,
+              0.0
+            ],
+            [
+              30.0,
+              15.698996655518394
+            ],
+            [
+              17.0,
+              15.698996655518394
+            ]
+          ],
+          "rotation": 0,
+          "attached_to": null,
+          "minimum_area": 90.0,
+          "preferred_area": null,
+          "privacy_level": "semi_private",
+          "accessible": true
+        },
+        {
+          "id": "living-1",
+          "name": "Living \u00b7 Ground floor",
+          "type": "living",
+          "floor": 0,
+          "x": 17.0,
+          "y": 15.698996655518394,
+          "width": 13.0,
+          "height": 19.301003344481607,
+          "polygon": [
+            [
+              17.0,
+              15.698996655518394
+            ],
+            [
+              30.0,
+              15.698996655518394
+            ],
+            [
+              30.0,
+              35.0
+            ],
+            [
+              17.0,
+              35.0
+            ]
+          ],
+          "rotation": 0,
+          "attached_to": null,
+          "minimum_area": 140.0,
+          "preferred_area": null,
+          "privacy_level": "semi_private",
+          "accessible": true
+        },
+        {
+          "id": "porch-1",
+          "name": "Entrance sit-out",
+          "type": "porch",
+          "floor": 0,
+          "x": 17.0,
+          "y": 35.0,
+          "width": 13.0,
+          "height": 5.0,
+          "polygon": [
+            [
+              17.0,
+              35.0
+            ],
+            [
+              30.0,
+              35.0
+            ],
+            [
+              30.0,
+              40.0
+            ],
+            [
+              17.0,
+              40.0
+            ]
+          ],
+          "rotation": 0,
+          "attached_to": null,
+          "minimum_area": 50.0,
+          "preferred_area": null,
+          "privacy_level": "semi_private",
+          "accessible": true
+        }
+      ],
+      "walls": [
+        {
+          "id": "wall-0",
+          "floor": 0,
+          "x1": 0.0,
+          "y1": 0.0,
+          "x2": 13.0,
+          "y2": 0.0,
+          "exterior": true,
+          "thickness": 0.5
+        },
+        {
+          "id": "wall-1",
+          "floor": 0,
+          "x1": 13.0,
+          "y1": 0.0,
+          "x2": 17.0,
+          "y2": 0.0,
+          "exterior": true,
+          "thickness": 0.5
+        },
+        {
+          "id": "wall-2",
+          "floor": 0,
+          "x1": 17.0,
+          "y1": 0.0,
+          "x2": 30.0,
+          "y2": 0.0,
+          "exterior": true,
+          "thickness": 0.5
+        },
+        {
+          "id": "wall-3",
+          "floor": 0,
+          "x1": 17.0,
+          "y1": 0.0,
+          "x2": 17.0,
+          "y2": 15.698997,
+          "exterior": false,
+          "thickness": 0.5
+        },
+        {
+          "id": "wall-4",
+          "floor": 0,
+          "x1": 17.0,
+          "y1": 15.698997,
+          "x2": 17.0,
+          "y2": 35.0,
+          "exterior": false,
+          "thickness": 0.5
+        },
+        {
+          "id": "wall-5",
+          "floor": 0,
+          "x1": 17.0,
+          "y1": 35.0,
+          "x2": 17.0,
+          "y2": 40.0,
+          "exterior": false,
+          "thickness": 0.5
+        },
+        {
+          "id": "wall-6",
+          "floor": 0,
+          "x1": 0.0,
+          "y1": 40.0,
+          "x2": 13.0,
+          "y2": 40.0,
+          "exterior": true,
+          "thickness": 0.5
+        },
+        {
+          "id": "wall-7",
+          "floor": 0,
+          "x1": 13.0,
+          "y1": 40.0,
+          "x2": 17.0,
+          "y2": 40.0,
+          "exterior": true,
+          "thickness": 0.5
+        },
+        {
+          "id": "wall-8",
+          "floor": 0,
+          "x1": 17.0,
+          "y1": 40.0,
+          "x2": 30.0,
+          "y2": 40.0,
+          "exterior": true,
+          "thickness": 0.5
+        },
+        {
+          "id": "wall-9",
+          "floor": 0,
+          "x1": 13.0,
+          "y1": 0.0,
+          "x2": 13.0,
+          "y2": 12.042289,
+          "exterior": false,
+          "thickness": 0.5
+        },
+        {
+          "id": "wall-10",
+          "floor": 0,
+          "x1": 13.0,
+          "y1": 12.042289,
+          "x2": 13.0,
+          "y2": 24.084577,
+          "exterior": false,
+          "thickness": 0.5
+        },
+        {
+          "id": "wall-11",
+          "floor": 0,
+          "x1": 13.0,
+          "y1": 24.084577,
+          "x2": 13.0,
+          "y2": 34.318408,
+          "exterior": false,
+          "thickness": 0.5
+        },
+        {
+          "id": "wall-12",
+          "floor": 0,
+          "x1": 13.0,
+          "y1": 34.318408,
+          "x2": 13.0,
+          "y2": 40.0,
+          "exterior": false,
+          "thickness": 0.5
+        },
+        {
+          "id": "wall-13",
+          "floor": 0,
+          "x1": 0.0,
+          "y1": 12.042289,
+          "x2": 13.0,
+          "y2": 12.042289,
+          "exterior": false,
+          "thickness": 0.5
+        },
+        {
+          "id": "wall-14",
+          "floor": 0,
+          "x1": 0.0,
+          "y1": 0.0,
+          "x2": 0.0,
+          "y2": 12.042289,
+          "exterior": true,
+          "thickness": 0.5
+        },
+        {
+          "id": "wall-15",
+          "floor": 0,
+          "x1": 0.0,
+          "y1": 12.042289,
+          "x2": 0.0,
+          "y2": 24.084577,
+          "exterior": true,
+          "thickness": 0.5
+        },
+        {
+          "id": "wall-16",
+          "floor": 0,
+          "x1": 0.0,
+          "y1": 24.084577,
+          "x2": 0.0,
+          "y2": 34.318408,
+          "exterior": true,
+          "thickness": 0.5
+        },
+        {
+          "id": "wall-17",
+          "floor": 0,
+          "x1": 0.0,
+          "y1": 34.318408,
+          "x2": 0.0,
+          "y2": 40.0,
+          "exterior": true,
+          "thickness": 0.5
+        },
+        {
+          "id": "wall-18",
+          "floor": 0,
+          "x1": 0.0,
+          "y1": 24.084577,
+          "x2": 13.0,
+          "y2": 24.084577,
+          "exterior": false,
+          "thickness": 0.5
+        },
+        {
+          "id": "wall-19",
+          "floor": 0,
+          "x1": 0.0,
+          "y1": 34.318408,
+          "x2": 13.0,
+          "y2": 34.318408,
+          "exterior": false,
+          "thickness": 0.5
+        },
+        {
+          "id": "wall-20",
+          "floor": 0,
+          "x1": 30.0,
+          "y1": 0.0,
+          "x2": 30.0,
+          "y2": 15.698997,
+          "exterior": true,
+          "thickness": 0.5
+        },
+        {
+          "id": "wall-21",
+          "floor": 0,
+          "x1": 30.0,
+          "y1": 15.698997,
+          "x2": 30.0,
+          "y2": 35.0,
+          "exterior": true,
+          "thickness": 0.5
+        },
+        {
+          "id": "wall-22",
+          "floor": 0,
+          "x1": 30.0,
+          "y1": 35.0,
+          "x2": 30.0,
+          "y2": 40.0,
+          "exterior": true,
+          "thickness": 0.5
+        },
+        {
+          "id": "wall-23",
+          "floor": 0,
+          "x1": 17.0,
+          "y1": 35.0,
+          "x2": 30.0,
+          "y2": 35.0,
+          "exterior": false,
+          "thickness": 0.5
+        }
+      ],
+      "doors": [
+        {
+          "id": "door-0",
+          "room_a": "bedroom-2",
+          "room_b": "hall-0-0",
+          "wall": "wall-9",
+          "position": 4.7211445,
+          "width": 2.6,
+          "swing_direction": "left",
+          "kind": "interior"
+        },
+        {
+          "id": "door-1",
+          "room_a": "bedroom-1",
+          "room_b": "hall-0-0",
+          "wall": "wall-10",
+          "position": 4.721144,
+          "width": 2.6,
+          "swing_direction": "left",
+          "kind": "interior"
+        },
+        {
+          "id": "door-2",
+          "room_a": "kitchen-1",
+          "room_b": "hall-0-0",
+          "wall": "wall-11",
+          "position": 3.8169154999999995,
+          "width": 2.6,
+          "swing_direction": "left",
+          "kind": "interior"
+        },
+        {
+          "id": "door-3",
+          "room_a": "bathroom-1",
+          "room_b": "hall-0-0",
+          "wall": "wall-12",
+          "position": 1.540796000000001,
+          "width": 2.6,
+          "swing_direction": "left",
+          "kind": "interior"
+        },
+        {
+          "id": "door-4",
+          "room_a": "dining-1",
+          "room_b": "hall-0-0",
+          "wall": "wall-3",
+          "position": 6.5494985,
+          "width": 2.6,
+          "swing_direction": "left",
+          "kind": "interior"
+        },
+        {
+          "id": "door-5",
+          "room_a": "living-1",
+          "room_b": "hall-0-0",
+          "wall": "wall-4",
+          "position": 8.3505015,
+          "width": 2.6,
+          "swing_direction": "left",
+          "kind": "interior"
+        },
+        {
+          "id": "door-6",
+          "room_a": "porch-1",
+          "room_b": "living-1",
+          "wall": "wall-23",
+          "position": 4.9,
+          "width": 3.2,
+          "swing_direction": "left",
+          "kind": "interior"
+        },
+        {
+          "id": "door-7",
+          "room_a": "porch-1",
+          "room_b": null,
+          "wall": "wall-8",
+          "position": 4.9,
+          "width": 3.2,
+          "swing_direction": "left",
+          "kind": "entry"
+        }
+      ],
+      "windows": [
+        {
+          "id": "window-bedroom-2",
+          "room": "bedroom-2",
+          "wall": "wall-0",
+          "position": 4.5,
+          "width": 4.0
+        },
+        {
+          "id": "window-bedroom-1",
+          "room": "bedroom-1",
+          "wall": "wall-15",
+          "position": 4.021144,
+          "width": 4.0
+        },
+        {
+          "id": "window-kitchen-1",
+          "room": "kitchen-1",
+          "wall": "wall-16",
+          "position": 3.1169154999999993,
+          "width": 4.0
+        },
+        {
+          "id": "window-bathroom-1",
+          "room": "bathroom-1",
+          "wall": "wall-6",
+          "position": 4.5,
+          "width": 4.0
+        },
+        {
+          "id": "window-dining-1",
+          "room": "dining-1",
+          "wall": "wall-20",
+          "position": 5.8494985,
+          "width": 4.0
+        },
+        {
+          "id": "window-living-1",
+          "room": "living-1",
+          "wall": "wall-21",
+          "position": 7.650501500000001,
+          "width": 4.0
+        }
+      ],
+      "stairs": [],
+      "checks": [
+        {
+          "name": "Valid building polygon",
+          "status": "PASS",
+          "detail": "GEOS topology is valid."
+        },
+        {
+          "name": "Building inside plot",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "Setbacks respected",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "All rooms inside selected footprint",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "No room overlaps",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "Valid floor assignments",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "Minimum room sizes",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "1 bathroom",
+          "status": "PASS",
+          "detail": "1 generated"
+        },
+        {
+          "name": "2 bedrooms",
+          "status": "PASS",
+          "detail": "2 generated"
+        },
+        {
+          "name": "1 dining",
+          "status": "PASS",
+          "detail": "1 generated"
+        },
+        {
+          "name": "1 living",
+          "status": "PASS",
+          "detail": "1 generated"
+        },
+        {
+          "name": "1 kitchen",
+          "status": "PASS",
+          "detail": "1 generated"
+        },
+        {
+          "name": "Ground floor: 2 bedroom",
+          "status": "PASS",
+          "detail": "2 generated on the requested floor."
+        },
+        {
+          "name": "Ground floor: 1 living",
+          "status": "PASS",
+          "detail": "1 generated on the requested floor."
+        },
+        {
+          "name": "Ground floor: 1 dining",
+          "status": "PASS",
+          "detail": "1 generated on the requested floor."
+        },
+        {
+          "name": "Ground floor: 1 kitchen",
+          "status": "PASS",
+          "detail": "1 generated on the requested floor."
+        },
+        {
+          "name": "Ground floor: 1 bathroom",
+          "status": "PASS",
+          "detail": "1 generated on the requested floor."
+        },
+        {
+          "name": "0 attached bathrooms",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "0 parking spaces",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "Doors connect valid spaces",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "Parking has road-reachable vehicle access",
+          "status": "PASS",
+          "detail": "Each vehicle bay requires an exterior gate at least 8 ft wide with an unobstructed route to the declared road edge."
+        },
+        {
+          "name": "Windows on exterior walls",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "Staircase connects floors",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "All rooms accessible",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "Road access available",
+          "status": "PASS",
+          "detail": "An exterior entrance connects the circulation graph."
+        },
+        {
+          "name": "Bathrooms avoid direct kitchen access",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "Entrance serves public space",
+          "status": "PASS",
+          "detail": "Exterior entry should lead to circulation, living, or an entry porch."
+        },
+        {
+          "name": "Road to sit-out to living route",
+          "status": "PASS",
+          "detail": "Every pedestrian entry must reach a distinct sit-out before the living room."
+        },
+        {
+          "name": "Sit-out has usable space",
+          "status": "PASS",
+          "detail": "The sit-out requires at least 50 sq ft and a 4 ft clear side."
+        },
+        {
+          "name": "Sit-out faces the road",
+          "status": "PASS",
+          "detail": "The front entry must have a clear approach from the declared road side."
+        },
+        {
+          "name": "Parking cannot bypass the sit-out",
+          "status": "PASS",
+          "detail": "A car bay must not provide a shortcut into bedrooms, bathrooms or the living room."
+        }
+      ],
+      "score": {
+        "requirement_score": 100.0,
+        "adjacency_score": 100.0,
+        "area_score": 69.8,
+        "circulation_score": 100.0,
+        "efficiency_score": 86.7,
+        "lighting_score": 100.0,
+        "privacy_score": 100.0,
+        "ventilation_score": 100.0,
+        "structural_score": 100.0,
+        "plot_utilization_score": 100.0,
+        "strategy_score": 100.0,
+        "overall_score": 95.6
+      }
+    },
+    {
+      "candidate_id": "rectangle-SERVICE_CLUSTER-0",
+      "strategy": "SERVICE_CLUSTER",
+      "label": "Rectangle",
+      "rationale": "Rectangle footprint \u00b7 100% circulation \u00b7 100% daylight \u00b7 100% plot use",
+      "width": 30.0,
+      "length": 40.0,
+      "floors": 1,
+      "unit": "feet",
+      "footprint": {
+        "shape": "rectangle",
+        "plot_width": 30.0,
+        "plot_length": 40.0,
+        "boundary": [
+          [
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            40.0
+          ],
+          [
+            30.0,
+            40.0
+          ],
+          [
+            30.0,
+            0.0
+          ]
+        ],
+        "courtyard": null,
+        "buildable_boundary": [
+          [
+            30.0,
+            0.0
+          ],
+          [
+            30.0,
+            40.0
+          ],
+          [
+            0.0,
+            40.0
+          ],
+          [
+            0.0,
+            0.0
+          ]
+        ],
+        "bounding_box": [
+          0.0,
+          0.0,
+          30.0,
+          40.0
+        ],
+        "metrics": {
+          "W": 30.0,
+          "L": 40.0,
+          "footprint_area": 1200.0,
+          "buildable_area": 1200.0
+        }
+      },
+      "rooms": [
+        {
+          "id": "hall-0-0",
+          "name": "Circulation",
+          "type": "hall",
+          "floor": 0,
+          "x": 13.0,
+          "y": 0.0,
+          "width": 4.0,
+          "height": 40.0,
+          "polygon": [
+            [
+              13.0,
+              0.0
+            ],
+            [
+              17.0,
+              0.0
+            ],
+            [
+              17.0,
+              40.0
+            ],
+            [
+              13.0,
+              40.0
+            ]
+          ],
+          "rotation": 0,
+          "attached_to": null,
+          "minimum_area": 0,
+          "preferred_area": null,
+          "privacy_level": "semi_private",
+          "accessible": true
+        },
+        {
+          "id": "bathroom-1",
+          "name": "Bathroom \u00b7 Ground floor",
+          "type": "bathroom",
+          "floor": 0,
+          "x": 0.0,
+          "y": 0.0,
+          "width": 13.0,
+          "height": 5.681592039800995,
+          "polygon": [
+            [
+              0.0,
+              0.0
+            ],
+            [
+              13.0,
+              0.0
+            ],
+            [
+              13.0,
+              5.681592039800995
+            ],
+            [
+              0.0,
+              5.681592039800995
+            ]
+          ],
+          "rotation": 0,
+          "attached_to": null,
+          "minimum_area": 35.0,
+          "preferred_area": null,
+          "privacy_level": "semi_private",
+          "accessible": true
+        },
+        {
+          "id": "kitchen-1",
+          "name": "Kitchen \u00b7 Ground floor",
+          "type": "kitchen",
+          "floor": 0,
+          "x": 0.0,
+          "y": 5.681592039800995,
+          "width": 13.0,
+          "height": 10.233830845771145,
+          "polygon": [
+            [
+              0.0,
+              5.681592039800995
+            ],
+            [
+              13.0,
+              5.681592039800995
+            ],
+            [
+              13.0,
+              15.91542288557214
+            ],
+            [
+              0.0,
+              15.91542288557214
+            ]
+          ],
+          "rotation": 0,
+          "attached_to": null,
+          "minimum_area": 80.0,
+          "preferred_area": null,
+          "privacy_level": "semi_private",
+          "accessible": true
+        },
+        {
+          "id": "bedroom-1",
+          "name": "Ground bedroom 1",
+          "type": "bedroom",
+          "floor": 0,
+          "x": 0.0,
+          "y": 15.91542288557214,
+          "width": 13.0,
+          "height": 12.042288557213931,
+          "polygon": [
+            [
+              0.0,
+              15.91542288557214
+            ],
+            [
+              13.0,
+              15.91542288557214
+            ],
+            [
+              13.0,
+              27.95771144278607
+            ],
+            [
+              0.0,
+              27.95771144278607
+            ]
+          ],
+          "rotation": 0,
+          "attached_to": null,
+          "minimum_area": 100.0,
+          "preferred_area": null,
+          "privacy_level": "semi_private",
+          "accessible": true
+        },
+        {
+          "id": "bedroom-2",
+          "name": "Ground bedroom 2",
+          "type": "bedroom",
+          "floor": 0,
+          "x": 0.0,
+          "y": 27.95771144278607,
+          "width": 13.0,
+          "height": 12.04228855721393,
+          "polygon": [
+            [
+              0.0,
+              27.95771144278607
+            ],
+            [
+              13.0,
+              27.95771144278607
+            ],
+            [
+              13.0,
+              40.0
+            ],
+            [
+              0.0,
+              40.0
+            ]
+          ],
+          "rotation": 0,
+          "attached_to": null,
+          "minimum_area": 100.0,
+          "preferred_area": null,
+          "privacy_level": "semi_private",
+          "accessible": true
+        },
+        {
+          "id": "dining-1",
+          "name": "Dining \u00b7 Ground floor",
+          "type": "dining",
+          "floor": 0,
+          "x": 17.0,
+          "y": 0.0,
+          "width": 13.0,
+          "height": 15.698996655518394,
+          "polygon": [
+            [
+              17.0,
+              0.0
+            ],
+            [
+              30.0,
+              0.0
+            ],
+            [
+              30.0,
+              15.698996655518394
+            ],
+            [
+              17.0,
+              15.698996655518394
+            ]
+          ],
+          "rotation": 0,
+          "attached_to": null,
+          "minimum_area": 90.0,
+          "preferred_area": null,
+          "privacy_level": "semi_private",
+          "accessible": true
+        },
+        {
+          "id": "living-1",
+          "name": "Living \u00b7 Ground floor",
+          "type": "living",
+          "floor": 0,
+          "x": 17.0,
+          "y": 15.698996655518394,
+          "width": 13.0,
+          "height": 19.301003344481607,
+          "polygon": [
+            [
+              17.0,
+              15.698996655518394
+            ],
+            [
+              30.0,
+              15.698996655518394
+            ],
+            [
+              30.0,
+              35.0
+            ],
+            [
+              17.0,
+              35.0
+            ]
+          ],
+          "rotation": 0,
+          "attached_to": null,
+          "minimum_area": 140.0,
+          "preferred_area": null,
+          "privacy_level": "semi_private",
+          "accessible": true
+        },
+        {
+          "id": "porch-1",
+          "name": "Entrance sit-out",
+          "type": "porch",
+          "floor": 0,
+          "x": 17.0,
+          "y": 35.0,
+          "width": 13.0,
+          "height": 5.0,
+          "polygon": [
+            [
+              17.0,
+              35.0
+            ],
+            [
+              30.0,
+              35.0
+            ],
+            [
+              30.0,
+              40.0
+            ],
+            [
+              17.0,
+              40.0
+            ]
+          ],
+          "rotation": 0,
+          "attached_to": null,
+          "minimum_area": 50.0,
+          "preferred_area": null,
+          "privacy_level": "semi_private",
+          "accessible": true
+        }
+      ],
+      "walls": [
+        {
+          "id": "wall-0",
+          "floor": 0,
+          "x1": 0.0,
+          "y1": 0.0,
+          "x2": 13.0,
+          "y2": 0.0,
+          "exterior": true,
+          "thickness": 0.5
+        },
+        {
+          "id": "wall-1",
+          "floor": 0,
+          "x1": 13.0,
+          "y1": 0.0,
+          "x2": 17.0,
+          "y2": 0.0,
+          "exterior": true,
+          "thickness": 0.5
+        },
+        {
+          "id": "wall-2",
+          "floor": 0,
+          "x1": 17.0,
+          "y1": 0.0,
+          "x2": 30.0,
+          "y2": 0.0,
+          "exterior": true,
+          "thickness": 0.5
+        },
+        {
+          "id": "wall-3",
+          "floor": 0,
+          "x1": 17.0,
+          "y1": 0.0,
+          "x2": 17.0,
+          "y2": 15.698997,
+          "exterior": false,
+          "thickness": 0.5
+        },
+        {
+          "id": "wall-4",
+          "floor": 0,
+          "x1": 17.0,
+          "y1": 15.698997,
+          "x2": 17.0,
+          "y2": 35.0,
+          "exterior": false,
+          "thickness": 0.5
+        },
+        {
+          "id": "wall-5",
+          "floor": 0,
+          "x1": 17.0,
+          "y1": 35.0,
+          "x2": 17.0,
+          "y2": 40.0,
+          "exterior": false,
+          "thickness": 0.5
+        },
+        {
+          "id": "wall-6",
+          "floor": 0,
+          "x1": 0.0,
+          "y1": 40.0,
+          "x2": 13.0,
+          "y2": 40.0,
+          "exterior": true,
+          "thickness": 0.5
+        },
+        {
+          "id": "wall-7",
+          "floor": 0,
+          "x1": 13.0,
+          "y1": 40.0,
+          "x2": 17.0,
+          "y2": 40.0,
+          "exterior": true,
+          "thickness": 0.5
+        },
+        {
+          "id": "wall-8",
+          "floor": 0,
+          "x1": 17.0,
+          "y1": 40.0,
+          "x2": 30.0,
+          "y2": 40.0,
+          "exterior": true,
+          "thickness": 0.5
+        },
+        {
+          "id": "wall-9",
+          "floor": 0,
+          "x1": 13.0,
+          "y1": 0.0,
+          "x2": 13.0,
+          "y2": 5.681592,
+          "exterior": false,
+          "thickness": 0.5
+        },
+        {
+          "id": "wall-10",
+          "floor": 0,
+          "x1": 13.0,
+          "y1": 5.681592,
+          "x2": 13.0,
+          "y2": 15.915423,
+          "exterior": false,
+          "thickness": 0.5
+        },
+        {
+          "id": "wall-11",
+          "floor": 0,
+          "x1": 13.0,
+          "y1": 15.915423,
+          "x2": 13.0,
+          "y2": 27.957711,
+          "exterior": false,
+          "thickness": 0.5
+        },
+        {
+          "id": "wall-12",
+          "floor": 0,
+          "x1": 13.0,
+          "y1": 27.957711,
+          "x2": 13.0,
+          "y2": 40.0,
+          "exterior": false,
+          "thickness": 0.5
+        },
+        {
+          "id": "wall-13",
+          "floor": 0,
+          "x1": 0.0,
+          "y1": 5.681592,
+          "x2": 13.0,
+          "y2": 5.681592,
+          "exterior": false,
+          "thickness": 0.5
+        },
+        {
+          "id": "wall-14",
+          "floor": 0,
+          "x1": 0.0,
+          "y1": 0.0,
+          "x2": 0.0,
+          "y2": 5.681592,
+          "exterior": true,
+          "thickness": 0.5
+        },
+        {
+          "id": "wall-15",
+          "floor": 0,
+          "x1": 0.0,
+          "y1": 5.681592,
+          "x2": 0.0,
+          "y2": 15.915423,
+          "exterior": true,
+          "thickness": 0.5
+        },
+        {
+          "id": "wall-16",
+          "floor": 0,
+          "x1": 0.0,
+          "y1": 15.915423,
+          "x2": 0.0,
+          "y2": 27.957711,
+          "exterior": true,
+          "thickness": 0.5
+        },
+        {
+          "id": "wall-17",
+          "floor": 0,
+          "x1": 0.0,
+          "y1": 27.957711,
+          "x2": 0.0,
+          "y2": 40.0,
+          "exterior": true,
+          "thickness": 0.5
+        },
+        {
+          "id": "wall-18",
+          "floor": 0,
+          "x1": 0.0,
+          "y1": 15.915423,
+          "x2": 13.0,
+          "y2": 15.915423,
+          "exterior": false,
+          "thickness": 0.5
+        },
+        {
+          "id": "wall-19",
+          "floor": 0,
+          "x1": 0.0,
+          "y1": 27.957711,
+          "x2": 13.0,
+          "y2": 27.957711,
+          "exterior": false,
+          "thickness": 0.5
+        },
+        {
+          "id": "wall-20",
+          "floor": 0,
+          "x1": 30.0,
+          "y1": 0.0,
+          "x2": 30.0,
+          "y2": 15.698997,
+          "exterior": true,
+          "thickness": 0.5
+        },
+        {
+          "id": "wall-21",
+          "floor": 0,
+          "x1": 30.0,
+          "y1": 15.698997,
+          "x2": 30.0,
+          "y2": 35.0,
+          "exterior": true,
+          "thickness": 0.5
+        },
+        {
+          "id": "wall-22",
+          "floor": 0,
+          "x1": 30.0,
+          "y1": 35.0,
+          "x2": 30.0,
+          "y2": 40.0,
+          "exterior": true,
+          "thickness": 0.5
+        },
+        {
+          "id": "wall-23",
+          "floor": 0,
+          "x1": 17.0,
+          "y1": 35.0,
+          "x2": 30.0,
+          "y2": 35.0,
+          "exterior": false,
+          "thickness": 0.5
+        }
+      ],
+      "doors": [
+        {
+          "id": "door-0",
+          "room_a": "bathroom-1",
+          "room_b": "hall-0-0",
+          "wall": "wall-9",
+          "position": 1.540796,
+          "width": 2.6,
+          "swing_direction": "left",
+          "kind": "interior"
+        },
+        {
+          "id": "door-1",
+          "room_a": "kitchen-1",
+          "room_b": "hall-0-0",
+          "wall": "wall-10",
+          "position": 3.8169155000000003,
+          "width": 2.6,
+          "swing_direction": "left",
+          "kind": "interior"
+        },
+        {
+          "id": "door-2",
+          "room_a": "bedroom-1",
+          "room_b": "hall-0-0",
+          "wall": "wall-11",
+          "position": 4.721144,
+          "width": 2.6,
+          "swing_direction": "left",
+          "kind": "interior"
+        },
+        {
+          "id": "door-3",
+          "room_a": "bedroom-2",
+          "room_b": "hall-0-0",
+          "wall": "wall-12",
+          "position": 4.7211445,
+          "width": 2.6,
+          "swing_direction": "left",
+          "kind": "interior"
+        },
+        {
+          "id": "door-4",
+          "room_a": "dining-1",
+          "room_b": "hall-0-0",
+          "wall": "wall-3",
+          "position": 6.5494985,
+          "width": 2.6,
+          "swing_direction": "left",
+          "kind": "interior"
+        },
+        {
+          "id": "door-5",
+          "room_a": "living-1",
+          "room_b": "hall-0-0",
+          "wall": "wall-4",
+          "position": 8.3505015,
+          "width": 2.6,
+          "swing_direction": "left",
+          "kind": "interior"
+        },
+        {
+          "id": "door-6",
+          "room_a": "porch-1",
+          "room_b": "living-1",
+          "wall": "wall-23",
+          "position": 4.9,
+          "width": 3.2,
+          "swing_direction": "left",
+          "kind": "interior"
+        },
+        {
+          "id": "door-7",
+          "room_a": "porch-1",
+          "room_b": null,
+          "wall": "wall-8",
+          "position": 4.9,
+          "width": 3.2,
+          "swing_direction": "left",
+          "kind": "entry"
+        }
+      ],
+      "windows": [
+        {
+          "id": "window-bathroom-1",
+          "room": "bathroom-1",
+          "wall": "wall-0",
+          "position": 4.5,
+          "width": 4.0
+        },
+        {
+          "id": "window-kitchen-1",
+          "room": "kitchen-1",
+          "wall": "wall-15",
+          "position": 3.1169155,
+          "width": 4.0
+        },
+        {
+          "id": "window-bedroom-1",
+          "room": "bedroom-1",
+          "wall": "wall-16",
+          "position": 4.021144,
+          "width": 4.0
+        },
+        {
+          "id": "window-bedroom-2",
+          "room": "bedroom-2",
+          "wall": "wall-6",
+          "position": 4.5,
+          "width": 4.0
+        },
+        {
+          "id": "window-dining-1",
+          "room": "dining-1",
+          "wall": "wall-20",
+          "position": 5.8494985,
+          "width": 4.0
+        },
+        {
+          "id": "window-living-1",
+          "room": "living-1",
+          "wall": "wall-21",
+          "position": 7.650501500000001,
+          "width": 4.0
+        }
+      ],
+      "stairs": [],
+      "checks": [
+        {
+          "name": "Valid building polygon",
+          "status": "PASS",
+          "detail": "GEOS topology is valid."
+        },
+        {
+          "name": "Building inside plot",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "Setbacks respected",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "All rooms inside selected footprint",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "No room overlaps",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "Valid floor assignments",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "Minimum room sizes",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "1 bathroom",
+          "status": "PASS",
+          "detail": "1 generated"
+        },
+        {
+          "name": "2 bedrooms",
+          "status": "PASS",
+          "detail": "2 generated"
+        },
+        {
+          "name": "1 dining",
+          "status": "PASS",
+          "detail": "1 generated"
+        },
+        {
+          "name": "1 living",
+          "status": "PASS",
+          "detail": "1 generated"
+        },
+        {
+          "name": "1 kitchen",
+          "status": "PASS",
+          "detail": "1 generated"
+        },
+        {
+          "name": "Ground floor: 2 bedroom",
+          "status": "PASS",
+          "detail": "2 generated on the requested floor."
+        },
+        {
+          "name": "Ground floor: 1 living",
+          "status": "PASS",
+          "detail": "1 generated on the requested floor."
+        },
+        {
+          "name": "Ground floor: 1 dining",
+          "status": "PASS",
+          "detail": "1 generated on the requested floor."
+        },
+        {
+          "name": "Ground floor: 1 kitchen",
+          "status": "PASS",
+          "detail": "1 generated on the requested floor."
+        },
+        {
+          "name": "Ground floor: 1 bathroom",
+          "status": "PASS",
+          "detail": "1 generated on the requested floor."
+        },
+        {
+          "name": "0 attached bathrooms",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "0 parking spaces",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "Doors connect valid spaces",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "Parking has road-reachable vehicle access",
+          "status": "PASS",
+          "detail": "Each vehicle bay requires an exterior gate at least 8 ft wide with an unobstructed route to the declared road edge."
+        },
+        {
+          "name": "Windows on exterior walls",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "Staircase connects floors",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "All rooms accessible",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "Road access available",
+          "status": "PASS",
+          "detail": "An exterior entrance connects the circulation graph."
+        },
+        {
+          "name": "Bathrooms avoid direct kitchen access",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "Entrance serves public space",
+          "status": "PASS",
+          "detail": "Exterior entry should lead to circulation, living, or an entry porch."
+        },
+        {
+          "name": "Road to sit-out to living route",
+          "status": "PASS",
+          "detail": "Every pedestrian entry must reach a distinct sit-out before the living room."
+        },
+        {
+          "name": "Sit-out has usable space",
+          "status": "PASS",
+          "detail": "The sit-out requires at least 50 sq ft and a 4 ft clear side."
+        },
+        {
+          "name": "Sit-out faces the road",
+          "status": "PASS",
+          "detail": "The front entry must have a clear approach from the declared road side."
+        },
+        {
+          "name": "Parking cannot bypass the sit-out",
+          "status": "PASS",
+          "detail": "A car bay must not provide a shortcut into bedrooms, bathrooms or the living room."
+        }
+      ],
+      "score": {
+        "requirement_score": 100.0,
+        "adjacency_score": 100.0,
+        "area_score": 69.8,
+        "circulation_score": 100.0,
+        "efficiency_score": 86.7,
+        "lighting_score": 100.0,
+        "privacy_score": 100.0,
+        "ventilation_score": 100.0,
+        "structural_score": 100.0,
+        "plot_utilization_score": 100.0,
+        "strategy_score": 100.0,
+        "overall_score": 95.6
+      }
+    }
+  ]
+}

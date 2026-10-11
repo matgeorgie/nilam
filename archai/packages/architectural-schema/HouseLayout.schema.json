@@ -1,0 +1,850 @@
+{
+  "$defs": {
+    "Check": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "PASS",
+            "WARNING",
+            "ERROR"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "detail": {
+          "title": "Detail",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "status",
+        "detail"
+      ],
+      "title": "Check",
+      "type": "object"
+    },
+    "Door": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "room_a": {
+          "title": "Room A",
+          "type": "string"
+        },
+        "room_b": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Room B"
+        },
+        "wall": {
+          "title": "Wall",
+          "type": "string"
+        },
+        "position": {
+          "title": "Position",
+          "type": "number"
+        },
+        "width": {
+          "default": 2.6,
+          "title": "Width",
+          "type": "number"
+        },
+        "swing_direction": {
+          "default": "left",
+          "enum": [
+            "left",
+            "right"
+          ],
+          "title": "Swing Direction",
+          "type": "string"
+        },
+        "kind": {
+          "default": "interior",
+          "enum": [
+            "interior",
+            "entry",
+            "vehicle"
+          ],
+          "title": "Kind",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "room_a",
+        "room_b",
+        "wall",
+        "position"
+      ],
+      "title": "Door",
+      "type": "object"
+    },
+    "HouseFootprint": {
+      "additionalProperties": false,
+      "properties": {
+        "shape": {
+          "$ref": "#/$defs/HouseShape"
+        },
+        "plot_width": {
+          "title": "Plot Width",
+          "type": "number"
+        },
+        "plot_length": {
+          "title": "Plot Length",
+          "type": "number"
+        },
+        "boundary": {
+          "items": {
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "type": "array"
+          },
+          "title": "Boundary",
+          "type": "array"
+        },
+        "courtyard": {
+          "anyOf": [
+            {
+              "items": {
+                "maxItems": 2,
+                "minItems": 2,
+                "prefixItems": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "type": "array"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Courtyard"
+        },
+        "buildable_boundary": {
+          "anyOf": [
+            {
+              "items": {
+                "maxItems": 2,
+                "minItems": 2,
+                "prefixItems": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "type": "array"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Buildable Boundary"
+        },
+        "bounding_box": {
+          "maxItems": 4,
+          "minItems": 4,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Bounding Box",
+          "type": "array"
+        },
+        "metrics": {
+          "additionalProperties": {
+            "type": "number"
+          },
+          "title": "Metrics",
+          "type": "object"
+        }
+      },
+      "required": [
+        "shape",
+        "plot_width",
+        "plot_length",
+        "boundary",
+        "bounding_box"
+      ],
+      "title": "HouseFootprint",
+      "type": "object"
+    },
+    "HouseShape": {
+      "enum": [
+        "auto",
+        "rectangle",
+        "l_shape",
+        "t_shape",
+        "u_shape",
+        "c_shape",
+        "stepped",
+        "courtyard"
+      ],
+      "title": "HouseShape",
+      "type": "string"
+    },
+    "LayoutAlternative": {
+      "additionalProperties": false,
+      "properties": {
+        "candidate_id": {
+          "title": "Candidate Id",
+          "type": "string"
+        },
+        "label": {
+          "title": "Label",
+          "type": "string"
+        },
+        "rationale": {
+          "title": "Rationale",
+          "type": "string"
+        },
+        "width": {
+          "title": "Width",
+          "type": "number"
+        },
+        "length": {
+          "title": "Length",
+          "type": "number"
+        },
+        "floors": {
+          "title": "Floors",
+          "type": "integer"
+        },
+        "unit": {
+          "const": "feet",
+          "default": "feet",
+          "title": "Unit",
+          "type": "string"
+        },
+        "footprint": {
+          "$ref": "#/$defs/HouseFootprint"
+        },
+        "rooms": {
+          "items": {
+            "$ref": "#/$defs/RoomGeometry"
+          },
+          "title": "Rooms",
+          "type": "array"
+        },
+        "walls": {
+          "items": {
+            "$ref": "#/$defs/Wall"
+          },
+          "title": "Walls",
+          "type": "array"
+        },
+        "doors": {
+          "items": {
+            "$ref": "#/$defs/Door"
+          },
+          "title": "Doors",
+          "type": "array"
+        },
+        "windows": {
+          "items": {
+            "$ref": "#/$defs/Window"
+          },
+          "title": "Windows",
+          "type": "array"
+        },
+        "stairs": {
+          "items": {
+            "$ref": "#/$defs/Stair"
+          },
+          "title": "Stairs",
+          "type": "array"
+        },
+        "checks": {
+          "items": {
+            "$ref": "#/$defs/Check"
+          },
+          "title": "Checks",
+          "type": "array"
+        },
+        "score": {
+          "$ref": "#/$defs/LayoutScore"
+        }
+      },
+      "required": [
+        "candidate_id",
+        "label",
+        "rationale",
+        "width",
+        "length",
+        "floors",
+        "footprint",
+        "rooms",
+        "walls",
+        "doors",
+        "windows",
+        "stairs",
+        "checks",
+        "score"
+      ],
+      "title": "LayoutAlternative",
+      "type": "object"
+    },
+    "LayoutScore": {
+      "additionalProperties": false,
+      "properties": {
+        "requirement_score": {
+          "title": "Requirement Score",
+          "type": "number"
+        },
+        "adjacency_score": {
+          "title": "Adjacency Score",
+          "type": "number"
+        },
+        "area_score": {
+          "title": "Area Score",
+          "type": "number"
+        },
+        "circulation_score": {
+          "title": "Circulation Score",
+          "type": "number"
+        },
+        "efficiency_score": {
+          "title": "Efficiency Score",
+          "type": "number"
+        },
+        "lighting_score": {
+          "title": "Lighting Score",
+          "type": "number"
+        },
+        "privacy_score": {
+          "default": 100,
+          "title": "Privacy Score",
+          "type": "number"
+        },
+        "ventilation_score": {
+          "default": 100,
+          "title": "Ventilation Score",
+          "type": "number"
+        },
+        "structural_score": {
+          "default": 100,
+          "title": "Structural Score",
+          "type": "number"
+        },
+        "plot_utilization_score": {
+          "default": 100,
+          "title": "Plot Utilization Score",
+          "type": "number"
+        },
+        "overall_score": {
+          "title": "Overall Score",
+          "type": "number"
+        }
+      },
+      "required": [
+        "requirement_score",
+        "adjacency_score",
+        "area_score",
+        "circulation_score",
+        "efficiency_score",
+        "lighting_score",
+        "overall_score"
+      ],
+      "title": "LayoutScore",
+      "type": "object"
+    },
+    "RoomGeometry": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "type": {
+          "title": "Type",
+          "type": "string"
+        },
+        "floor": {
+          "title": "Floor",
+          "type": "integer"
+        },
+        "x": {
+          "title": "X",
+          "type": "number"
+        },
+        "y": {
+          "title": "Y",
+          "type": "number"
+        },
+        "width": {
+          "exclusiveMinimum": 0,
+          "title": "Width",
+          "type": "number"
+        },
+        "height": {
+          "exclusiveMinimum": 0,
+          "title": "Height",
+          "type": "number"
+        },
+        "polygon": {
+          "items": {
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "type": "array"
+          },
+          "title": "Polygon",
+          "type": "array"
+        },
+        "rotation": {
+          "default": 0,
+          "title": "Rotation",
+          "type": "number"
+        },
+        "attached_to": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Attached To"
+        },
+        "minimum_area": {
+          "default": 0,
+          "title": "Minimum Area",
+          "type": "number"
+        },
+        "preferred_area": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Preferred Area"
+        },
+        "privacy_level": {
+          "default": "semi_private",
+          "enum": [
+            "public",
+            "semi_private",
+            "private",
+            "service"
+          ],
+          "title": "Privacy Level",
+          "type": "string"
+        },
+        "accessible": {
+          "default": true,
+          "title": "Accessible",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "type",
+        "floor",
+        "x",
+        "y",
+        "width",
+        "height"
+      ],
+      "title": "RoomGeometry",
+      "type": "object"
+    },
+    "Stair": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "from_floor": {
+          "title": "From Floor",
+          "type": "integer"
+        },
+        "to_floor": {
+          "title": "To Floor",
+          "type": "integer"
+        },
+        "x": {
+          "title": "X",
+          "type": "number"
+        },
+        "y": {
+          "title": "Y",
+          "type": "number"
+        },
+        "width": {
+          "title": "Width",
+          "type": "number"
+        },
+        "length": {
+          "title": "Length",
+          "type": "number"
+        },
+        "direction": {
+          "default": "north",
+          "title": "Direction",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "from_floor",
+        "to_floor",
+        "x",
+        "y",
+        "width",
+        "length"
+      ],
+      "title": "Stair",
+      "type": "object"
+    },
+    "Wall": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "floor": {
+          "title": "Floor",
+          "type": "integer"
+        },
+        "x1": {
+          "title": "X1",
+          "type": "number"
+        },
+        "y1": {
+          "title": "Y1",
+          "type": "number"
+        },
+        "x2": {
+          "title": "X2",
+          "type": "number"
+        },
+        "y2": {
+          "title": "Y2",
+          "type": "number"
+        },
+        "exterior": {
+          "default": false,
+          "title": "Exterior",
+          "type": "boolean"
+        },
+        "thickness": {
+          "default": 0.5,
+          "exclusiveMinimum": 0,
+          "maximum": 3,
+          "title": "Thickness",
+          "type": "number"
+        }
+      },
+      "required": [
+        "id",
+        "floor",
+        "x1",
+        "y1",
+        "x2",
+        "y2"
+      ],
+      "title": "Wall",
+      "type": "object"
+    },
+    "Window": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "room": {
+          "title": "Room",
+          "type": "string"
+        },
+        "wall": {
+          "title": "Wall",
+          "type": "string"
+        },
+        "position": {
+          "title": "Position",
+          "type": "number"
+        },
+        "width": {
+          "default": 3,
+          "title": "Width",
+          "type": "number"
+        }
+      },
+      "required": [
+        "id",
+        "room",
+        "wall",
+        "position"
+      ],
+      "title": "Window",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "width": {
+      "title": "Width",
+      "type": "number"
+    },
+    "length": {
+      "title": "Length",
+      "type": "number"
+    },
+    "floors": {
+      "title": "Floors",
+      "type": "integer"
+    },
+    "unit": {
+      "const": "feet",
+      "default": "feet",
+      "title": "Unit",
+      "type": "string"
+    },
+    "footprint": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/HouseFootprint"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "plot_boundary": {
+      "items": {
+        "maxItems": 2,
+        "minItems": 2,
+        "prefixItems": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "number"
+          }
+        ],
+        "type": "array"
+      },
+      "title": "Plot Boundary",
+      "type": "array"
+    },
+    "setback_boundary": {
+      "items": {
+        "maxItems": 2,
+        "minItems": 2,
+        "prefixItems": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "number"
+          }
+        ],
+        "type": "array"
+      },
+      "title": "Setback Boundary",
+      "type": "array"
+    },
+    "road_edge": {
+      "anyOf": [
+        {
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "type": "array"
+            }
+          ],
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Road Edge"
+    },
+    "rooms": {
+      "items": {
+        "$ref": "#/$defs/RoomGeometry"
+      },
+      "title": "Rooms",
+      "type": "array"
+    },
+    "walls": {
+      "items": {
+        "$ref": "#/$defs/Wall"
+      },
+      "title": "Walls",
+      "type": "array"
+    },
+    "doors": {
+      "items": {
+        "$ref": "#/$defs/Door"
+      },
+      "title": "Doors",
+      "type": "array"
+    },
+    "windows": {
+      "items": {
+        "$ref": "#/$defs/Window"
+      },
+      "title": "Windows",
+      "type": "array"
+    },
+    "stairs": {
+      "items": {
+        "$ref": "#/$defs/Stair"
+      },
+      "title": "Stairs",
+      "type": "array"
+    },
+    "checks": {
+      "items": {
+        "$ref": "#/$defs/Check"
+      },
+      "title": "Checks",
+      "type": "array"
+    },
+    "score": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/LayoutScore"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "generation_ms": {
+      "default": 0,
+      "title": "Generation Ms",
+      "type": "number"
+    },
+    "candidate_count": {
+      "default": 0,
+      "title": "Candidate Count",
+      "type": "integer"
+    },
+    "chosen_candidate_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Chosen Candidate Id"
+    },
+    "alternatives": {
+      "items": {
+        "$ref": "#/$defs/LayoutAlternative"
+      },
+      "title": "Alternatives",
+      "type": "array"
+    }
+  },
+  "required": [
+    "width",
+    "length",
+    "floors",
+    "rooms",
+    "walls",
+    "doors",
+    "windows",
+    "stairs"
+  ],
+  "title": "HouseLayout",
+  "type": "object"
+}

@@ -51,6 +51,15 @@ also download only when their optional paths are used.
 
 ## Run locally
 
+To run Nilam and its integrated ArchAI 2 home-design studio together on this Mac, run:
+
+```bash
+cd "/Users/mathewbijugeorge/Documents/Codex Project/kerala-land-lab"
+bash scripts/run_integrated.sh
+```
+
+Open [http://127.0.0.1:8000](http://127.0.0.1:8000). After assessing or selecting a land result, **Design a home here** opens the plot brief at `/design/` under the same local site. The integrated ArchAI source is in [`archai`](archai), and its API and web server run on loopback ports 8001 and 3000 behind that route. The selected coordinates, district and screening score are saved as a site reference with the design; enter actual parcel dimensions in the brief. The local design studio has no account step. The launcher reuses locally installed dependencies and model weights from the older sibling `ArchAI 2` folder when present; it never commits them. If ArchAI lives elsewhere, set `ARCHAI_DIR` before launching. This local account-free mode must remain bound to `127.0.0.1`.
+
 Requirements: macOS/Linux, Python 3.11, Node.js, completed Earth Engine authentication, local model artifacts, the prepared data files, and a Google Maps browser key with Maps JavaScript API, Places API (New), and Street View enabled.
 
 Copy `.env.example` to `.env` and set:

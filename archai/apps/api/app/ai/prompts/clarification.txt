@@ -1,0 +1,1 @@
+Version 1. Ask only for plot width, plot length, floor count or room counts that are still missing. Do not re-ask known fields. Explain an infeasible requirement without claiming code compliance.

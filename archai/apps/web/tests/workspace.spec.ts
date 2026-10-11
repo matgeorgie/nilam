@@ -1,0 +1,38 @@
+import {test,expect} from '@playwright/test';
+test('complete design workflow and mobile panels',async({page,request})=>{
+ const auth=await request.post('http://127.0.0.1:8000/api/auth/demo');const {token}=await auth.json();
+ const response=await request.post('http://127.0.0.1:8000/api/projects/demo',{headers:{Authorization:`Bearer ${token}`}});expect(response.ok()).toBeTruthy();const project=await response.json();
+ await page.addInitScript(token=>localStorage.setItem('archai-session',token),token);
+ await page.goto('/workspace/'+project.id);
+ await expect(page.getByText('Modern Family Villa',{exact:true})).toBeVisible();
+ await expect(page.getByRole('img',{name:'Architectural floor plan, floor 0'})).toBeVisible();
+ await page.getByRole('button',{name:/Living room, .* square feet/}).click();
+ await expect(page.getByRole('heading',{name:'Living room',exact:true})).toBeVisible();
+ await page.getByLabel('Select floor').selectOption('1');
+ await expect(page.getByRole('img',{name:'Architectural floor plan, floor 1'})).toBeVisible();
+ await page.getByLabel('Describe a design change').fill('Make the master bedroom larger.');
+ await page.getByRole('button',{name:'Send message'}).click();
+ await expect(page.getByText('Design updated · new revision saved')).toBeVisible({timeout:45000});
+ await page.getByRole('button',{name:'Undo design change'}).click();
+ await expect(page.getByRole('button',{name:'Redo design change'})).toBeEnabled();
+ await page.getByRole('button',{name:'3D view',exact:true}).click();
+ await expect(page.locator('.model-container canvas')).toBeVisible({timeout:30000});
+ await page.getByRole('button',{name:'2D plan',exact:true}).click();
+ await page.screenshot({path:'../../workspace-desktop.png',fullPage:true});
+ await page.setViewportSize({width:390,height:844});
+ await page.getByRole('button',{name:'Assistant',exact:true}).click();
+ await expect(page.getByLabel('Describe a design change')).toBeVisible();
+ await page.getByRole('button',{name:'Details',exact:true}).click();
+ await expect(page.getByRole('button',{name:'Properties',exact:true})).toBeVisible();
+ await page.getByRole('button',{name:'Design',exact:true}).click();
+ await page.screenshot({path:'../../workspace-mobile.png',fullPage:true});
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBeTruthy();
+});
+test('landing and dashboard render',async({page})=>{
+ await page.goto('/');await expect(page.getByRole('heading',{name:/A home begins/})).toBeVisible();
+ await page.screenshot({path:'../../landing-desktop.png',fullPage:true});
+ await page.getByRole('button',{name:'Explore a live project'}).click();
+ await expect(page).toHaveURL(/workspace/,{timeout:45000});
+ await page.getByRole('link',{name:'Back to projects'}).click();
+ await expect(page.getByRole('heading',{name:'Your projects.'})).toBeVisible();
+});

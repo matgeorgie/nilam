@@ -1,0 +1,1132 @@
+{
+  "package": "ArchAI full Windows sharing package",
+  "model_weights_included": true,
+  "dependency_installation_requires_internet": true,
+  "personal_database_included": false,
+  "files": [
+    {
+      "path": ".env.example",
+      "bytes": 308
+    },
+    {
+      "path": ".gitignore",
+      "bytes": 134
+    },
+    {
+      "path": "1-SETUP.cmd",
+      "bytes": 299
+    },
+    {
+      "path": "2-START.cmd",
+      "bytes": 285
+    },
+    {
+      "path": "3-STOP.cmd",
+      "bytes": 175
+    },
+    {
+      "path": "CONTEXT.md",
+      "bytes": 2872
+    },
+    {
+      "path": "COURTYARD-FIX.md",
+      "bytes": 1990
+    },
+    {
+      "path": "DESCRIPTION-MATCHING.md",
+      "bytes": 1760
+    },
+    {
+      "path": "docker-compose.yml",
+      "bytes": 923
+    },
+    {
+      "path": "LOCAL-AI-UPGRADE.md",
+      "bytes": 6001
+    },
+    {
+      "path": "package-lock.json",
+      "bytes": 62130
+    },
+    {
+      "path": "package.json",
+      "bytes": 183
+    },
+    {
+      "path": "PLANNING-CORRECTIONS.md",
+      "bytes": 3924
+    },
+    {
+      "path": "README.md",
+      "bytes": 13367
+    },
+    {
+      "path": "REQUIREMENTS-UX.md",
+      "bytes": 6837
+    },
+    {
+      "path": "RESEARCH-AND-CHANGES.md",
+      "bytes": 7272
+    },
+    {
+      "path": "sample-floorplan.png",
+      "bytes": 4667
+    },
+    {
+      "path": "SEND-TO-FRIEND.md",
+      "bytes": 4168
+    },
+    {
+      "path": "START-HERE.md",
+      "bytes": 4894
+    },
+    {
+      "path": "apps/api/alembic.ini",
+      "bytes": 60
+    },
+    {
+      "path": "apps/api/Dockerfile",
+      "bytes": 211
+    },
+    {
+      "path": "apps/api/pytest.ini",
+      "bytes": 57
+    },
+    {
+      "path": "apps/api/requirements.txt",
+      "bytes": 319
+    },
+    {
+      "path": "apps/api/app/asset_generation.py",
+      "bytes": 2446
+    },
+    {
+      "path": "apps/api/app/courtyard_home.py",
+      "bytes": 20388
+    },
+    {
+      "path": "apps/api/app/db.py",
+      "bytes": 2650
+    },
+    {
+      "path": "apps/api/app/exports.py",
+      "bytes": 10668
+    },
+    {
+      "path": "apps/api/app/footprint.py",
+      "bytes": 6494
+    },
+    {
+      "path": "apps/api/app/intent_validation.py",
+      "bytes": 2194
+    },
+    {
+      "path": "apps/api/app/layout.py",
+      "bytes": 70636
+    },
+    {
+      "path": "apps/api/app/layout_edits.py",
+      "bytes": 4617
+    },
+    {
+      "path": "apps/api/app/main.py",
+      "bytes": 22335
+    },
+    {
+      "path": "apps/api/app/modern_home.py",
+      "bytes": 10620
+    },
+    {
+      "path": "apps/api/app/schemas.py",
+      "bytes": 12894
+    },
+    {
+      "path": "apps/api/app/services.py",
+      "bytes": 4454
+    },
+    {
+      "path": "apps/api/app/simple_home.py",
+      "bytes": 10950
+    },
+    {
+      "path": "apps/api/app/single_courtyard.py",
+      "bytes": 8932
+    },
+    {
+      "path": "apps/api/app/stair_geometry.py",
+      "bytes": 3752
+    },
+    {
+      "path": "apps/api/app/__init__.py",
+      "bytes": 0
+    },
+    {
+      "path": "apps/api/app/ai/intent.py",
+      "bytes": 7297
+    },
+    {
+      "path": "apps/api/app/ai/local_model.py",
+      "bytes": 14609
+    },
+    {
+      "path": "apps/api/app/ai/providers.py",
+      "bytes": 11865
+    },
+    {
+      "path": "apps/api/app/ai/__init__.py",
+      "bytes": 0
+    },
+    {
+      "path": "apps/api/app/ai/prompts/clarification.txt",
+      "bytes": 196
+    },
+    {
+      "path": "apps/api/app/ai/prompts/modification.txt",
+      "bytes": 655
+    },
+    {
+      "path": "apps/api/app/ai/prompts/requirement_extraction.txt",
+      "bytes": 2202
+    },
+    {
+      "path": "apps/api/app/ai/prompts/validation_explanation.txt",
+      "bytes": 201
+    },
+    {
+      "path": "apps/api/app/ml/dataset.py",
+      "bytes": 2772
+    },
+    {
+      "path": "apps/api/app/ml/engine.py",
+      "bytes": 6576
+    },
+    {
+      "path": "apps/api/app/ml/model.py",
+      "bytes": 2143
+    },
+    {
+      "path": "apps/api/app/ml/reconstruction.py",
+      "bytes": 6305
+    },
+    {
+      "path": "apps/api/app/ml/train.py",
+      "bytes": 3431
+    },
+    {
+      "path": "apps/api/app/ml/cubicasa/hg_furukawa_original.py",
+      "bytes": 8138
+    },
+    {
+      "path": "apps/api/app/ml/cubicasa/LICENSE",
+      "bytes": 260
+    },
+    {
+      "path": "apps/api/app/ml/cubicasa/model_best_val_loss_var.pkl",
+      "bytes": 208651193
+    },
+    {
+      "path": "apps/api/app/ml/cubicasa/__init__.py",
+      "bytes": 0
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/.gitignore",
+      "bytes": 51
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/LICENSE",
+      "bytes": 36049
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/README.md",
+      "bytes": 2487
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/requirements.txt",
+      "bytes": 192
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/test.py",
+      "bytes": 4323
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/train.py",
+      "bytes": 10867
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/checkpoints/pretrained.pth",
+      "bytes": 2561009
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/data/sample_list.txt",
+      "bytes": 467
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/data/json/18477.json",
+      "bytes": 2744
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/data/json/19307.json",
+      "bytes": 2695
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/data/json/36233.json",
+      "bytes": 2350
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/data/json/45012.json",
+      "bytes": 2714
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/data/json/45161.json",
+      "bytes": 3150
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/data/json/7513.json",
+      "bytes": 3003
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/dataset/floorplan_dataset_maps_functional_high_res.py",
+      "bytes": 15695
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/dataset/__init__.py",
+      "bytes": 0
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/misc/arial.ttf",
+      "bytes": 311636
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/misc/clustering_tsne.py",
+      "bytes": 4433
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/misc/compatibility_figure.py",
+      "bytes": 6709
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/misc/compute_FID.py",
+      "bytes": 4035
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/misc/convert_to_onnx.py",
+      "bytes": 6900
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/misc/debug.py",
+      "bytes": 224
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/misc/intersections.py",
+      "bytes": 4100
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/misc/read_data.py",
+      "bytes": 7969
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/misc/read_floorplan.py",
+      "bytes": 8336
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/misc/train_autoencoder.py",
+      "bytes": 1296
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/misc/train_exp_3.py",
+      "bytes": 13843
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/misc/train_exp_high_res.py",
+      "bytes": 13882
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/misc/train_exp_high_res_per_node_type.py",
+      "bytes": 15497
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/misc/utils.py",
+      "bytes": 14054
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/misc/__init__.py",
+      "bytes": 0
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/misc/old/autoencoder_dataset.py",
+      "bytes": 3591
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/misc/old/coordconv.py",
+      "bytes": 6329
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/misc/old/data_stats.py",
+      "bytes": 4172
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/misc/old/dump_to_html.sh",
+      "bytes": 1244
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/misc/old/experiment_replace_feature_volumes.py",
+      "bytes": 9729
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/misc/old/experiment_replace_feature_volumes_feats.py",
+      "bytes": 9715
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/misc/old/finetune_generator.py",
+      "bytes": 4569
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/misc/old/finetune_generator_feats.py",
+      "bytes": 3663
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/misc/old/generate_features.py",
+      "bytes": 7499
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/misc/old/generate_features_reconstruction.py",
+      "bytes": 7694
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/misc/old/generate_floorplans_for_vectorization.py",
+      "bytes": 8703
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/misc/teaser/0_for_figure_output.svg",
+      "bytes": 1850
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/misc/teaser/0_for_figure_output_new.svg",
+      "bytes": 2118
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/misc/teaser/1.svg",
+      "bytes": 2172
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/misc/teaser/1_for_figure_output.svg",
+      "bytes": 1869
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/misc/teaser/1_for_figure_output_new.svg",
+      "bytes": 2137
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/misc/teaser/2_for_figure_output.svg",
+      "bytes": 2127
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/misc/teaser/3.svg",
+      "bytes": 1911
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/misc/teaser/3_for_figure_output.svg",
+      "bytes": 1867
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/misc/teaser/3_for_figure_output_new.svg",
+      "bytes": 2135
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/misc/teaser/4_for_figure_output.svg",
+      "bytes": 1904
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/misc/teaser/5.svg",
+      "bytes": 2118
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/misc/teaser/5_for_figure_output.svg",
+      "bytes": 1675
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/misc/teaser/5_for_figure_output_new (3rd copy).svg",
+      "bytes": 1911
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/misc/teaser/5_for_figure_output_new (another copy).svg",
+      "bytes": 1911
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/misc/teaser/5_for_figure_output_new (copy).svg",
+      "bytes": 1911
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/misc/teaser/5_for_figure_output_new.svg",
+      "bytes": 1911
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/misc/teaser/6_for_figure_output.svg",
+      "bytes": 1783
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/misc/teaser/6_for_figure_output_new.svg",
+      "bytes": 2035
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/misc/teaser/7_for_figure_output.svg",
+      "bytes": 1833
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/misc/teaser/7_for_figure_output_new.svg",
+      "bytes": 2101
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/misc/teaser/8_for_figure_output.svg",
+      "bytes": 2025
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/misc/teaser/8_for_figure_output_new.svg",
+      "bytes": 2325
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/misc/teaser/9_for_figure_output.svg",
+      "bytes": 1701
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/misc/teaser/9_for_figure_output_new.svg",
+      "bytes": 1937
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/misc/teaser/edit_svg.py",
+      "bytes": 639
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/models/models.py",
+      "bytes": 9795
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/models/models_improved.py",
+      "bytes": 14535
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/models/model_resnet.py",
+      "bytes": 8664
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/models/__init__.py",
+      "bytes": 0
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/refs/sample.png",
+      "bytes": 52524
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/scripts/bayesian_opt.py",
+      "bytes": 16964
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/scripts/evaluation_FID.py",
+      "bytes": 20181
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/scripts/evaluation_GED_v3.py",
+      "bytes": 23091
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/scripts/evaluation_high_res_init.py",
+      "bytes": 21440
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/scripts/optimization_valid_houses_v3.py",
+      "bytes": 22943
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/scripts/optimizing_compatibility.py",
+      "bytes": 19734
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/scripts/optimizing_compatibility_valid_houses.py",
+      "bytes": 18660
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/scripts/train_exp_3.py",
+      "bytes": 13843
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/scripts/train_exp_high_res.py",
+      "bytes": 13890
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/scripts/train_exp_high_res_per_node_type.py",
+      "bytes": 15974
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/scripts/viz.py",
+      "bytes": 4475
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/testing/evaluate_parallel.py",
+      "bytes": 8391
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/testing/evaluation_high_res_max_subgraph.py",
+      "bytes": 13016
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/testing/evaluation_high_res_random.py",
+      "bytes": 12864
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/testing/pytorch_visualize.py",
+      "bytes": 8488
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/testing/reconstruct.py",
+      "bytes": 12052
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/testing/reconstruction_dataset.py",
+      "bytes": 3557
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/testing/reconstruct_heuristic.py",
+      "bytes": 1161
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/testing/run_exps.py",
+      "bytes": 687
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/testing/test.py",
+      "bytes": 3311
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/testing/test_experiment_given_masks_gt.py",
+      "bytes": 10597
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/testing/variation_bbs.py",
+      "bytes": 6239
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/testing/variation_bbs_with_target_graph.py",
+      "bytes": 6500
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/testing/variation_bbs_with_target_graph_segments.py",
+      "bytes": 9268
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/testing/variation_bbs_with_target_graph_segments_suppl.py",
+      "bytes": 9769
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/testing/variation_bbs_with_target_graph_segments_suppl_conditioned.py",
+      "bytes": 11262
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/testing/variation_test.py",
+      "bytes": 6043
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/testing/vectorize_floorplans.py",
+      "bytes": 5209
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/testing/vectorize_OLD.py",
+      "bytes": 8165
+    },
+    {
+      "path": "apps/api/app/ml/houseganpp/testing/visualize.py",
+      "bytes": 6747
+    },
+    {
+      "path": "apps/api/app/ml/language/qwen2.5-1.5b-instruct-q4_k_m.gguf",
+      "bytes": 1117320736
+    },
+    {
+      "path": "apps/api/app/ml/language/README.md",
+      "bytes": 1368
+    },
+    {
+      "path": "apps/api/app/research/datasets.py",
+      "bytes": 2712
+    },
+    {
+      "path": "apps/api/app/research/evaluation.py",
+      "bytes": 1458
+    },
+    {
+      "path": "apps/api/app/research/__init__.py",
+      "bytes": 0
+    },
+    {
+      "path": "apps/api/migrations/env.py",
+      "bytes": 234
+    },
+    {
+      "path": "apps/api/migrations/versions/0001_initial.py",
+      "bytes": 309
+    },
+    {
+      "path": "apps/api/tests/test_architectural_intent.py",
+      "bytes": 23645
+    },
+    {
+      "path": "apps/api/tests/test_asset_generation.py",
+      "bytes": 1158
+    },
+    {
+      "path": "apps/api/tests/test_baseline_cases.py",
+      "bytes": 4001
+    },
+    {
+      "path": "apps/api/tests/test_brief_matching.py",
+      "bytes": 2187
+    },
+    {
+      "path": "apps/api/tests/test_core.py",
+      "bytes": 12318
+    },
+    {
+      "path": "apps/api/tests/test_courtyard_home.py",
+      "bytes": 5502
+    },
+    {
+      "path": "apps/api/tests/test_courtyard_variations.py",
+      "bytes": 1482
+    },
+    {
+      "path": "apps/api/tests/test_entry_sitout.py",
+      "bytes": 5122
+    },
+    {
+      "path": "apps/api/tests/test_fallback_stair.py",
+      "bytes": 2369
+    },
+    {
+      "path": "apps/api/tests/test_local_edits.py",
+      "bytes": 2473
+    },
+    {
+      "path": "apps/api/tests/test_modern_home.py",
+      "bytes": 2715
+    },
+    {
+      "path": "apps/api/tests/test_simple_home.py",
+      "bytes": 3945
+    },
+    {
+      "path": "apps/api/tests/test_single_courtyard.py",
+      "bytes": 1931
+    },
+    {
+      "path": "apps/api/tests/test_spatial_intent.py",
+      "bytes": 11241
+    },
+    {
+      "path": "apps/api/tests/test_upgrade.py",
+      "bytes": 2989
+    },
+    {
+      "path": "apps/api/tests/fixtures/baseline_cases.json",
+      "bytes": 6692
+    },
+    {
+      "path": "apps/api/tests/fixtures/clean-floorplan.png",
+      "bytes": 4667
+    },
+    {
+      "path": "apps/api/tests/fixtures/guided-duplex-stair.json",
+      "bytes": 4046
+    },
+    {
+      "path": "apps/web/Dockerfile",
+      "bytes": 239
+    },
+    {
+      "path": "apps/web/next-env.d.ts",
+      "bytes": 266
+    },
+    {
+      "path": "apps/web/next.config.ts",
+      "bytes": 413
+    },
+    {
+      "path": "apps/web/package.json",
+      "bytes": 580
+    },
+    {
+      "path": "apps/web/playwright.config.ts",
+      "bytes": 255
+    },
+    {
+      "path": "apps/web/pnpm-lock.yaml",
+      "bytes": 39968
+    },
+    {
+      "path": "apps/web/server.mjs",
+      "bytes": 702
+    },
+    {
+      "path": "apps/web/tsconfig.json",
+      "bytes": 699
+    },
+    {
+      "path": "apps/web/app/globals.css",
+      "bytes": 52293
+    },
+    {
+      "path": "apps/web/app/layout.tsx",
+      "bytes": 404
+    },
+    {
+      "path": "apps/web/app/page.tsx",
+      "bytes": 5986
+    },
+    {
+      "path": "apps/web/app/login/page.tsx",
+      "bytes": 3192
+    },
+    {
+      "path": "apps/web/app/projects/page.tsx",
+      "bytes": 4743
+    },
+    {
+      "path": "apps/web/app/workspace/[id]/page.tsx",
+      "bytes": 26016
+    },
+    {
+      "path": "apps/web/components/Brand.tsx",
+      "bytes": 343
+    },
+    {
+      "path": "apps/web/components/DetailedFurniture.tsx",
+      "bytes": 6604
+    },
+    {
+      "path": "apps/web/components/FloorRequirements.tsx",
+      "bytes": 5691
+    },
+    {
+      "path": "apps/web/components/ImportPlan.tsx",
+      "bytes": 2593
+    },
+    {
+      "path": "apps/web/components/Model.tsx",
+      "bytes": 12860
+    },
+    {
+      "path": "apps/web/components/NewProject.tsx",
+      "bytes": 15490
+    },
+    {
+      "path": "apps/web/components/Plan.tsx",
+      "bytes": 12669
+    },
+    {
+      "path": "apps/web/components/Walkthrough.tsx",
+      "bytes": 3144
+    },
+    {
+      "path": "apps/web/lib/api.ts",
+      "bytes": 2063
+    },
+    {
+      "path": "apps/web/lib/geometry.ts",
+      "bytes": 1036
+    },
+    {
+      "path": "apps/web/lib/guidedRequirements.ts",
+      "bytes": 840
+    },
+    {
+      "path": "apps/web/lib/modelCamera.ts",
+      "bytes": 1754
+    },
+    {
+      "path": "apps/web/lib/modelGeometry.ts",
+      "bytes": 1950
+    },
+    {
+      "path": "apps/web/lib/modelLighting.ts",
+      "bytes": 507
+    },
+    {
+      "path": "apps/web/lib/modelMaterials.ts",
+      "bytes": 3347
+    },
+    {
+      "path": "apps/web/lib/roomFurniturePlanner.ts",
+      "bytes": 9395
+    },
+    {
+      "path": "apps/web/lib/siteAccess.ts",
+      "bytes": 1340
+    },
+    {
+      "path": "apps/web/lib/stairGeometry.ts",
+      "bytes": 1309
+    },
+    {
+      "path": "apps/web/lib/types.ts",
+      "bytes": 3765
+    },
+    {
+      "path": "apps/web/lib/walkNavigation.ts",
+      "bytes": 2692
+    },
+    {
+      "path": "apps/web/public/favicon.svg",
+      "bytes": 208
+    },
+    {
+      "path": "apps/web/public/materials/brown_planks_03/diff.jpg",
+      "bytes": 570668
+    },
+    {
+      "path": "apps/web/public/materials/brown_planks_03/nor_gl.jpg",
+      "bytes": 516860
+    },
+    {
+      "path": "apps/web/public/materials/brown_planks_03/rough.jpg",
+      "bytes": 222197
+    },
+    {
+      "path": "apps/web/public/materials/rocky_terrain_02/diff.jpg",
+      "bytes": 843188
+    },
+    {
+      "path": "apps/web/public/materials/rocky_terrain_02/nor_gl.jpg",
+      "bytes": 993692
+    },
+    {
+      "path": "apps/web/public/materials/rocky_terrain_02/rough.jpg",
+      "bytes": 437094
+    },
+    {
+      "path": "apps/web/public/materials/wood_floor_deck/diff.jpg",
+      "bytes": 925789
+    },
+    {
+      "path": "apps/web/public/materials/wood_floor_deck/nor_gl.jpg",
+      "bytes": 665094
+    },
+    {
+      "path": "apps/web/public/materials/wood_floor_deck/rough.jpg",
+      "bytes": 658448
+    },
+    {
+      "path": "apps/web/tests/api.test.mjs",
+      "bytes": 2243
+    },
+    {
+      "path": "apps/web/tests/brief-matching.spec.ts",
+      "bytes": 2434
+    },
+    {
+      "path": "apps/web/tests/brief-wizard.spec.ts",
+      "bytes": 7179
+    },
+    {
+      "path": "apps/web/tests/courtyard-wizard.spec.ts",
+      "bytes": 2116
+    },
+    {
+      "path": "apps/web/tests/guided-walkthrough.spec.ts",
+      "bytes": 2477
+    },
+    {
+      "path": "apps/web/tests/modelCamera.test.mjs",
+      "bytes": 1001
+    },
+    {
+      "path": "apps/web/tests/modelGeometry.test.mjs",
+      "bytes": 1932
+    },
+    {
+      "path": "apps/web/tests/modelLighting.test.mjs",
+      "bytes": 529
+    },
+    {
+      "path": "apps/web/tests/modelMaterials.test.mjs",
+      "bytes": 750
+    },
+    {
+      "path": "apps/web/tests/navigation.spec.ts",
+      "bytes": 1709
+    },
+    {
+      "path": "apps/web/tests/planning.spec.ts",
+      "bytes": 2015
+    },
+    {
+      "path": "apps/web/tests/roomFurniturePlanner.test.mjs",
+      "bytes": 2437
+    },
+    {
+      "path": "apps/web/tests/upgrade.spec.ts",
+      "bytes": 2575
+    },
+    {
+      "path": "apps/web/tests/workspace.spec.ts",
+      "bytes": 2855
+    },
+    {
+      "path": "apps/web/tests/fixtures/courtyard-brief.txt",
+      "bytes": 580
+    },
+    {
+      "path": "apps/web/tests/fixtures/full-house-brief.txt",
+      "bytes": 574
+    },
+    {
+      "path": "apps/web/tests/fixtures/walk-layouts.json",
+      "bytes": 131844
+    },
+    {
+      "path": "data/README.md",
+      "bytes": 766
+    },
+    {
+      "path": "data/annotations/README.md",
+      "bytes": 50
+    },
+    {
+      "path": "data/processed/README.md",
+      "bytes": 53
+    },
+    {
+      "path": "data/raw/README.md",
+      "bytes": 92
+    },
+    {
+      "path": "data/splits/README.md",
+      "bytes": 50
+    },
+    {
+      "path": "docs/architecture.md",
+      "bytes": 5126
+    },
+    {
+      "path": "docs/courtyard-family-preview.png",
+      "bytes": 32778
+    },
+    {
+      "path": "docs/dataset-research.md",
+      "bytes": 5895
+    },
+    {
+      "path": "docs/floorplan-generation-assessment.md",
+      "bytes": 4821
+    },
+    {
+      "path": "docs/simple-home-preview.png",
+      "bytes": 17934
+    },
+    {
+      "path": "docs/adr/0001-structured-geometry-is-canonical.md",
+      "bytes": 572
+    },
+    {
+      "path": "docs/examples/courtyard-plan.svg",
+      "bytes": 21048
+    },
+    {
+      "path": "docs/examples/c_shape-plan.svg",
+      "bytes": 15794
+    },
+    {
+      "path": "docs/examples/l_shape-plan.svg",
+      "bytes": 16120
+    },
+    {
+      "path": "docs/examples/manifest.json",
+      "bytes": 1635
+    },
+    {
+      "path": "docs/examples/rectangle-plan.svg",
+      "bytes": 16400
+    },
+    {
+      "path": "docs/examples/shape-diversity-report.json",
+      "bytes": 19493
+    },
+    {
+      "path": "docs/examples/stepped-plan.svg",
+      "bytes": 17125
+    },
+    {
+      "path": "docs/examples/t_shape-plan.svg",
+      "bytes": 15227
+    },
+    {
+      "path": "docs/examples/u_shape-plan.svg",
+      "bytes": 18529
+    },
+    {
+      "path": "examples/current-house.json",
+      "bytes": 84031
+    },
+    {
+      "path": "examples/open-living-dining.json",
+      "bytes": 18659
+    },
+    {
+      "path": "packages/architectural-schema/HouseLayout.schema.json",
+      "bytes": 18626
+    },
+    {
+      "path": "packages/architectural-schema/HouseSpecification.schema.json",
+      "bytes": 8738
+    },
+    {
+      "path": "packages/architectural-schema/Operation.schema.json",
+      "bytes": 1758
+    },
+    {
+      "path": "packages/shared-types/README.md",
+      "bytes": 311
+    },
+    {
+      "path": "scripts/download-language-model.py",
+      "bytes": 1299
+    },
+    {
+      "path": "scripts/evaluate-shape-diversity.py",
+      "bytes": 2282
+    },
+    {
+      "path": "scripts/export-schema.py",
+      "bytes": 603
+    },
+    {
+      "path": "scripts/generate-example-plans.py",
+      "bytes": 1195
+    },
+    {
+      "path": "scripts/Install-LocalAI.ps1",
+      "bytes": 548
+    },
+    {
+      "path": "scripts/render-house.py",
+      "bytes": 2067
+    },
+    {
+      "path": "scripts/run-api.py",
+      "bytes": 473
+    },
+    {
+      "path": "scripts/Setup-ArchAI.ps1",
+      "bytes": 1747
+    },
+    {
+      "path": "scripts/setup-reconstruction.ps1",
+      "bytes": 461
+    },
+    {
+      "path": "scripts/Start-ArchAI.ps1",
+      "bytes": 1723
+    },
+    {
+      "path": "scripts/Stop-ArchAI.ps1",
+      "bytes": 647
+    }
+  ]
+}

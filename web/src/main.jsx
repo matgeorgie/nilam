@@ -4,6 +4,16 @@ import "./style.css";
 
 const KERALA_CENTER = { lat: 10.36, lng: 76.27 };
 const DISTRICTS = ["Kasaragod", "Kannur", "Wayanad", "Kozhikode", "Malappuram", "Palakkad", "Thrissur", "Ernakulam", "Idukki", "Kottayam", "Alappuzha", "Pathanamthitta", "Kollam", "Thiruvananthapuram"];
+const DESIGN_URL = import.meta.env.VITE_ARCHAI_URL || "/design/";
+function designLink(lat, lon, district, score) {
+  const url = new URL(DESIGN_URL, window.location.href);
+  url.searchParams.set("source", "nilam");
+  url.searchParams.set("lat", Number(lat).toFixed(6));
+  url.searchParams.set("lon", Number(lon).toFixed(6));
+  url.searchParams.set("district", district);
+  if (score != null && Number.isFinite(Number(score))) url.searchParams.set("score", Number(score).toFixed(1));
+  return url.toString();
+}
 const FEATURE_NAMES = {
   annual_rainfall: "Annual rainfall", aspect: "Slope direction", clay_content: "Clay content",
   distance_to_water: "Distance from water", elevation: "Elevation", flood_occurrence: "Surface water history",
@@ -161,7 +171,7 @@ function AssessmentPanel({ report, stage, error, onStreetView, onClear }) {
       <div className="score-top"><div className="score"><strong>{fmt(score, 0)}</strong><span>%</span></div><div><p>{report.outcome}</p><h2>{report.district}</h2><small>{report.location.selection_type === "polygon" ? `${fmt(report.location.area_m2, 0)} m² selected area` : `${Number(report.location.lat).toFixed(5)}, ${Number(report.location.lon).toFixed(5)}`}</small></div></div>
       <div className="score-bar"><i style={{ width: `${score}%` }} /></div>
       <p className="score-summary">{report.reason}</p>
-      <button className="outline-action" onClick={onStreetView}><Icon type="street" />Open nearby Street View</button>
+      <div className="score-actions"><button className="outline-action" onClick={onStreetView}><Icon type="street" />Open nearby Street View</button>{report.location.selection_type !== "polygon" && <a className="design-action" href={designLink(report.location.lat, report.location.lon, report.district, score)}><Icon type="arrow" /> Design a home here</a>}</div>
     </section>
     {report.location.selection_type === "polygon" && <div className="area-stats"><div><span>Samples</span><strong>{report.prediction.spatial_summary.samples}</strong></div><div><span>Lowest</span><strong>{fmt(report.prediction.spatial_summary.minimum_percent, 0)}%</strong></div><div><span>Highest</span><strong>{fmt(report.prediction.spatial_summary.maximum_percent, 0)}%</strong></div></div>}
     <ModelSignals data={report.prediction.multimodal} />
@@ -203,7 +213,7 @@ function CandidateDetails({ candidate, onAssess, onStreetView, searched = false 
     <div className="candidate-scores"><div><strong>{fmt(candidate.suitability_percent, 0)}%</strong><span>Land score</span></div><div><strong>{fmt(candidate.surface_percent, 0)}%</strong><span>Flat & open</span></div><div><strong>{fmt(candidate.preference_fit_percent, 0)}%</strong><span>Preference match</span></div></div>
     <div className="detail-grid"><div><span>Mean slope across 45 m</span><strong>{fmt(evidence.mean_slope_45m)}°</strong></div><div><span>90% of terrain below</span><strong>{fmt(evidence.p90_slope_45m)}°</strong></div><div><span>Ground-height variation</span><strong>{fmt(evidence.elevation_variation_45m)} m</strong></div><div><span>Satellite open-land signal</span><strong>{fmt(evidence.satellite_open_probability)}%</strong></div><div><span>Nearest mapped building</span><strong>{distanceLabel(evidence.building_distance_m)}</strong></div><div><span>Built-up around 45 m</span><strong>{fmt(evidence.nearby_built_probability)}%</strong></div><div><span>Nearest road</span><strong>{distanceLabel(evidence.road_distance_m)}</strong></div><div><span>100-year flood depth</span><strong>{fmt(evidence.flood_level_100yr_m)} m</strong></div></div>
     {candidate.advantages.length > 0 && <div className="candidate-reasons">{candidate.advantages.map((item) => <span key={item}>✓ {item}</span>)}</div>}
-    <div className="candidate-actions"><button className="secondary-action" onClick={() => onStreetView(candidate)}><Icon type="street" />Street View</button><button className="primary-action" onClick={() => onAssess(candidate)}>Full assessment <Icon type="arrow" /></button></div>
+    <div className="candidate-actions"><button className="secondary-action" onClick={() => onStreetView(candidate)}><Icon type="street" />Street View</button><button className="primary-action" onClick={() => onAssess(candidate)}>Full assessment <Icon type="arrow" /></button><a className="design-action" href={designLink(candidate.lat, candidate.lon, candidate.district, candidate.suitability_percent)}>Design a home here <Icon type="arrow" /></a></div>
   </section>;
 }
 

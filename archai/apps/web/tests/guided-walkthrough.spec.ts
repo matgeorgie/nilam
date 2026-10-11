@@ -1,0 +1,24 @@
+import {test,expect} from '@playwright/test';
+test('guided counts generate a basic plan and walkthrough moves and exits',async({page,request})=>{
+ test.setTimeout(180000);
+ const session=await request.post('http://127.0.0.1:8000/api/auth/demo');const {token}=await session.json();
+ await page.addInitScript(value=>localStorage.setItem('archai-session',value),token);
+ const errors:string[]=[];page.on('pageerror',error=>errors.push(error.message));
+ await page.goto('/projects');await page.getByRole('button',{name:'New project',exact:true}).click();
+ await page.getByLabel('Project name',{exact:true}).fill('Guided walkthrough test');await page.getByRole('button',{name:'Continue',exact:true}).click();
+ await page.getByRole('button',{name:'Continue',exact:true}).click();
+ await expect(page.getByLabel('Bedrooms floor 0',{exact:true})).toHaveValue('2');await page.getByLabel('Shared bathrooms floor 0',{exact:true}).fill('1');
+ await page.getByLabel('Open kitchen',{exact:true}).uncheck();await expect(page.getByLabel('Open kitchen',{exact:true})).not.toBeChecked();
+ await page.getByRole('button',{name:'Review my brief',exact:true}).click();
+ await page.getByRole('button',{name:'Generate 2D plan',exact:true}).click();await page.waitForURL('**/workspace/**');
+ await page.getByRole('button',{name:'Edit requirements',exact:true}).click();await expect(page.getByRole('dialog',{name:'Guided requirements'})).toBeVisible();
+ await expect(page.getByLabel('Bedrooms floor 0',{exact:true})).toHaveValue('2');await page.getByLabel('Close requirements').click();
+ await page.getByRole('button',{name:'3D view',exact:true}).click();await expect(page.locator('.model-container canvas')).toBeVisible({timeout:90000});
+ await page.getByRole('button',{name:'Start walkthrough',exact:true}).click();
+ const canvas=page.locator('.model-container canvas');await expect(canvas).toHaveAttribute('data-walk-floor','0');
+ const before=await canvas.getAttribute('data-walk-position');await canvas.click();await page.keyboard.down('w');
+ await expect.poll(()=>canvas.getAttribute('data-walk-position')).not.toBe(before);await page.keyboard.up('w');
+ await page.screenshot({path:'../../walkthrough-preview.png',fullPage:true});
+ await page.keyboard.press('Escape');await expect(page.getByRole('button',{name:'Start walkthrough',exact:true})).toBeVisible();
+ await page.screenshot({path:'../../garden-corrected-preview.png',fullPage:true});expect(errors).toEqual([]);
+});

@@ -1,0 +1,408 @@
+{
+  "$defs": {
+    "HouseShape": {
+      "enum": [
+        "auto",
+        "rectangle",
+        "l_shape",
+        "t_shape",
+        "u_shape",
+        "c_shape",
+        "stepped",
+        "courtyard"
+      ],
+      "title": "HouseShape",
+      "type": "string"
+    },
+    "Relationship": {
+      "additionalProperties": false,
+      "properties": {
+        "source": {
+          "title": "Source",
+          "type": "string"
+        },
+        "target": {
+          "title": "Target",
+          "type": "string"
+        },
+        "relation": {
+          "enum": [
+            "adjacent",
+            "near",
+            "connected",
+            "separated",
+            "accessible_from",
+            "attached",
+            "preferred_near",
+            "must_not_be_adjacent"
+          ],
+          "title": "Relation",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source",
+        "target",
+        "relation"
+      ],
+      "title": "Relationship",
+      "type": "object"
+    },
+    "RoomRequirement": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "enum": [
+            "bedroom",
+            "bathroom",
+            "kitchen",
+            "dining",
+            "living",
+            "parking",
+            "balcony",
+            "office",
+            "utility",
+            "porch",
+            "veranda"
+          ],
+          "title": "Type",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "count": {
+          "default": 1,
+          "maximum": 30,
+          "minimum": 1,
+          "title": "Count",
+          "type": "integer"
+        },
+        "minimum_area": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Minimum Area"
+        },
+        "preferred_area": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Preferred Area"
+        },
+        "attached_bathroom": {
+          "default": false,
+          "title": "Attached Bathroom",
+          "type": "boolean"
+        },
+        "preferred_floor": {
+          "anyOf": [
+            {
+              "maximum": 3,
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Preferred Floor"
+        },
+        "exact_width": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Exact Width"
+        },
+        "exact_length": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Exact Length"
+        }
+      },
+      "required": [
+        "type",
+        "name"
+      ],
+      "title": "RoomRequirement",
+      "type": "object"
+    },
+    "SiteConstraints": {
+      "additionalProperties": false,
+      "properties": {
+        "front_setback": {
+          "default": 0,
+          "maximum": 100,
+          "minimum": 0,
+          "title": "Front Setback",
+          "type": "number"
+        },
+        "rear_setback": {
+          "default": 0,
+          "maximum": 100,
+          "minimum": 0,
+          "title": "Rear Setback",
+          "type": "number"
+        },
+        "left_setback": {
+          "default": 0,
+          "maximum": 100,
+          "minimum": 0,
+          "title": "Left Setback",
+          "type": "number"
+        },
+        "right_setback": {
+          "default": 0,
+          "maximum": 100,
+          "minimum": 0,
+          "title": "Right Setback",
+          "type": "number"
+        }
+      },
+      "title": "SiteConstraints",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "plot_width": {
+      "anyOf": [
+        {
+          "exclusiveMinimum": 0,
+          "maximum": 300,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Plot Width"
+    },
+    "plot_length": {
+      "anyOf": [
+        {
+          "exclusiveMinimum": 0,
+          "maximum": 300,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Plot Length"
+    },
+    "plot_polygon": {
+      "anyOf": [
+        {
+          "items": {
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "type": "array"
+          },
+          "minItems": 3,
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Plot Polygon"
+    },
+    "shape": {
+      "$ref": "#/$defs/HouseShape",
+      "default": "auto"
+    },
+    "shape_parameters": {
+      "additionalProperties": {
+        "type": "number"
+      },
+      "title": "Shape Parameters",
+      "type": "object"
+    },
+    "setbacks": {
+      "$ref": "#/$defs/SiteConstraints"
+    },
+    "unit": {
+      "default": "feet",
+      "enum": [
+        "feet",
+        "meters"
+      ],
+      "title": "Unit",
+      "type": "string"
+    },
+    "floors": {
+      "anyOf": [
+        {
+          "maximum": 4,
+          "minimum": 1,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Floors"
+    },
+    "orientation": {
+      "default": "north",
+      "enum": [
+        "north",
+        "south",
+        "east",
+        "west"
+      ],
+      "title": "Orientation",
+      "type": "string"
+    },
+    "north_angle": {
+      "default": 0,
+      "exclusiveMaximum": 360,
+      "minimum": 0,
+      "title": "North Angle",
+      "type": "number"
+    },
+    "road_location": {
+      "default": "south",
+      "enum": [
+        "north",
+        "south",
+        "east",
+        "west"
+      ],
+      "title": "Road Location",
+      "type": "string"
+    },
+    "road_width": {
+      "anyOf": [
+        {
+          "exclusiveMinimum": 0,
+          "maximum": 200,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Road Width"
+    },
+    "rooms": {
+      "items": {
+        "$ref": "#/$defs/RoomRequirement"
+      },
+      "maxItems": 50,
+      "title": "Rooms",
+      "type": "array"
+    },
+    "parking_spaces": {
+      "default": 0,
+      "maximum": 4,
+      "minimum": 0,
+      "title": "Parking Spaces",
+      "type": "integer"
+    },
+    "style": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Style"
+    },
+    "special_requirements": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Special Requirements",
+      "type": "array"
+    },
+    "preferences": {
+      "additionalProperties": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "number"
+          },
+          {
+            "type": "boolean"
+          }
+        ]
+      },
+      "title": "Preferences",
+      "type": "object"
+    },
+    "relationships": {
+      "items": {
+        "$ref": "#/$defs/Relationship"
+      },
+      "title": "Relationships",
+      "type": "array"
+    },
+    "provenance": {
+      "additionalProperties": {
+        "enum": [
+          "user",
+          "system_default",
+          "ai_assumption"
+        ],
+        "type": "string"
+      },
+      "title": "Provenance",
+      "type": "object"
+    }
+  },
+  "title": "HouseSpecification",
+  "type": "object"
+}
