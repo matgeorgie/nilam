@@ -10,12 +10,10 @@ Install the Nilam environment and build its data/models as described in the [Nil
 cd "/Users/mathewbijugeorge/Documents/Codex Project/kerala-land-lab/archai"
 python3.12 -m venv .venv
 .venv/bin/python -m pip install -r apps/api/requirements.txt
-CMAKE_ARGS="-DGGML_METAL=OFF -DGGML_OPENMP=OFF" .venv/bin/python -m pip install --no-cache-dir --no-binary=llama-cpp-python llama-cpp-python==0.3.36
-.venv/bin/python scripts/download-language-model.py
 npm install
 ```
 
-The Qwen checkpoint powers free-text design edits. The plot-to-plan wizard still works when language inference is unavailable. Without `DATABASE_URL`, ArchAI stores designs in `apps/api/archai.db` on this device.
+For free-text requirements and design edits, load `qwen/qwen3.5-9b` in LM Studio and start its local server at `http://127.0.0.1:1234/v1`. Check `http://127.0.0.1:1234/v1/models` to confirm the model ID. The plot-to-plan wizard still works when language inference is unavailable. Without `DATABASE_URL`, ArchAI stores designs in `apps/api/archai.db` on this device.
 
 ## Start the combined app
 

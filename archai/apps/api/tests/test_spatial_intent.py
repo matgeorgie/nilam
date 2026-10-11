@@ -177,12 +177,12 @@ def test_local_model_json_retry_rejects_wrong_ensuite_owner():
     assert fixture.calls==2 and not result.rooms[0].attached_bathroom
 
 
-def test_missing_local_weights_do_not_fall_back_to_parser(monkeypatch,tmp_path):
+def test_lm_studio_provider_uses_configured_model(monkeypatch):
     import app.ai.local_model as local
     local.model.cache_clear()
-    monkeypatch.setattr(local,'MODEL_PATH',tmp_path/'missing.gguf')
-    with pytest.raises(RuntimeError,match='No rule parser'):
-        local.model()
+    monkeypatch.setenv('ARCHAI_LM_STUDIO_MODEL','qwen/qwen3.5-9b')
+    assert local.model().model_id=='qwen/qwen3.5-9b'
+    local.model.cache_clear()
 
 
 def test_edit_explicitly_reports_full_reflow_and_preserves_old_revision():

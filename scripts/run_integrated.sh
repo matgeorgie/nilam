@@ -16,7 +16,6 @@ if [[ "${archai_dir}" == "${nilam_dir}/archai" && -d "${legacy_archai}" ]]; then
   done
   for asset in \
     apps/api/archai.db \
-    apps/api/app/ml/language/qwen2.5-1.5b-instruct-q4_k_m.gguf \
     apps/api/app/ml/cubicasa/model_best_val_loss_var.pkl \
     apps/api/app/ml/houseganpp/checkpoints/pretrained.pth; do
     if [[ ! -e "${archai_dir}/${asset}" && -e "${legacy_archai}/${asset}" ]]; then

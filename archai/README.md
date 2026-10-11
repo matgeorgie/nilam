@@ -25,7 +25,9 @@ See `.env.example`. Shell environment values are read by the backend. To load a 
 | Variable | Purpose |
 |---|---|
 | `DATABASE_URL` | PostgreSQL SQLAlchemy URL; local SQLite fallback if absent |
-| `ARCHAI_MODEL_PATH` | Optional path to a local Qwen GGUF; default checkpoint under apps/api/app/ml/language |
+| `ARCHAI_LM_STUDIO_URL` | Local LM Studio OpenAI-compatible API; default `http://127.0.0.1:1234/v1` |
+| `ARCHAI_LM_STUDIO_MODEL` | Loaded model ID; default `qwen/qwen3.5-9b` |
+| `ARCHAI_LM_STUDIO_TIMEOUT` | Response timeout in seconds; default 180 |
 | `NEXT_PUBLIC_API_URL` | Browser API origin, default `http://127.0.0.1:8001` |
 | `CORS_ORIGINS` | Comma-separated local frontend origins; Nilam at port 8000 is included by default |
 
@@ -48,11 +50,11 @@ See `docs/architecture.md` for data model, API contracts and frontend structure.
 
 ### Language interpretation
 
-Production language inference uses LocalModelProvider in apps/api/app/ai/local_model.py with a pinned official Qwen2.5-1.5B-Instruct Q4_K_M checkpoint and llama-cpp-python. It runs directly in the Python process without an HTTP inference endpoint. The old development parser is retained only for legacy fixtures and is never selected by get_provider(). Hosted language providers were removed.
+Language inference uses Qwen 3.5 9B through LM Studio's OpenAI-compatible API on this device. Start LM Studio's local server and load `qwen/qwen3.5-9b` before using free-text requirements or chat edits. ArchAI requests schema-constrained JSON and validates it before applying changes. The guided plot and room wizard does not require the language model. The old development parser is retained only for legacy fixtures and is never selected by `get_provider()`.
 
 Site settings from the form are authoritative. The local model reads per-floor room lists and cannot overwrite the plot, shape, road or floor count. The form exposes the extracted requirements for review. Typed JSON validation and room-reference checks reject malformed output and guessed room instances. Chat supports typed edits and validated position swaps; infeasible edits preserve the current revision. The general layout generator remains bounded and cannot handle every program or footprint.
 
-See START-HERE.md and LOCAL-AI-UPGRADE.md for installation, controls, tested scope and limitations.
+See RUNNING.md for installation and startup. `START-HERE.md` and `LOCAL-AI-UPGRADE.md` describe an earlier standalone version.
 
 ### Layout engine
 

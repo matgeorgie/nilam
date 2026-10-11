@@ -1,24 +1,20 @@
-"""In-process GGUF inference. No HTTP inference service or parser fallback."""
-import asyncio,json,os,threading,time
+"""Local LM Studio inference with validated structured responses."""
+import asyncio,json,os,threading
 from contextlib import contextmanager
 from functools import lru_cache
-from pathlib import Path
 from typing import Literal
+import httpx
 from pydantic import Field,model_validator
 from ..schemas import StrictModel,HouseSpecification,Operation,HouseShape
 
-MODEL_PATH=Path(__file__).parents[1]/'ml/language/qwen2.5-1.5b-instruct-q4_k_m.gguf'
+LM_STUDIO_URL='http://127.0.0.1:1234/v1'
+LM_STUDIO_MODEL='qwen/qwen3.5-9b'
 LOCK=threading.Lock()
 @contextmanager
 def inference_lock():
     if not LOCK.acquire(blocking=False):raise RuntimeError('Local AI is processing another request. Use guided requirements or wait and try again.')
     try:yield
     finally:LOCK.release()
-
-def deadline(seconds=90):
-    from llama_cpp import StoppingCriteriaList
-    start=time.monotonic()
-    return StoppingCriteriaList([lambda ids,logits:time.monotonic()-start>seconds])
 
 class ModelRoom(StrictModel):
     type:Literal['bedroom','bathroom','kitchen','dining','living','balcony','office','utility','porch','veranda']
@@ -76,19 +72,50 @@ Example output for swapping bedroom-1 with kitchen-1: {"mode":"edit","questions"
 
 @lru_cache(maxsize=1)
 def model():
-    path=Path(os.getenv('ARCHAI_MODEL_PATH',str(MODEL_PATH)))
-    if not path.is_file():raise RuntimeError('Local language model is missing. Run scripts/Install-LocalAI.ps1. No rule parser was used.')
-    try:
-        from llama_cpp import Llama
-        class TimedLlama(Llama):
-            def create_completion(self,*args,**kwargs):
-                kwargs['stopping_criteria']=deadline()
-                return super().create_completion(*args,**kwargs)
-        return TimedLlama(model_path=str(path),n_ctx=4096,n_batch=128,n_threads=4,n_gpu_layers=0,chat_format='chatml',verbose=False)
-    except (ImportError,OSError) as exc:raise RuntimeError('Local AI runtime could not load. Run scripts/Install-LocalAI.ps1.') from exc
+    return LMStudioModel()
+
+class LMStudioModel:
+    """Translate ArchAI's existing completion calls to LM Studio's local API."""
+    def __init__(self,client=None):
+        self.url=os.getenv('ARCHAI_LM_STUDIO_URL',LM_STUDIO_URL).rstrip('/')
+        self.model_id=os.getenv('ARCHAI_LM_STUDIO_MODEL',LM_STUDIO_MODEL)
+        timeout=float(os.getenv('ARCHAI_LM_STUDIO_TIMEOUT','180'))
+        self.client=client or httpx.Client(timeout=httpx.Timeout(timeout,connect=5))
+
+    def create_chat_completion(self,*,messages,temperature,max_tokens,response_format):
+        schema=response_format['schema']
+        payload={'model':self.model_id,'messages':messages,'temperature':temperature,
+                 'max_tokens':max_tokens,'stream':False,
+                 'response_format':{'type':'json_schema','json_schema':{
+                     'name':'archai_decision','strict':True,'schema':schema}}}
+        try:
+            response=self.client.post(self.url+'/chat/completions',json=payload)
+            response.raise_for_status()
+            result=response.json()
+        except httpx.ConnectError as exc:
+            raise RuntimeError('LM Studio is unavailable. Start its local server and load Qwen 3.5 9B.') from exc
+        except httpx.TimeoutException as exc:
+            raise RuntimeError('LM Studio timed out while reading the design request. Try again or increase ARCHAI_LM_STUDIO_TIMEOUT.') from exc
+        except httpx.HTTPStatusError as exc:
+            raise RuntimeError(f'LM Studio rejected the model request (HTTP {exc.response.status_code}). Check that {self.model_id} is loaded.') from exc
+        except (httpx.RequestError,ValueError) as exc:
+            raise RuntimeError('LM Studio returned an invalid response. Check the local server and loaded model.') from exc
+        try:
+            choice=result['choices'][0]
+            content=choice['message'].get('content')
+            # Some LM Studio builds put Qwen 3.5's constrained JSON here while
+            # leaving content empty. Accept it only if it is a complete JSON value.
+            if not content:
+                candidate=choice['message'].get('reasoning_content','')
+                json.loads(candidate)
+                content=candidate
+            choice['message']['content']=content
+            return result
+        except (KeyError,IndexError,TypeError,ValueError) as exc:
+            raise RuntimeError('LM Studio did not return a complete structured JSON response.') from exc
 
 class LocalModelProvider:
-    name='Qwen2.5 1.5B · local GGUF'
+    name='Qwen 3.5 9B · LM Studio'
     async def interpret(self,message,current,layout=None):
         return await asyncio.to_thread(self._interpret,message,current,layout)
     def _interpret(self,message,current,layout):

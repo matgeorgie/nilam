@@ -38,7 +38,7 @@ def swap_rooms(layout:HouseLayout,spec:HouseSpecification,operation:Operation):
     errors=[c.detail for c in updated.checks if c.status=='ERROR']
     if errors:raise ValueError('The requested swap does not pass geometry/access checks: '+'; '.join(errors[:3]))
     updated.score=score(updated,spec)
-    updated.generation_info={**updated.generation_info,'edit':'validated room-function swap','language_model':'Qwen2.5-1.5B-Instruct GGUF'}
+    updated.generation_info={**updated.generation_info,'edit':'validated room-function swap','language_model':'Qwen 3.5 9B via LM Studio'}
     return updated
 
 def requirement_operation(spec,layout,op):
