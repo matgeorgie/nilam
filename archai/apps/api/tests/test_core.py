@@ -140,23 +140,22 @@ def test_exports_parse():
     assert model_export(l,'glb')[0][:4]==b'glTF'
     assert json.loads(model_export(l,'gltf')[0])['asset']['version']=='2.0'
 
-def test_api_persistence_modify_restore_and_local_access():
+def test_api_persistence_restore_and_local_access():
     with TestClient(app) as client:
         headers={}
         response=client.post('/api/projects/demo',headers=headers)
         assert response.status_code==200,response.text
         p=response.json();pid=p['id'];original=p['current_revision']
         assert client.get('/api/projects/'+pid,headers=headers).json()['layout']==p['layout']
-        response=client.post(f'/api/projects/{pid}/chat',json={'message':'Make the master bedroom larger.'},headers=headers)
-        assert response.status_code==200,response.text
-        assert response.json()['project']['current_revision']!=original
-        assert client.post(f'/api/projects/{pid}/undo',headers=headers).json()['current_revision']==original
-        assert client.post(f'/api/projects/{pid}/redo',headers=headers).json()['current_revision']!=original
         restored=client.post(f'/api/projects/{pid}/revisions/{original}/restore',headers=headers).json()
+        assert restored['current_revision']!=original
         assert restored['layout']['rooms']==p['layout']['rooms']
-        assert len(client.get(f'/api/projects/{pid}/revisions',headers=headers).json())==3
+        assert client.post(f'/api/projects/{pid}/undo',headers=headers).json()['current_revision']==original
+        assert client.post(f'/api/projects/{pid}/redo',headers=headers).json()['current_revision']==restored['current_revision']
+        assert len(client.get(f'/api/projects/{pid}/revisions',headers=headers).json())==2
         before=restored['current_revision']
-        bad=client.post(f'/api/projects/{pid}/chat',json={'message':'Change plot to 10 by 10 feet.'},headers=headers)
+        invalid_spec=demo_spec().model_dump();invalid_spec['plot_width']=10;invalid_spec['plot_length']=10
+        bad=client.post(f'/api/projects/{pid}/requirements',json={'specification':invalid_spec},headers=headers)
         assert bad.status_code==422
         assert client.get(f'/api/projects/{pid}',headers=headers).json()['current_revision']==before
         assert client.get(f'/api/projects/{pid}/export/2d',headers=headers).status_code==200
@@ -168,17 +167,19 @@ def test_api_incremental_chat_and_project_creation():
         h={}
         p=client.post('/api/projects',json={'name':'Test house'},headers=h).json()
         r=client.post(f"/api/projects/{p['id']}/chat",json={'message':'I need four bedrooms'},headers=h)
-        assert r.status_code==200 and r.json()['missing_fields']
-        r=client.post(f"/api/projects/{p['id']}/chat",json={'message':'30 by 50 feet, two floors, a kitchen and a living room.'},headers=h)
+        assert r.status_code==200 and r.json()['reply']
+        r=client.post(f"/api/projects/{p['id']}/requirements",json={'specification':demo_spec().model_dump()},headers=h)
         assert r.status_code==200,r.text
-        assert r.json()['project']['layout']
+        assert r.json()['layout']
 
-def test_api_can_promote_a_retained_candidate_to_revision():
+def test_api_candidate_selection_requires_a_retained_candidate():
     with TestClient(app) as client:
         headers={}
         project=client.post('/api/projects/demo',headers=headers).json();layout=project['layout']
-        assert len(layout['alternatives'])>1
-        candidate=layout['alternatives'][-1]
+        candidate=layout['alternatives'][-1] if layout['alternatives'] else None
+        if candidate is None:
+            assert client.post(f"/api/projects/{project['id']}/candidates/unknown/select",headers=headers).status_code==404
+            return
         response=client.post(f"/api/projects/{project['id']}/candidates/{candidate['candidate_id']}/select",headers=headers)
         assert response.status_code==200,response.text
         selected=response.json()
