@@ -1,0 +1,294 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2600" height="1400" viewBox="0 0 2600 1400" role="img" aria-labelledby="title desc">
+  <title id="title">Nilam end-to-end system architecture</title>
+  <desc id="desc">A wide architecture diagram showing Nilam land suitability, the ArchAI2 house generation extension, the Kerala construction cost calculator, their data sources, models, runtime flow, outputs, and offline training pipeline.</desc>
+  <defs>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="125%">
+      <feDropShadow dx="0" dy="4" stdDeviation="7" flood-color="#143d33" flood-opacity="0.10"/>
+    </filter>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L10,5 L0,10 z" fill="#587068"/>
+    </marker>
+    <marker id="arrowGreen" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L10,5 L0,10 z" fill="#2f7a60"/>
+    </marker>
+    <style>
+      .bg { fill: #f6f8f4; }
+      .title { font: 700 38px Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #143d33; letter-spacing: -0.7px; }
+      .subtitle { font: 400 19px Inter, ui-sans-serif, system-ui, sans-serif; fill: #61736d; }
+      .stage-no { font: 700 14px Inter, ui-sans-serif, system-ui, sans-serif; letter-spacing: 1.8px; }
+      .stage-title { font: 700 24px Inter, ui-sans-serif, system-ui, sans-serif; fill: #173d34; }
+      .stage-sub { font: 400 15px Inter, ui-sans-serif, system-ui, sans-serif; fill: #62736d; }
+      .node-title { font: 700 18px Inter, ui-sans-serif, system-ui, sans-serif; fill: #173d34; }
+      .node-text { font: 400 14px Inter, ui-sans-serif, system-ui, sans-serif; fill: #556b64; }
+      .node-small { font: 500 13px Inter, ui-sans-serif, system-ui, sans-serif; fill: #556b64; }
+      .pill { font: 700 12px Inter, ui-sans-serif, system-ui, sans-serif; letter-spacing: 0.8px; }
+      .output-title { font: 700 17px Inter, ui-sans-serif, system-ui, sans-serif; fill: #173d34; }
+      .output-text { font: 400 13px Inter, ui-sans-serif, system-ui, sans-serif; fill: #5e706a; }
+      .lane-title { font: 700 19px Inter, ui-sans-serif, system-ui, sans-serif; fill: #173d34; }
+      .lane-sub { font: 400 14px Inter, ui-sans-serif, system-ui, sans-serif; fill: #62736d; }
+      .edge { fill: none; stroke: #587068; stroke-width: 3; marker-end: url(#arrow); }
+      .edge-green { fill: none; stroke: #2f7a60; stroke-width: 4; marker-end: url(#arrowGreen); }
+      .edge-dashed { fill: none; stroke: #778a83; stroke-width: 2.5; stroke-dasharray: 9 8; marker-end: url(#arrow); }
+      .edge-label { font: 600 12px Inter, ui-sans-serif, system-ui, sans-serif; fill: #536861; }
+      .card { fill: #ffffff; stroke: #d6e0dc; stroke-width: 1.5; filter: url(#shadow); }
+    </style>
+  </defs>
+
+  <rect class="bg" width="2600" height="1400"/>
+
+  <!-- Header -->
+  <text class="title" x="54" y="60">NILAM — End-to-end System Architecture</text>
+  <text class="subtitle" x="54" y="92">Kerala land intelligence → AI-assisted house design → district-aware construction budget</text>
+  <rect x="2186" y="35" width="360" height="48" rx="24" fill="#e2eee8"/>
+  <text class="pill" x="2366" y="65" text-anchor="middle" fill="#23654f">LOCAL-FIRST PRODUCT · CLOUD DATA ON DEMAND</text>
+
+  <!-- Stage panels -->
+  <rect x="40" y="128" width="390" height="720" rx="24" fill="#edf3f8" stroke="#cfdae3" stroke-width="1.5"/>
+  <rect x="458" y="128" width="780" height="720" rx="24" fill="#e8f3ee" stroke="#c9ddd4" stroke-width="1.5"/>
+  <rect x="1266" y="128" width="218" height="720" rx="24" fill="#f0f4f1" stroke="#d5dfda" stroke-width="1.5"/>
+  <rect x="1512" y="128" width="660" height="720" rx="24" fill="#f1eef8" stroke="#d9d1e8" stroke-width="1.5"/>
+  <rect x="2200" y="128" width="360" height="720" rx="24" fill="#f8f0df" stroke="#e7d8b8" stroke-width="1.5"/>
+
+  <!-- Stage headings -->
+  <text class="stage-no" x="70" y="170" fill="#53778f">01 · INPUTS</text>
+  <text class="stage-title" x="70" y="201">User &amp; live evidence</text>
+  <text class="stage-sub" x="70" y="227">Where to inspect and what the user needs</text>
+
+  <text class="stage-no" x="488" y="170" fill="#2f7a60">02 · LAND SUITABILITY</text>
+  <text class="stage-title" x="488" y="201">Geospatial screening &amp; multimodal AI</text>
+  <text class="stage-sub" x="488" y="227">Site evidence, hard screening, prediction and explanation</text>
+
+  <text class="stage-no" x="1296" y="170" fill="#60736c">03 · HANDOFF</text>
+  <text class="stage-title" x="1296" y="201">Site context</text>
+  <text class="stage-sub" x="1296" y="227">One shared contract</text>
+
+  <text class="stage-no" x="1542" y="170" fill="#725a99">04 · ARCHAI2</text>
+  <text class="stage-title" x="1542" y="201">House generation &amp; refinement</text>
+  <text class="stage-sub" x="1542" y="227">Natural-language brief to validated 2D/3D geometry</text>
+
+  <text class="stage-no" x="2230" y="170" fill="#9a6a22">05 · COST</text>
+  <text class="stage-title" x="2230" y="201">Kerala cost calculator</text>
+  <text class="stage-sub" x="2230" y="227">Concept budget from the saved design</text>
+
+  <!-- Inputs cards -->
+  <rect class="card" x="70" y="266" width="330" height="142" rx="16"/>
+  <rect x="70" y="266" width="8" height="142" rx="4" fill="#5f89a1"/>
+  <text class="node-title" x="98" y="300">Map &amp; requirement input</text>
+  <text class="node-text" x="98" y="329">• Search, click, polygon or device location</text>
+  <text class="node-text" x="98" y="354">• Centre point + radius for land discovery</text>
+  <text class="node-text" x="98" y="379">• Optional text or English voice preferences</text>
+
+  <rect class="card" x="70" y="430" width="330" height="184" rx="16"/>
+  <rect x="70" y="430" width="8" height="184" rx="4" fill="#5f89a1"/>
+  <text class="node-title" x="98" y="464">Live geospatial evidence</text>
+  <text class="node-text" x="98" y="494">Google Earth Engine</text>
+  <text class="node-small" x="98" y="518">Terrain · land cover · vegetation · water</text>
+  <text class="node-text" x="98" y="549">OpenStreetMap + Kerala hazard layers</text>
+  <text class="node-small" x="98" y="573">Buildings · roads · amenities · flood · landslide</text>
+  <text class="node-text" x="98" y="598">Google Maps, Places and Street View</text>
+
+  <rect class="card" x="70" y="636" width="330" height="176" rx="16"/>
+  <rect x="70" y="636" width="8" height="176" rx="4" fill="#5f89a1"/>
+  <text class="node-title" x="98" y="670">House &amp; budget preferences</text>
+  <text class="node-text" x="98" y="699">Plot dimensions · floors · room programme</text>
+  <text class="node-text" x="98" y="724">Style · relationships · parking · setbacks</text>
+  <text class="node-text" x="98" y="749">District · finish level · design refinements</text>
+  <rect x="98" y="770" width="190" height="25" rx="12" fill="#edf3f8"/>
+  <text class="pill" x="193" y="787" text-anchor="middle" fill="#53778f">USED AFTER SITE SELECTION</text>
+
+  <!-- Land cards -->
+  <rect class="card" x="488" y="266" width="720" height="118" rx="16"/>
+  <text class="node-title" x="518" y="299">Site feature service &amp; candidate search</text>
+  <text class="node-text" x="518" y="327">Build 38 mapped terrain, climate, soil, water, hazard, access, utility and amenity features.</text>
+  <text class="node-text" x="518" y="351">For radius search, sample fresh grid cells and reject steep, rough, flooded, built-up or building-adjacent cells.</text>
+
+  <rect class="card" x="488" y="406" width="222" height="162" rx="16"/>
+  <rect x="508" y="424" width="90" height="24" rx="12" fill="#dceee6"/>
+  <text class="pill" x="553" y="440" text-anchor="middle" fill="#2f765d">TABULAR</text>
+  <text class="node-title" x="508" y="477">TabPFN 3.5</text>
+  <text class="node-text" x="508" y="504">38 site features</text>
+  <text class="node-text" x="508" y="528">4 suitability classes</text>
+  <text class="node-small" x="508" y="551">Primary expert · 92% blend</text>
+
+  <rect class="card" x="727" y="406" width="240" height="162" rx="16"/>
+  <rect x="747" y="424" width="88" height="24" rx="12" fill="#dceee6"/>
+  <text class="pill" x="791" y="440" text-anchor="middle" fill="#2f765d">VISION</text>
+  <text class="node-title" x="747" y="477">TerraMind Base</text>
+  <text class="node-text" x="747" y="504">Dry + monsoon Sentinel-2</text>
+  <text class="node-text" x="747" y="528">224 × 224 × 12 per season</text>
+  <text class="node-small" x="747" y="551">Fine-tuned expert · 8% blend</text>
+
+  <rect class="card" x="984" y="406" width="224" height="162" rx="16"/>
+  <rect x="1004" y="424" width="94" height="24" rx="12" fill="#dceee6"/>
+  <text class="pill" x="1051" y="440" text-anchor="middle" fill="#2f765d">INTENT</text>
+  <text class="node-title" x="1004" y="477">Laya router</text>
+  <text class="node-text" x="1004" y="504">Preference extraction</text>
+  <text class="node-text" x="1004" y="528">+ deterministic numbers</text>
+  <text class="node-small" x="1004" y="551">Distil-Whisper for speech</text>
+
+  <rect class="card" x="488" y="590" width="720" height="112" rx="16"/>
+  <text class="node-title" x="518" y="624">Decision engine</text>
+  <text class="node-text" x="518" y="652">Hard safety/open-land gates → calibrated class-probability fusion → ordinal suitability percentage</text>
+  <text class="node-text" x="518" y="677">Conditional permutation SHAP explains the final result; amenity and evidence services add local context.</text>
+
+  <rect x="488" y="724" width="720" height="88" rx="16" fill="#dceee6" stroke="#bbd6c9"/>
+  <text class="node-title" x="518" y="758">Land intelligence output</text>
+  <text class="node-text" x="518" y="785">Final score + suitability band · feature drivers · ranked flat/open candidates · amenities · Street View</text>
+
+  <!-- Handoff -->
+  <rect class="card" x="1292" y="314" width="166" height="314" rx="18"/>
+  <rect x="1320" y="337" width="110" height="28" rx="14" fill="#dfe9e4"/>
+  <text class="pill" x="1375" y="356" text-anchor="middle" fill="#526a61">SITE_CONTEXT</text>
+  <text class="node-title" x="1318" y="400">Selected site</text>
+  <text class="node-text" x="1318" y="432">Latitude</text>
+  <text class="node-text" x="1318" y="458">Longitude</text>
+  <text class="node-text" x="1318" y="484">District</text>
+  <text class="node-text" x="1318" y="510">Suitability %</text>
+  <line x1="1318" y1="532" x2="1432" y2="532" stroke="#d9e2de"/>
+  <text class="node-small" x="1318" y="559">Passed into the</text>
+  <text class="node-small" x="1318" y="580">home brief and cost</text>
+  <text class="node-small" x="1318" y="601">estimator.</text>
+
+  <!-- ArchAI cards -->
+  <rect class="card" x="1542" y="266" width="600" height="104" rx="16"/>
+  <rect x="1542" y="266" width="8" height="104" rx="4" fill="#7b63a2"/>
+  <text class="node-title" x="1570" y="300">Qwen 3.5 9B · local LM Studio</text>
+  <text class="node-text" x="1570" y="328">Converts the user’s brief and refinements into schema-constrained house requirements.</text>
+  <text class="node-small" x="1570" y="351">Language interpretation only; geometry must pass deterministic validation.</text>
+
+  <rect class="card" x="1542" y="392" width="282" height="130" rx="16"/>
+  <text class="node-title" x="1568" y="426">Spatial intent compiler</text>
+  <text class="node-text" x="1568" y="455">Room programme · adjacency</text>
+  <text class="node-text" x="1568" y="480">Plot shape · floors · setbacks</text>
+  <text class="node-small" x="1568" y="504">Canonical structured specification</text>
+
+  <rect class="card" x="1842" y="392" width="300" height="130" rx="16"/>
+  <text class="node-title" x="1868" y="426">Candidate generation</text>
+  <text class="node-text" x="1868" y="455">HouseGAN++ proposal when eligible</text>
+  <text class="node-text" x="1868" y="480">+ procedural constrained optimizer</text>
+  <text class="node-small" x="1868" y="504">Multiple layout candidates</text>
+
+  <rect class="card" x="1542" y="544" width="600" height="112" rx="16"/>
+  <text class="node-title" x="1570" y="578">Independent validation &amp; selection</text>
+  <text class="node-text" x="1570" y="607">Rejects collisions and infeasible geometry; checks access, circulation, room area, adjacency and setbacks.</text>
+  <text class="node-small" x="1570" y="633">Only validated structured geometry can become the saved revision.</text>
+
+  <rect class="card" x="1542" y="678" width="290" height="134" rx="16"/>
+  <text class="node-title" x="1568" y="712">Canonical geometry</text>
+  <text class="node-text" x="1568" y="741">Rooms · walls · doors · windows</text>
+  <text class="node-text" x="1568" y="766">Stairs · footprint · site boundary</text>
+  <text class="node-small" x="1568" y="790">One source for 2D, 3D and exports</text>
+
+  <rect class="card" x="1850" y="678" width="292" height="134" rx="16"/>
+  <text class="node-title" x="1876" y="712">Projects &amp; revisions</text>
+  <text class="node-text" x="1876" y="741">FastAPI services + SQLite history</text>
+  <text class="node-text" x="1876" y="766">Chat refinements + candidate choice</text>
+  <text class="node-small" x="1876" y="790">Next.js workspace</text>
+
+  <!-- Cost cards -->
+  <rect class="card" x="2230" y="266" width="300" height="132" rx="16"/>
+  <rect x="2230" y="266" width="8" height="132" rx="4" fill="#b47a2b"/>
+  <text class="node-title" x="2258" y="300">Estimator inputs</text>
+  <text class="node-text" x="2258" y="329">Saved house geometry</text>
+  <text class="node-text" x="2258" y="354">Kerala district from Nilam</text>
+  <text class="node-text" x="2258" y="379">Chosen finish level</text>
+
+  <rect class="card" x="2230" y="420" width="300" height="224" rx="16"/>
+  <text class="node-title" x="2258" y="454">Cost engine</text>
+  <text class="node-text" x="2258" y="483">Union room polygons by floor</text>
+  <text class="node-text" x="2258" y="508">+ wall / semi-open allowances</text>
+  <text class="node-text" x="2258" y="539">Kerala finish-rate bands</text>
+  <text class="node-text" x="2258" y="564">× district material/labour factor</text>
+  <text class="node-text" x="2258" y="595">+ complexity and room allowances</text>
+  <text class="node-text" x="2258" y="620">+ 12% planning reserve</text>
+
+  <rect x="2230" y="666" width="300" height="146" rx="16" fill="#f2e4c7" stroke="#dfc99e"/>
+  <text class="node-title" x="2258" y="700">Concept-stage budget</text>
+  <text class="node-text" x="2258" y="730">Low / planning / high range</text>
+  <text class="node-text" x="2258" y="755">Area and cost breakdown</text>
+  <text class="node-text" x="2258" y="780">District factor + assumptions</text>
+
+  <!-- Main runtime arrows -->
+  <path class="edge-green" d="M400 337 H454"/>
+  <path class="edge" d="M400 522 H446 V324 H482"/>
+  <path class="edge" d="M1208 768 H1252 V471 H1286"/>
+  <path class="edge-green" d="M1458 471 H1488 V318 H1536"/>
+  <path class="edge-green" d="M2142 746 H2176 V332 H2224"/>
+  <path class="edge" d="M400 724 H440 V856 H1492 V350 H1536"/>
+  <text class="edge-label" x="414" y="324">site / radius</text>
+  <text class="edge-label" x="1242" y="750" text-anchor="end">selected land</text>
+  <text class="edge-label" x="1460" y="302">site context</text>
+  <text class="edge-label" x="1410" y="847">house requirements</text>
+  <text class="edge-label" x="2160" y="316">saved revision</text>
+
+  <!-- User outputs lane -->
+  <rect x="40" y="876" width="2520" height="166" rx="24" fill="#ffffff" stroke="#d7e1dc" stroke-width="1.5"/>
+  <text class="lane-title" x="70" y="916">End-user outputs</text>
+  <text class="lane-sub" x="70" y="940">One continuous Nilam journey, with each output feeding the next decision</text>
+
+  <rect x="356" y="902" width="452" height="108" rx="15" fill="#edf6f1"/>
+  <text class="output-title" x="384" y="936">Assess a site</text>
+  <text class="output-text" x="384" y="962">Suitability percentage · evidence drivers · SHAP explanation</text>
+  <text class="output-text" x="384" y="985">Nearby amenities · Street View · saved location</text>
+
+  <rect x="830" y="902" width="418" height="108" rx="15" fill="#edf6f1"/>
+  <text class="output-title" x="858" y="936">Find suitable land</text>
+  <text class="output-text" x="858" y="962">Ranked flat/open candidate points within the chosen radius</text>
+  <text class="output-text" x="858" y="985">Preference match · site detail · Street View inspection</text>
+
+  <rect x="1270" y="902" width="636" height="108" rx="15" fill="#f4f1fa"/>
+  <text class="output-title" x="1298" y="936">Design and refine the home</text>
+  <text class="output-text" x="1298" y="962">Validated 2D floor plan · interactive 3D model · revision history</text>
+  <text class="output-text" x="1298" y="985">SVG / PNG / PDF / GLB / GLTF exports</text>
+
+  <rect x="1928" y="902" width="602" height="108" rx="15" fill="#fbf4e7"/>
+  <text class="output-title" x="1956" y="936">Estimate construction cost</text>
+  <text class="output-text" x="1956" y="962">Kerala district-adjusted planning budget and range</text>
+  <text class="output-text" x="1956" y="985">Transparent quantities, assumptions, exclusions and source links</text>
+
+  <!-- Offline training lane -->
+  <rect x="40" y="1072" width="2520" height="280" rx="24" fill="#eef1ef" stroke="#d5ded9" stroke-width="1.5"/>
+  <text class="lane-title" x="70" y="1112">Offline evidence build, training &amp; evaluation</text>
+  <text class="lane-sub" x="70" y="1136">Executed ahead of runtime; produces versioned data and model artifacts loaded by the land service</text>
+
+  <rect class="card" x="70" y="1170" width="454" height="138" rx="16"/>
+  <text class="node-title" x="98" y="1204">Authoritative and public data</text>
+  <text class="node-text" x="98" y="1232">SRTM · CHIRPS · ERA5-Land · Dynamic World</text>
+  <text class="node-text" x="98" y="1257">MODIS NDVI · JRC water · OpenLandMap</text>
+  <text class="node-text" x="98" y="1282">GSI / KSDMA / UNEP hazards · Kerala OSM PBF</text>
+
+  <rect class="card" x="560" y="1170" width="462" height="138" rx="16"/>
+  <text class="node-title" x="588" y="1204">Statewide academic cohort</text>
+  <text class="node-text" x="588" y="1232">1,400 points · 100 per Kerala district</text>
+  <text class="node-text" x="588" y="1257">38 tabular features + weak-label class / confidence</text>
+  <text class="node-text" x="588" y="1282">1,400 paired dry/monsoon Sentinel-2 chip files</text>
+
+  <rect class="card" x="1058" y="1170" width="490" height="138" rx="16"/>
+  <text class="node-title" x="1086" y="1204">Model fitting</text>
+  <text class="node-text" x="1086" y="1232">Fit TabPFN on mapped features</text>
+  <text class="node-text" x="1086" y="1257">Fine-tune TerraMind vision head + final two encoder blocks</text>
+  <text class="node-text" x="1086" y="1282">Whole-district train / validation / test split</text>
+
+  <rect class="card" x="1584" y="1170" width="450" height="138" rx="16"/>
+  <text class="node-title" x="1612" y="1204">Calibration &amp; evaluation</text>
+  <text class="node-text" x="1612" y="1232">Validation-selected 92% / 8% geometric pool</text>
+  <text class="node-text" x="1612" y="1257">Accuracy · macro F1 · precision · recall · log loss</text>
+  <text class="node-text" x="1612" y="1282">Fusion and classical-model ablations</text>
+
+  <rect x="2070" y="1170" width="460" height="138" rx="16" fill="#dfe9e4" stroke="#c4d5cd"/>
+  <text class="node-title" x="2098" y="1204">Versioned runtime artifacts</text>
+  <text class="node-text" x="2098" y="1232">TabPFN estimator · TerraMind checkpoint / head</text>
+  <text class="node-text" x="2098" y="1257">Fusion configuration · feature schema · metrics</text>
+  <text class="node-text" x="2098" y="1282">Loaded locally by Nilam FastAPI</text>
+
+  <path class="edge" d="M524 1239 H554"/>
+  <path class="edge" d="M1022 1239 H1052"/>
+  <path class="edge" d="M1548 1239 H1578"/>
+  <path class="edge" d="M2034 1239 H2064"/>
+  <path class="edge-dashed" d="M2300 1170 V1100 H844 V574"/>
+  <text class="edge-label" x="1814" y="1091">model registry / local artifacts</text>
+
+  <!-- Platform footer -->
+  <text class="node-small" x="54" y="1380">Runtime: React + Google Maps UI · Nilam FastAPI (:8000) · ArchAI2 FastAPI (:8001) · Next.js workspace (:3000) · local SQLite + caches</text>
+  <text class="node-small" x="2546" y="1380" text-anchor="end">System boundary: NILAM</text>
+</svg>
