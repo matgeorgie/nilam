@@ -1,5 +1,5 @@
 import type {Project} from './types';
-export const API=process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8001';
+export const API=process.env.NEXT_PUBLIC_API_URL || (typeof window!=='undefined'&&window.location.port==='8000'?window.location.origin+'/design-api':'http://127.0.0.1:8001');
 export class ApiError extends Error{readonly status:number;constructor(message:string,status:number){super(message);this.name='ApiError';this.status=status}}
 export async function api<T>(path:string,options:RequestInit={}):Promise<T>{
   let response:Response;

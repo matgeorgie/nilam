@@ -43,6 +43,12 @@ def test_nilam_site_reference_is_saved_without_login(tmp_path):
             assert generated.status_code == 200, generated.text
             assert generated.json()['layout']['rooms']
             assert generated.json()['specification']['site_context'] == site
+            estimate = client.get(f"/api/projects/{project['id']}/estimate")
+            assert estimate.status_code == 200, estimate.text
+            assert estimate.json()['district'] == 'Thrissur'
+            assert estimate.json()['district_source'] == 'nilam'
+            assert estimate.json()['planning_budget_inr'] > estimate.json()['construction_inr']
+            assert client.get(f"/api/projects/{project['id']}/estimate?district=Kochi").status_code == 422
             assert client.get(f"/api/projects/{project['id']}").json()['specification']['site_context'] == site
             assert any(item['id'] == project['id'] for item in client.get('/api/projects').json())
             assert client.post('/api/auth/login', json={}).status_code == 404

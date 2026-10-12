@@ -15,3 +15,13 @@ export type LayoutAlternative={candidate_id:string;label:string;rationale:string
 export type Layout={strategy?:string;generation_info?:{model?:string;loaded?:boolean;used?:boolean;attempts?:number;reason?:string;draft?:boolean;final_engine?:string};width:number;length:number;floors:number;unit:string;footprint?:HouseFootprint|null;plot_boundary?:[number,number][];setback_boundary?:[number,number][];road_edge?:[[number,number],[number,number]]|null;rooms:Room[];walls:Wall[];doors:Door[];windows:WindowOpening[];stairs:Stair[];checks:Check[];score:LayoutScore;generation_ms:number;candidate_count:number;chosen_candidate_id?:string|null;alternatives?:LayoutAlternative[]};
 export type Project={id:string;name:string;specification:Specification;layout:Layout|null;messages:{id:string;role:string;content:string}[];updated_at:string;current_revision:string|null;can_undo:boolean;can_redo:boolean;provider:string};
 export type Revision={id:string;title:string;created_at:string;layout:Layout;specification:Specification};
+export type CostEstimate={
+  as_of:string;district:string|null;district_source:'nilam'|'selected'|'kerala_average';district_factor:number;finish:'essential'|'standard'|'premium';
+  rate_band_inr_sqft:{low:number;mid:number;high:number};
+  floors:{floor:number;net_enclosed_sqft:number;gross_enclosed_sqft:number;semi_open_sqft:number}[];
+  area:{net_enclosed_sqft:number;gross_enclosed_sqft:number;wall_allowance_sqft:number;semi_open_sqft:number;priced_equivalent_sqft:number};
+  requirements:{bathrooms:number;kitchens:number;shape:string};
+  line_items:{label:string;detail:string;amount_inr:number}[];
+  construction_inr:number;reserve_inr:number;planning_budget_inr:number;planning_range_inr:{low:number;high:number};
+  assumptions:string[];exclusions:string[];sources:{title:string;url:string;use:string}[];method:string;
+};

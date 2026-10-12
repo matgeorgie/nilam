@@ -18,6 +18,7 @@ from .layout import DeterministicLayoutEngine, validate
 from .simple_home import SimpleHomeLayoutEngine
 from .services import apply_operation, demo_spec
 from .exports import drawing_export, model_export
+from .cost_estimator import estimate_cost
 
 def uid():return str(uuid4())
 
@@ -250,6 +251,20 @@ def get_layout(project_id:str,user:User=Depends(current_user),db:Session=Depends
     p=own(db,user,project_id)
     if not p.current_revision:raise HTTPException(404,'Generate a design first.')
     return db.get(Revision,p.current_revision).layout
+
+
+@app.get('/api/projects/{project_id}/estimate')
+def get_estimate(project_id:str,finish:str='standard',district:str|None=None,
+                 user:User=Depends(current_user),db:Session=Depends(get_db)):
+    p=own(db,user,project_id)
+    if not p.current_revision:raise HTTPException(404,'Generate a design first to see a budget.')
+    revision=db.get(Revision,p.current_revision)
+    try:
+        return estimate_cost(HouseLayout.model_validate(revision.layout),
+                             HouseSpecification.model_validate(revision.specification),
+                             finish=finish,district=district)
+    except ValueError as error:
+        raise HTTPException(422,str(error)) from error
 
 @app.post('/api/projects/{project_id}/validate')
 def validation(project_id:str,user:User=Depends(current_user),db:Session=Depends(get_db)):

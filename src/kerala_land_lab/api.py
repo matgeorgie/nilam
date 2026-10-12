@@ -45,6 +45,23 @@ async def lifespan(_:FastAPI):
 app=FastAPI(title='Nilam · Kerala Land Lab',version='0.3.0',lifespan=lifespan)
 
 
+@app.api_route('/design-api/{path:path}',methods=['GET','HEAD','POST','PUT','PATCH','DELETE'])
+async def design_api(request:Request,path:str):
+    """Serve the local ArchAI API on Nilam's origin for the integrated studio."""
+    target='http://127.0.0.1:8001/'+path
+    if request.url.query:target+='?'+request.url.query
+    headers={key:value for key,value in request.headers.items()
+             if key.lower() not in {'host','connection','accept-encoding','content-length'}}
+    try:
+        async with httpx.AsyncClient(timeout=120,follow_redirects=False) as client:
+            upstream=await client.request(request.method,target,headers=headers,content=await request.body())
+    except httpx.RequestError:
+        raise HTTPException(503,'Home design API is unavailable. Start the ArchAI API on port 8001.')
+    response_headers={key:value for key,value in upstream.headers.items()
+                      if key.lower() not in {'content-length','content-encoding','transfer-encoding','connection'}}
+    return Response(content=upstream.content,status_code=upstream.status_code,headers=response_headers)
+
+
 @app.api_route('/design',methods=['GET','HEAD','POST','PUT','PATCH','DELETE'])
 @app.api_route('/design/{path:path}',methods=['GET','HEAD','POST','PUT','PATCH','DELETE'])
 async def design_studio(request:Request,path:str=''):
