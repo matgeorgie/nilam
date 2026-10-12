@@ -17,7 +17,7 @@ The application exposes one model: **TerraMind Base + TabPFN 3.5 adaptive late f
 - The displayed percentage is the probability-weighted ordinal index using class anchors 8%, 34%, 64%, and 90%. It is an experimental comparative score, not a calibrated safety probability.
 - Conditional permutation SHAP perturbs TabPFN features while holding TerraMind evidence fixed, so the final report can explain mapped feature effects without repeatedly running the satellite backbone.
 
-Calibration uses Ernakulam and Wayanad. Alappuzha, Idukki, and Kasaragod remain untouched test districts. The fused model obtained 0.847 macro-F1 and TabPFN alone obtained 0.850 on the 300-point test set. The gate accepts fusion only within a narrow performance tolerance and therefore limits TerraMind to 8%. Full metrics are tracked in [`docs/terramind-tabpfn-evaluation.json`](docs/terramind-tabpfn-evaluation.json).
+Calibration uses Ernakulam and Wayanad. Alappuzha, Idukki, and Kasaragod form the geographically held-out test set. The fused model obtained 0.847 macro-F1 and TabPFN alone obtained 0.850 on the 300-point test set. These districts have appeared in earlier development reports, so the result is retrospective rather than a fresh confirmatory test. The gate accepts fusion only within a narrow performance tolerance and therefore limits TerraMind to 8%. The [model comparison](docs/model-comparison.md) reports accuracy, macro precision/recall/F1, class-level results, and traditional baselines; the original fusion metrics are in [`docs/terramind-tabpfn-evaluation.json`](docs/terramind-tabpfn-evaluation.json).
 
 ## Statewide dataset
 
