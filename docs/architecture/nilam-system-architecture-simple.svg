@@ -1,0 +1,215 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2600" height="1250" viewBox="0 0 2600 1250" role="img" aria-labelledby="title desc">
+  <title id="title">Simplified Nilam system architecture</title>
+  <desc id="desc">A wide simplified architecture showing Nilam inputs, land suitability, site handoff, ArchAI2 house generation, Kerala cost estimation, offline training, and local application services.</desc>
+  <defs>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="125%">
+      <feDropShadow dx="0" dy="4" stdDeviation="7" flood-color="#173f35" flood-opacity="0.09"/>
+    </filter>
+    <marker id="arrow" markerWidth="11" markerHeight="11" refX="9" refY="5.5" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L11,5.5 L0,11 z" fill="#537168"/>
+    </marker>
+    <marker id="arrowGreen" markerWidth="11" markerHeight="11" refX="9" refY="5.5" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L11,5.5 L0,11 z" fill="#2f7a60"/>
+    </marker>
+    <style>
+      .bg { fill: #f7f8f5; }
+      .title { font: 700 42px Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #143d33; letter-spacing: -0.8px; }
+      .subtitle { font: 500 21px Inter, ui-sans-serif, system-ui, sans-serif; fill: #63756e; }
+      .phase { font: 700 15px Inter, ui-sans-serif, system-ui, sans-serif; letter-spacing: 2px; }
+      .panel-title { font: 700 27px Inter, ui-sans-serif, system-ui, sans-serif; fill: #163e34; }
+      .card-title { font: 700 21px Inter, ui-sans-serif, system-ui, sans-serif; fill: #173f35; }
+      .item { font: 500 18px Inter, ui-sans-serif, system-ui, sans-serif; fill: #506860; }
+      .item-strong { font: 700 18px Inter, ui-sans-serif, system-ui, sans-serif; fill: #264f43; }
+      .small { font: 600 16px Inter, ui-sans-serif, system-ui, sans-serif; fill: #5f726b; }
+      .lane-title { font: 700 25px Inter, ui-sans-serif, system-ui, sans-serif; fill: #173f35; }
+      .lane-card { font: 700 19px Inter, ui-sans-serif, system-ui, sans-serif; fill: #173f35; }
+      .lane-item { font: 500 16px Inter, ui-sans-serif, system-ui, sans-serif; fill: #5a6e67; }
+      .infra { font: 700 17px Inter, ui-sans-serif, system-ui, sans-serif; fill: #49625a; }
+      .card { fill: #ffffff; stroke: #d5dfda; stroke-width: 1.5; filter: url(#shadow); }
+      .arrow { fill: none; stroke: #537168; stroke-width: 4; marker-end: url(#arrow); }
+      .arrow-main { fill: none; stroke: #2f7a60; stroke-width: 5; marker-end: url(#arrowGreen); }
+      .arrow-dashed { fill: none; stroke: #71877e; stroke-width: 3; stroke-dasharray: 10 9; marker-end: url(#arrow); }
+    </style>
+  </defs>
+
+  <rect class="bg" width="2600" height="1250"/>
+
+  <text class="title" x="52" y="62">NILAM — Simplified System Architecture</text>
+  <text class="subtitle" x="52" y="96">Land suitability · ArchAI2 house generation · Kerala construction cost</text>
+  <rect x="2268" y="35" width="280" height="48" rx="24" fill="#e1eee8"/>
+  <text class="small" x="2408" y="66" text-anchor="middle" fill="#2f7059">ONE CONNECTED PRODUCT</text>
+
+  <text class="phase" x="52" y="143" fill="#688079">LIVE USER FLOW</text>
+
+  <!-- Main panels -->
+  <rect x="40" y="168" width="400" height="650" rx="24" fill="#edf3f8" stroke="#cedbe4" stroke-width="1.5"/>
+  <rect x="480" y="168" width="780" height="650" rx="24" fill="#e8f3ee" stroke="#c7ddd3" stroke-width="1.5"/>
+  <rect x="1300" y="168" width="230" height="650" rx="24" fill="#f0f4f1" stroke="#d4dfda" stroke-width="1.5"/>
+  <rect x="1570" y="168" width="620" height="650" rx="24" fill="#f1eef8" stroke="#d9d1e8" stroke-width="1.5"/>
+  <rect x="2230" y="168" width="330" height="650" rx="24" fill="#f8f0df" stroke="#e7d7b6" stroke-width="1.5"/>
+
+  <!-- Inputs -->
+  <text class="phase" x="70" y="208" fill="#567b92">01 · INPUTS &amp; DATA</text>
+  <text class="panel-title" x="70" y="246">User and live services</text>
+
+  <rect class="card" x="70" y="278" width="340" height="210" rx="18"/>
+  <text class="card-title" x="96" y="316">User input</text>
+  <text class="item" x="96" y="351">Map site or search address</text>
+  <text class="item" x="96" y="383">Radius for land discovery</text>
+  <text class="item" x="96" y="415">Text or English voice request</text>
+  <text class="item" x="96" y="447">House brief and finish level</text>
+
+  <rect class="card" x="70" y="514" width="340" height="266" rx="18"/>
+  <text class="card-title" x="96" y="552">Live data services</text>
+  <text class="item-strong" x="96" y="590">Google Earth Engine</text>
+  <text class="item" x="96" y="620">Terrain · land cover · water</text>
+  <text class="item-strong" x="96" y="659">OSM + Kerala hazards</text>
+  <text class="item" x="96" y="689">Buildings · roads · flood · landslide</text>
+  <text class="item-strong" x="96" y="728">Google location services</text>
+  <text class="item" x="96" y="758">Maps · Places · Street View</text>
+
+  <!-- Land suitability -->
+  <text class="phase" x="510" y="208" fill="#2f7a60">02 · LAND SUITABILITY</text>
+  <text class="panel-title" x="510" y="246">Geospatial and multimodal intelligence</text>
+
+  <rect class="card" x="510" y="278" width="720" height="98" rx="18"/>
+  <text class="card-title" x="538" y="316">Site feature extraction + candidate search</text>
+  <text class="item" x="538" y="349">38 mapped features · grid sampling · flat/open-land safety gates</text>
+
+  <rect class="card" x="510" y="402" width="218" height="142" rx="18"/>
+  <text class="card-title" x="536" y="440">TabPFN 3.5</text>
+  <text class="item" x="536" y="476">Tabular site evidence</text>
+  <text class="small" x="536" y="511">92% fusion weight</text>
+
+  <rect class="card" x="748" y="402" width="220" height="142" rx="18"/>
+  <text class="card-title" x="774" y="440">TerraMind</text>
+  <text class="item" x="774" y="476">Seasonal Sentinel-2</text>
+  <text class="small" x="774" y="511">8% fusion weight</text>
+
+  <rect class="card" x="988" y="402" width="242" height="142" rx="18"/>
+  <text class="card-title" x="1014" y="440">Laya + Whisper</text>
+  <text class="item" x="1014" y="476">Preference routing</text>
+  <text class="small" x="1014" y="511">Local speech input</text>
+
+  <rect class="card" x="510" y="570" width="720" height="88" rx="18"/>
+  <text class="card-title" x="538" y="607">Probability fusion + SHAP explanation</text>
+  <text class="item" x="538" y="638">Four classes → final suitability percentage</text>
+
+  <rect x="510" y="684" width="720" height="96" rx="18" fill="#dceee6" stroke="#bdd7ca" stroke-width="1.5"/>
+  <text class="card-title" x="538" y="722">Land outputs</text>
+  <text class="item" x="538" y="755">Score · drivers · ranked flat land · amenities · Street View</text>
+
+  <!-- Handoff -->
+  <text class="phase" x="1330" y="208" fill="#60746c">03 · HANDOFF</text>
+  <text class="panel-title" x="1330" y="246">Site context</text>
+
+  <rect class="card" x="1326" y="315" width="178" height="330" rx="20"/>
+  <rect x="1348" y="341" width="134" height="32" rx="16" fill="#dfe9e4"/>
+  <text class="small" x="1415" y="363" text-anchor="middle">SITE_CONTEXT</text>
+  <text class="card-title" x="1352" y="414">Selected site</text>
+  <text class="item" x="1352" y="456">Latitude</text>
+  <text class="item" x="1352" y="492">Longitude</text>
+  <text class="item" x="1352" y="528">District</text>
+  <text class="item" x="1352" y="564">Suitability %</text>
+  <line x1="1352" y1="589" x2="1478" y2="589" stroke="#d6e0db" stroke-width="2"/>
+  <text class="small" x="1352" y="620">Land → home</text>
+
+  <!-- ArchAI2 -->
+  <text class="phase" x="1600" y="208" fill="#765d9c">04 · ARCHAI2</text>
+  <text class="panel-title" x="1600" y="246">House generation and refinement</text>
+
+  <rect class="card" x="1600" y="278" width="560" height="92" rx="18"/>
+  <text class="card-title" x="1628" y="316">Qwen 3.5 9B · local LM Studio</text>
+  <text class="item" x="1628" y="348">Structured house requirements</text>
+
+  <rect class="card" x="1600" y="396" width="268" height="128" rx="18"/>
+  <text class="card-title" x="1628" y="434">Spatial specification</text>
+  <text class="item" x="1628" y="471">Rooms · floors · setbacks</text>
+  <text class="item" x="1628" y="500">Adjacency · plot geometry</text>
+
+  <rect class="card" x="1892" y="396" width="268" height="128" rx="18"/>
+  <text class="card-title" x="1920" y="434">Layout generation</text>
+  <text class="item" x="1920" y="471">HouseGAN++ proposals</text>
+  <text class="item" x="1920" y="500">Procedural optimizer</text>
+
+  <rect class="card" x="1600" y="550" width="560" height="90" rx="18"/>
+  <text class="card-title" x="1628" y="588">Deterministic geometry validation</text>
+  <text class="item" x="1628" y="620">Collision · access · circulation · area · setbacks</text>
+
+  <rect x="1600" y="666" width="560" height="114" rx="18" fill="#e6e0f2" stroke="#d0c4e4" stroke-width="1.5"/>
+  <text class="card-title" x="1628" y="704">Design outputs</text>
+  <text class="item" x="1628" y="738">Canonical geometry + SQLite revisions</text>
+  <text class="item" x="1628" y="766">2D plan · 3D model · exports</text>
+
+  <!-- Cost -->
+  <text class="phase" x="2260" y="208" fill="#99691f">05 · COST</text>
+  <text class="panel-title" x="2260" y="246">Kerala estimator</text>
+
+  <rect class="card" x="2260" y="278" width="270" height="100" rx="18"/>
+  <text class="card-title" x="2286" y="316">Estimator input</text>
+  <text class="item" x="2286" y="349">Geometry · district · finish</text>
+
+  <rect class="card" x="2260" y="404" width="270" height="192" rx="18"/>
+  <text class="card-title" x="2286" y="442">Cost calculation</text>
+  <text class="item" x="2286" y="480">Measured floor area</text>
+  <text class="item" x="2286" y="514">Kerala rate bands</text>
+  <text class="item" x="2286" y="548">District factor</text>
+  <text class="item" x="2286" y="582">Allowances + reserve</text>
+
+  <rect x="2260" y="622" width="270" height="158" rx="18" fill="#f2e3c4" stroke="#ddc694" stroke-width="1.5"/>
+  <text class="card-title" x="2286" y="662">Cost outputs</text>
+  <text class="item" x="2286" y="700">Budget range</text>
+  <text class="item" x="2286" y="734">Cost breakdown</text>
+  <text class="item" x="2286" y="768">Source assumptions</text>
+
+  <!-- Unobstructed stage arrows -->
+  <path class="arrow-main" d="M440 480 H474"/>
+  <path class="arrow-main" d="M1260 480 H1294"/>
+  <path class="arrow-main" d="M1530 480 H1564"/>
+  <path class="arrow-main" d="M2190 480 H2224"/>
+
+  <!-- Offline pipeline -->
+  <rect x="40" y="866" width="2520" height="304" rx="24" fill="#eef2ef" stroke="#d3ddd8" stroke-width="1.5"/>
+  <text class="phase" x="70" y="907" fill="#637870">OFFLINE PIPELINE</text>
+  <text class="lane-title" x="70" y="943">Data preparation, model fitting and evaluation</text>
+
+  <rect class="card" x="70" y="974" width="410" height="150" rx="18"/>
+  <text class="lane-card" x="96" y="1011">Public geospatial data</text>
+  <text class="lane-item" x="96" y="1045">SRTM · CHIRPS · ERA5-Land</text>
+  <text class="lane-item" x="96" y="1073">Dynamic World · MODIS · JRC</text>
+  <text class="lane-item" x="96" y="1101">OpenLandMap · hazards · OSM</text>
+
+  <rect class="card" x="520" y="974" width="430" height="150" rx="18"/>
+  <text class="lane-card" x="546" y="1011">Statewide training cohort</text>
+  <text class="lane-item" x="546" y="1045">1,400 points · 100 per district</text>
+  <text class="lane-item" x="546" y="1073">38 features + weak labels</text>
+  <text class="lane-item" x="546" y="1101">Paired dry / monsoon image chips</text>
+
+  <rect class="card" x="990" y="974" width="430" height="150" rx="18"/>
+  <text class="lane-card" x="1016" y="1011">Model fitting</text>
+  <text class="lane-item" x="1016" y="1045">TabPFN in-context fit</text>
+  <text class="lane-item" x="1016" y="1073">TerraMind fine-tuning</text>
+  <text class="lane-item" x="1016" y="1101">District-based data split</text>
+
+  <rect class="card" x="1460" y="974" width="430" height="150" rx="18"/>
+  <text class="lane-card" x="1486" y="1011">Calibration + evaluation</text>
+  <text class="lane-item" x="1486" y="1045">92% TabPFN + 8% TerraMind</text>
+  <text class="lane-item" x="1486" y="1073">Accuracy · precision · recall</text>
+  <text class="lane-item" x="1486" y="1101">Macro F1 · log loss · ablations</text>
+
+  <rect x="1930" y="974" width="600" height="150" rx="18" fill="#dfe9e4" stroke="#c4d6cd" stroke-width="1.5"/>
+  <text class="lane-card" x="1958" y="1011">Versioned runtime artifacts</text>
+  <text class="lane-item" x="1958" y="1045">TabPFN estimator · TerraMind checkpoint</text>
+  <text class="lane-item" x="1958" y="1073">Fusion configuration · feature schema</text>
+  <text class="lane-item" x="1958" y="1101">Metrics and model metadata</text>
+
+  <path class="arrow" d="M480 1049 H514"/>
+  <path class="arrow" d="M950 1049 H984"/>
+  <path class="arrow" d="M1420 1049 H1454"/>
+  <path class="arrow" d="M1890 1049 H1924"/>
+  <path class="arrow-dashed" d="M2230 974 V842 H870 V824"/>
+
+  <!-- Platform bar -->
+  <rect x="40" y="1192" width="2520" height="42" rx="21" fill="#e2ebe6"/>
+  <text class="infra" x="1300" y="1219" text-anchor="middle">React + Google Maps UI   ·   Nilam FastAPI   ·   ArchAI2 FastAPI   ·   Next.js workspace   ·   Local LM Studio   ·   SQLite + local caches</text>
+</svg>
