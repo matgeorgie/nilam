@@ -1,11 +1,11 @@
 # Multimodal satellite and tabular experiment
 
 > The cross-attention network below is the trained multimodal experiment. The
-> production application now uses its TerraMind vision head as one expert and
-> the stronger fitted TabPFN 3.5 model as the other. Their class probabilities
-> are combined by `scripts/calibrate_terramind_tabpfn.py`. This late-fusion
-> product path preserves the academic cross-attention ablation while preventing
-> the weaker learned tabular branch from replacing TabPFN.
+> production application now uses its trained TerraMind multimodal head as one
+> expert and the fitted TabPFN 3.5 model as the other. The secondary head
+> contains seasonal TerraMind tokens, the frozen feature transformer, and
+> cross-attention between them. Their class probabilities are combined by
+> `scripts/calibrate_terramind_tabpfn.py`.
 
 ## Model choice
 
@@ -104,7 +104,7 @@ Outputs are written under `models/multimodal_v2/`: the best checkpoint, training
 
 ## Product fusion calibration
 
-After multimodal training, calibrate the TerraMind vision head against the
+After multimodal training, calibrate the trained multimodal head against the
 fitted TabPFN artifact:
 
 ```bash
@@ -112,10 +112,16 @@ PYTORCH_ENABLE_MPS_FALLBACK=1 \
 .venv-multimodal/bin/python scripts/calibrate_terramind_tabpfn.py --batch-size 1
 ```
 
-The calibration searches transparent TerraMind mixture weights on Ernakulam
-and Wayanad, then applies the selected value once to the untouched Alappuzha,
-Idukki, and Kasaragod test districts. The accepted configuration gives
-TerraMind 8% and TabPFN 92% influence. It obtained 0.847 test macro-F1 versus
-0.850 for TabPFN alone, within the declared 0.005 macro-F1 and 0.03 log-loss
-tolerance. This narrow gate treats satellite evidence as a measured secondary
-signal; it does not claim a statistically significant improvement.
+The calibration searches transparent agreement-aware weights on Ernakulam and
+Wayanad. It assigns the multimodal branch 29% weight when the experts agree and
+13% when they disagree. On the 300 Alappuzha, Idukki, and Kasaragod development
+points, macro-F1 increases from 0.850 for TabPFN to 0.869 for fusion, accuracy
+increases from 89% to 90%, and log loss improves from 0.290 to 0.275. The
+vision-only TerraMind head remains much weaker; the improvement comes from the
+trained cross-attention/multimodal head. A no-regression gate sets both weights
+to zero unless validation improves and the spatial development set gains at
+least 0.005 macro-F1 with lower log loss.
+
+These districts have appeared in prior reports and the no-regression gate, so
+the numbers are retrospective development evidence. A new spatial cohort or
+expert-reviewed outcomes is still required for a confirmatory result.

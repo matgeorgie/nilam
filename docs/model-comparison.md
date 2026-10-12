@@ -6,7 +6,7 @@
 
 | Model | Accuracy | Balanced accuracy | Macro precision | Macro recall | Macro F1 | Weighted F1 | Log loss |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| TabPFN + TerraMind | 88.7% | 83.6% | 86.7% | 83.6% | 84.7% | 88.4% | 0.296 |
+| TabPFN + TerraMind | 90.0% | 86.4% | 88.9% | 86.4% | 86.9% | 90.0% | 0.275 |
 | TabPFN | 89.0% | 84.2% | 86.7% | 84.2% | 85.0% | 88.9% | 0.290 |
 | TerraMind only | 62.0% | 45.5% | 56.4% | 45.5% | 41.9% | 57.4% | 0.934 |
 | XGBoost | 81.0% | 74.6% | 72.4% | 74.6% | 73.4% | 81.4% | 0.516 |
@@ -18,15 +18,15 @@
 
 Macro precision, recall and F1 average the four classes equally; weighted F1 gives more influence to common classes. Balanced accuracy is the mean class recall. Higher is better except for log loss.
 
-On these 300 points, TabPFN alone has 0.37 percentage points higher macro F1 than fusion. Fusion changed 3 predictions: 1 became correct and 2 became incorrect. Satellite fusion therefore does not improve reproduction of these rule-derived labels.
+On these 300 points, fusion changes macro F1 by +1.91 percentage points versus TabPFN. Fusion changed 9 predictions: 6 became correct and 3 became incorrect.
 
-The current app uses the **TabPFN + TerraMind** row. It geometrically blends class probabilities with a fixed 8% TerraMind weight and 92% TabPFN weight. The **TerraMind only** row evaluates its fine-tuned vision head, not the earlier learned multimodal gate.
+The current app geometrically combines TabPFN with the trained **TerraMind multimodal head**. Agreement and disagreement weights are read from the audited fusion artifact. **TerraMind only** remains the vision-only ablation.
 
 ## Per-class F1 on the test districts
 
 | Model | Screen out | Low | Moderate | Higher |
 |---|---:|---:|---:|---:|
-| TabPFN + TerraMind | 81.4% | 88.9% | 74.7% | 93.7% |
+| TabPFN + TerraMind | 84.2% | 90.6% | 78.8% | 94.2% |
 | TabPFN | 81.4% | 87.9% | 76.6% | 94.3% |
 | XGBoost | 68.6% | 69.7% | 62.0% | 93.5% |
 | ExtraTrees | 69.0% | 79.6% | 70.8% | 90.3% |

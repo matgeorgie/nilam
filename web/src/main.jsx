@@ -101,7 +101,7 @@ function ModelSignals({ data }) {
   const scores = data.branch_scores || {}, weights = data.routing_weights || {};
   return <section className="signals">
     <div className="section-heading"><div><h3>Model signals</h3><p>Satellite and mapped-data readings behind this result</p></div><strong>{fmt(scores.fused, 0)}%</strong></div>
-    <div className="signal"><span>TerraMind satellite</span><div><i style={{ width: `${scores.terramind || 0}%` }} /></div><b>{scores.terramind == null ? "Loading" : `${fmt(scores.terramind, 0)}%`}</b><small>{fmt(weights.terramind, 0)}% weight</small></div>
+    <div className="signal"><span>TerraMind cross-attention</span><div><i style={{ width: `${scores.terramind || 0}%` }} /></div><b>{scores.terramind == null ? "Loading" : `${fmt(scores.terramind, 0)}%`}</b><small>{fmt(weights.terramind, 0)}% fusion weight</small></div>
     <div className="signal"><span>TabPFN mapped data</span><div><i style={{ width: `${scores.tabpfn || 0}%` }} /></div><b>{scores.tabpfn == null ? "Loading" : `${fmt(scores.tabpfn, 0)}%`}</b><small>{fmt(weights.tabpfn, 0)}% weight</small></div>
   </section>;
 }

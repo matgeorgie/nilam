@@ -19,6 +19,16 @@ def test_fusion_is_normalized_and_respects_calibrated_weight():
     assert np.argmax(fused[0]) == 3
 
 
+def test_missing_fusion_config_safely_falls_back_to_tabpfn(tmp_path):
+    tabpfn = np.array([[0.05, 0.10, 0.25, 0.60]], dtype=np.float32)
+    secondary = np.array([[0.60, 0.20, 0.15, 0.05]], dtype=np.float32)
+    config = FusionConfig.load(tmp_path / "missing.json")
+    fused, weights = combine_probabilities(tabpfn, secondary, config)
+    assert config.secondary_head == "fusion"
+    assert np.allclose(weights, 0)
+    assert np.allclose(fused, tabpfn)
+
+
 def test_semantic_parser_preserves_explicit_metric_distances():
     result = deterministic_preferences(
         "Find quiet green land with a hospital within 2500 metres and school under 4 km."

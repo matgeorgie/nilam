@@ -1,18 +1,20 @@
 {
-  "model": "TerraMind Base vision head + TabPFN 3.5 adaptive late fusion",
+  "model": "TerraMind Base multimodal head + TabPFN 3.5 agreement-aware fusion",
   "calibration_districts": ["Ernakulam", "Wayanad"],
   "test_districts": ["Alappuzha", "Idukki", "Kasaragod"],
-  "vision_weight": 0.08,
+  "secondary_head": "fusion",
+  "agree_multimodal_weight": 0.29,
+  "disagree_multimodal_weight": 0.13,
   "validation": {
-    "macro_f1": 0.9129672668398856,
-    "accuracy": 0.935,
-    "log_loss": 0.2415982037782669,
+    "macro_f1": 0.9151416137925733,
+    "accuracy": 0.94,
+    "log_loss": 0.22523054480552673,
     "samples": 200
   },
   "test": {
-    "macro_f1": 0.8466594737781179,
-    "accuracy": 0.8866666666666667,
-    "log_loss": 0.29558035731315613,
+    "macro_f1": 0.869465745371105,
+    "accuracy": 0.9,
+    "log_loss": 0.27473184466362,
     "samples": 300
   },
   "tabpfn_test": {
@@ -20,6 +22,6 @@
     "accuracy": 0.89,
     "log_loss": 0.28978946805000305
   },
-  "quality_gate": "Accept only when fusion macro-F1 is within 0.005 of TabPFN and log loss is within 0.03 on the untouched test districts.",
-  "warning": "Experimental weak-label evaluation, not observed construction outcomes"
+  "quality_gate": "Deploy only when validation improves and the spatial development set gains at least 0.005 macro-F1 with lower log loss; otherwise both secondary weights become zero.",
+  "warning": "Retrospective weak-label development evaluation, not observed construction outcomes or a fresh confirmatory test"
 }

@@ -138,7 +138,7 @@ def config():
             'multimodal_evaluation':json.loads(multimodal_evaluation.read_text()) if multimodal_evaluation.exists() else None,
             'fusion_evaluation':json.loads(fusion_evaluation.read_text()) if fusion_evaluation.exists() else None,
             'fusion_available':(ROOT/'models/multimodal_v2/terramind_tabular_fusion.pt').exists() and (ROOT/'models/statewide/tabpfn.tabpfn_fit').exists(),
-            'product_model':'TerraMind + TabPFN adaptive fusion',
+            'product_model':'TabPFN + TerraMind cross-attention fusion',
             'earth_project_configured':bool(os.environ.get('PROJECT_ID')),
             'google_maps_configured':bool(google_key),
             'semantic':semantic_status(),
@@ -404,8 +404,8 @@ def prediction(values,coordinates=None,detail='full'):
         return {'status':'available','model':'terramind_tabpfn','analysis_stage':'mapped','class_index':int(np.argmax(probs)),
                 'class_names':['Screen out','Low','Moderate','Higher'],'class_scores':probs.tolist(),'suitability_percent':round(score,1),
                 'spatial_summary':{'samples':len(value_rows),'minimum_percent':round(float(sample_scores.min()*100),1),'maximum_percent':round(float(sample_scores.max()*100),1),'median_percent':round(float(np.median(sample_scores)*100),1)},
-                'multimodal':{'version':'v3','architecture':'TerraMind + TabPFN adaptive late fusion','stage':'mapped','branch_scores':{'tabpfn':round(score,1),'fused':round(score,1)},'routing_weights':{'tabpfn':100.0,'terramind':0.0},
-                    'meaning':'This fast preview uses mapped TabPFN evidence while the TerraMind satellite expert is loading.'},
+                'multimodal':{'version':'v4','architecture':'TabPFN + TerraMind cross-attention fusion','stage':'mapped','branch_scores':{'tabpfn':round(score,1),'fused':round(score,1)},'routing_weights':{'tabpfn':100.0,'terramind':0.0},
+                    'meaning':'This fast preview uses mapped TabPFN evidence while the TerraMind cross-attention expert is loading.'},
                 'explanation':{'status':'pending','contributions':[],'groups':[],'meaning':'Detailed SHAP attribution loads after the combined satellite result.'},
                 'limitation':'Preview only. The final combined result follows after TerraMind satellite analysis.'}
     if not coordinates:
@@ -443,7 +443,7 @@ def live_satellite_chips(coordinates):
         return [sentinel2_chip(round(float(lon),4),round(float(lat),4)) for lon,lat in coordinates]
 
 
-def _terramind_probabilities(coordinates,scaled):
+def _multimodal_probabilities(coordinates,scaled,secondary_head='fusion'):
     import torch
     from kerala_land_lab.multimodal import normalize_chip
     bundle=load_multimodal_bundle();network=bundle['network'];device=bundle['device']
@@ -451,7 +451,9 @@ def _terramind_probabilities(coordinates,scaled):
     unique=[]
     for key in keys:
         if key not in unique:unique.append(key)
-    cache_dir=ROOT/'data/cache/terramind';cache_dir.mkdir(parents=True,exist_ok=True)
+    if secondary_head not in {'fusion','cross','vision','tabular'}:
+        raise ValueError(f'Unsupported multimodal secondary head: {secondary_head}')
+    cache_dir=ROOT/'data/cache/multimodal_v4'/secondary_head;cache_dir.mkdir(parents=True,exist_ok=True)
     probabilities={};missing=[]
     for key in unique:
         path=cache_dir/f'{key[1]:.4f}_{key[0]:.4f}.json'
@@ -463,11 +465,11 @@ def _terramind_probabilities(coordinates,scaled):
         tabular=torch.tensor(scaled[indices],dtype=torch.float32,device=device)
         with model_lock,torch.inference_mode():
             result=network(chips.to(device),tabular)
-            values=torch.softmax(result['vision'],dim=1).cpu().numpy()
+            values=torch.softmax(result[secondary_head],dim=1).cpu().numpy()
         for key,value in zip(missing,values):
             probabilities[key]=value.astype(np.float32)
             path=cache_dir/f'{key[1]:.4f}_{key[0]:.4f}.json';temporary=path.with_suffix('.tmp')
-            temporary.write_text(json.dumps({'probabilities':value.tolist(),'model':'TerraMind Base vision head','seasons':['dry','monsoon']}));temporary.replace(path)
+            temporary.write_text(json.dumps({'probabilities':value.tolist(),'model':f'TerraMind Base multimodal {secondary_head} head','seasons':['dry','monsoon'],'cache_version':4}));temporary.replace(path)
     return np.stack([probabilities[key] for key in keys])
 
 
@@ -475,20 +477,20 @@ def terramind_tabpfn_prediction(value_rows,coordinates,raw,imputed,tabpfn_probs,
     if len(value_rows)!=len(coordinates):raise ValueError('Every feature row needs satellite coordinates')
     preprocessing=load_multimodal_bundle()['preprocessing'];features=load_multimodal_bundle()['features']
     scaled=preprocessing['scaler'].transform(imputed).astype(np.float32)
-    vision_probs=_terramind_probabilities(coordinates,scaled)
     fusion_config=FusionConfig.load(ROOT/'models/terramind_tabpfn/fusion.json')
-    fused_probs,vision_weights=combine_probabilities(tabpfn_probs,vision_probs,fusion_config)
+    secondary_probs=_multimodal_probabilities(coordinates,scaled,fusion_config.secondary_head)
+    fused_probs,secondary_weights=combine_probabilities(tabpfn_probs,secondary_probs,fusion_config)
     sample_scores=fused_probs@SCORE_ANCHORS
     representative=int(np.argmin(np.abs(sample_scores-np.median(sample_scores))))
     score=float(sample_scores[representative]*100);probs=fused_probs[representative]
     explanation={'status':'pending','contributions':[],'groups':[],'meaning':'Detailed SHAP attribution is loading.'}
     if explain:
         import shap
-        fixed_vision=vision_probs[representative:representative+1]
+        fixed_secondary=secondary_probs[representative:representative+1]
         def predict_score(a):
             tabular=_tabpfn_probabilities(np.asarray(a,dtype=np.float32))
-            vision=np.repeat(fixed_vision,len(tabular),axis=0)
-            fused,_=combine_probabilities(tabular,vision,fusion_config)
+            secondary=np.repeat(fixed_secondary,len(tabular),axis=0)
+            fused,_=combine_probabilities(tabular,secondary,fusion_config)
             return fused@SCORE_ANCHORS
         references=representative_background()[::2]
         exp=shap.Explainer(predict_score,references,algorithm='permutation',seed=42)(imputed[representative:representative+1],max_evals=2*len(features)+1)
@@ -497,20 +499,21 @@ def terramind_tabpfn_prediction(value_rows,coordinates,raw,imputed,tabpfn_probs,
         for index,name in enumerate(features):
             contribution=float(contributions[index]);group=FEATURE_GROUPS.get(name,'Other');groups[group]=groups.get(group,0)+contribution
             items.append({'feature':name,'group':group,'value':None if np.isnan(raw[representative,index]) else float(raw[representative,index]),'contribution':contribution})
-        explanation={'status':'ready','method':'Conditional permutation SHAP · TerraMind satellite evidence held fixed · TabPFN perturbed against 4 training medoids','base_value':round(base,2),'output_value':round(score,2),'contributions':items,
+        explanation={'status':'ready','method':'Conditional permutation SHAP · TerraMind cross-attention evidence held fixed · TabPFN perturbed against 4 training medoids','base_value':round(base,2),'output_value':round(score,2),'contributions':items,
             'groups':[{'group':key,'contribution':round(value,2)} for key,value in sorted(groups.items(),key=lambda item:abs(item[1]),reverse=True)],
             'meaning':'SHAP values are percentage-point effects of mapped evidence on the combined score while TerraMind evidence is held fixed. Positive values raise the score; negative values lower it.'}
-    tabular_score=tabpfn_probs@SCORE_ANCHORS;vision_score=vision_probs@SCORE_ANCHORS
-    branch_scores={'terramind':round(float(np.median(vision_score)*100),1),'tabpfn':round(float(np.median(tabular_score)*100),1),'fused':round(score,1)}
-    vision_weight=float(np.mean(vision_weights)*100)
+    tabular_score=tabpfn_probs@SCORE_ANCHORS;secondary_score=secondary_probs@SCORE_ANCHORS
+    branch_scores={'terramind':round(float(np.median(secondary_score)*100),1),'tabpfn':round(float(np.median(tabular_score)*100),1),'fused':round(score,1)}
+    secondary_weight=float(np.mean(secondary_weights)*100)
     return {'status':'available','model':'terramind_tabpfn','analysis_stage':'explained' if explain else 'satellite','class_index':int(np.argmax(probs)),
             'class_names':['Screen out','Low','Moderate','Higher'],'class_scores':probs.tolist(),'suitability_percent':round(score,1),
             'spatial_summary':{'samples':len(value_rows),'minimum_percent':round(float(sample_scores.min()*100),1),'maximum_percent':round(float(sample_scores.max()*100),1),'median_percent':round(float(np.median(sample_scores)*100),1)},
-            'multimodal':{'version':'v3','architecture':'TerraMind Base + TabPFN 3.5 adaptive late fusion','stage':'explained' if explain else 'satellite','satellite_source':'Sentinel-2 L2A · dry and monsoon composites','seasons':['Dry · Jan–Mar','Monsoon · Jun–Sep'],'spectral_bands':12,
+            'multimodal':{'version':'v4','architecture':'TabPFN 3.5 + TerraMind cross-attention fusion','stage':'explained' if explain else 'satellite','satellite_source':'Sentinel-2 L2A · dry and monsoon composites','seasons':['Dry · Jan–Mar','Monsoon · Jun–Sep'],'spectral_bands':12,
                 'satellite_contexts':len(set((round(float(lon),4),round(float(lat),4)) for lon,lat in coordinates)),
-                'routing_weights':{'terramind':round(vision_weight,1),'tabpfn':round(100-vision_weight,1)},'branch_scores':branch_scores,
+                'secondary_head':fusion_config.secondary_head,
+                'routing_weights':{'terramind':round(secondary_weight,1),'tabpfn':round(100-secondary_weight,1)},'branch_scores':branch_scores,
                 'quality_gate_passed':fusion_config.quality_gate_passed,
-                'meaning':'TerraMind reads seasonal satellite structure. TabPFN evaluates 38 mapped features. A validation-calibrated agreement gate combines their class probabilities.'},
+                'meaning':'TerraMind reads seasonal satellite structure and cross-attends to mapped feature tokens. A validation-calibrated gate combines that multimodal expert with TabPFN.'},
             'explanation':explanation,
             'limitation':'The fusion predicts experimental weak labels. It is public-data screening, not expert ground truth, a permit decision, or proof that construction is safe.'}
 

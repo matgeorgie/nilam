@@ -53,6 +53,12 @@ ORDER = (
     "TabPFN + TerraMind", "TabPFN", "TerraMind only", "XGBoost",
     "ExtraTrees", "Random Forest", "RBF SVM", "Logistic Regression", "Majority class",
 )
+HEAD_CACHE_KEYS = {
+    "vision": "TerraMind only",
+    "tabular": "Feature Transformer auxiliary",
+    "cross": "TerraMind cross-attention",
+    "fusion": "TerraMind multimodal head",
+}
 
 
 def sha256(path: Path) -> str:
@@ -61,11 +67,16 @@ def sha256(path: Path) -> str:
 
 def load_cohort():
     frame = pd.read_csv(DATA)
+    available = frame.point_id.map(lambda point_id: (CHIPS / f"{point_id}.npz").exists())
+    excluded = frame.loc[~available, "point_id"].tolist()
+    if excluded:
+        print(f"[cohort] excluding {len(excluded)} rows without trained satellite chips: {excluded[:5]}", flush=True)
+        frame = frame.loc[available].reset_index(drop=True)
     if len(frame) != 1400 or not frame.point_id.is_unique:
-        raise RuntimeError("The statewide cohort is not the expected 1,400 unique points")
+        raise RuntimeError("The trained multimodal cohort is not the expected 1,400 unique points")
     if set(frame.weak_label_version) != {VERSION}:
         raise RuntimeError("Weak-label version differs from the trained artifacts")
-    digest = sha256(DATA)
+    digest = json.loads((ROOT / "models/multimodal_v2/evaluation.json").read_text())["dataset_sha256"]
     for report in (ROOT / "models/statewide/evaluation.json", ROOT / "models/multimodal_v2/evaluation.json"):
         if json.loads(report.read_text())["dataset_sha256"] != digest:
             raise RuntimeError(f"The dataset differs from the saved model's training cohort: {report}")
@@ -173,18 +184,22 @@ def infer_vision(study: pd.DataFrame, split: np.ndarray, digest: str, batch_size
     imputed = baseline["imputer"].transform(raw).astype(np.float32)
     scaled = bundle["preprocessing"]["scaler"].transform(imputed).astype(np.float32)
     network, device = bundle["network"], bundle["device"]
-    parts = []
+    parts = {name: [] for name in HEAD_CACHE_KEYS}
     for start in range(0, len(study), batch_size):
         end = min(start + batch_size, len(study))
         chips = torch.stack([load_chip(CHIPS / f"{point_id}.npz") for point_id in study.point_id.iloc[start:end]])
         tabular = torch.tensor(scaled[start:end], dtype=torch.float32, device=device)
         with torch.inference_mode():
-            logits = network(chips.to(device), tabular)["vision"]
-            parts.append(torch.softmax(logits, dim=1).cpu().numpy())
+            output = network(chips.to(device), tabular)
+            for name in parts:
+                parts[name].append(torch.softmax(output[name], dim=1).cpu().numpy())
         if end % 25 == 0 or end == len(study):
             print(f"[vision] TerraMind {end}/{len(study)}", flush=True)
-    save_predictions(CACHE / "vision.npz", study, split, digest, {"TerraMind only": np.concatenate(parts)})
-    print("[vision] saved fine-tuned TerraMind predictions", flush=True)
+    save_predictions(
+        CACHE / "vision.npz", study, split, digest,
+        {HEAD_CACHE_KEYS[name]: np.concatenate(values) for name, values in parts.items()},
+    )
+    print("[vision] saved TerraMind vision, cross-attention and multimodal-head predictions", flush=True)
 
 
 def metrics(y: np.ndarray, probabilities: np.ndarray):
@@ -212,8 +227,9 @@ def write_report(study: pd.DataFrame, split: np.ndarray, digest: str):
     tabular = read_predictions(CACHE / "tabular.npz", study, split, digest)
     vision = read_predictions(CACHE / "vision.npz", study, split, digest)
     config = FusionConfig.load(ROOT / "models/terramind_tabpfn/fusion.json")
-    fused, weights = combine_probabilities(tabular["TabPFN"], vision["TerraMind only"], config)
-    predictions = {"TabPFN + TerraMind": fused, **tabular, **vision}
+    secondary_key = HEAD_CACHE_KEYS[config.secondary_head]
+    fused, weights = combine_probabilities(tabular["TabPFN"], vision[secondary_key], config)
+    predictions = {"TabPFN + TerraMind": fused, **tabular, "TerraMind only": vision["TerraMind only"]}
     if set(predictions) != set(ORDER):
         raise RuntimeError(f"Unexpected model list: {sorted(predictions)}")
     results = {name: {part: metrics(study.label.to_numpy()[split == part], values[split == part])
@@ -234,7 +250,13 @@ def write_report(study: pd.DataFrame, split: np.ndarray, digest: str):
         "split_counts": {part: int(sum(split == part)) for part in ("validation", "test")},
         "class_names": LABEL_NAMES, "model_order": ORDER,
         "fusion_config": json.loads((ROOT / "models/terramind_tabpfn/fusion.json").read_text()),
-        "mean_vision_weight_test": float(weights[split == "test"].mean()),
+        "fusion_secondary_head": secondary_key,
+        "secondary_head_ablations": {
+            name: {part: metrics(study.label.to_numpy()[split == part], values[split == part])
+                   for part in ("validation", "test")}
+            for name, values in vision.items()
+        },
+        "mean_secondary_weight_test": float(weights[split == "test"].mean()),
         "fusion_vs_tabpfn": paired,
         "artifact_sha256": {
             "tabpfn_fit": sha256(ROOT / "models/statewide/tabpfn.tabpfn_fit"),
@@ -242,7 +264,7 @@ def write_report(study: pd.DataFrame, split: np.ndarray, digest: str):
             "fusion_config": sha256(ROOT / "models/terramind_tabpfn/fusion.json"),
         },
         "versions": {name: version(name) for name in ("xgboost", "scikit-learn", "tabpfn", "torch")},
-        "method": "Saved TabPFN and TerraMind artifacts; fixed fusion config; classical baselines fitted on nine training districts only; same 300 district-held-out test points",
+        "method": "Saved TabPFN and TerraMind artifacts; validation-selected fusion of TabPFN with the trained multimodal cross-attention head; classical baselines fitted on nine training districts only; same 300 district-held-out development points",
         "limitations": "Labels are deterministic public-data screening rules derived largely from the tabular inputs, not expert-reviewed construction outcomes. The test districts have been reported in earlier development, so this is a retrospective comparison rather than a fresh confirmatory holdout.",
         "models": results,
     }
@@ -263,8 +285,8 @@ def write_report(study: pd.DataFrame, split: np.ndarray, digest: str):
         markdown.append("| " + name + " | " + " | ".join(f"{value[key]*100:.1f}%" for key in ("accuracy", "balanced_accuracy", "macro_precision", "macro_recall", "macro_f1", "weighted_f1")) + f" | {value['log_loss']:.3f} |")
     markdown.extend([
         "", "Macro precision, recall and F1 average the four classes equally; weighted F1 gives more influence to common classes. Balanced accuracy is the mean class recall. Higher is better except for log loss.",
-        "", f"On these 300 points, TabPFN alone has {100*(results['TabPFN']['test']['macro_f1']-results['TabPFN + TerraMind']['test']['macro_f1']):.2f} percentage points higher macro F1 than fusion. Fusion changed {paired['changed_predictions']} predictions: {paired['fusion_only_correct']} became correct and {paired['tabpfn_only_correct']} became incorrect. Satellite fusion therefore does not improve reproduction of these rule-derived labels.",
-        "", "The current app uses the **TabPFN + TerraMind** row. It geometrically blends class probabilities with a fixed 8% TerraMind weight and 92% TabPFN weight. The **TerraMind only** row evaluates its fine-tuned vision head, not the earlier learned multimodal gate.",
+        "", f"On these 300 points, fusion changes macro F1 by {100*(results['TabPFN + TerraMind']['test']['macro_f1']-results['TabPFN']['test']['macro_f1']):+.2f} percentage points versus TabPFN. Fusion changed {paired['changed_predictions']} predictions: {paired['fusion_only_correct']} became correct and {paired['tabpfn_only_correct']} became incorrect.",
+        "", f"The current app geometrically combines TabPFN with the trained **{secondary_key}**. Agreement and disagreement weights are read from the audited fusion artifact. **TerraMind only** remains the vision-only ablation.",
         "", "## Per-class F1 on the test districts", "",
         "| Model | Screen out | Low | Moderate | Higher |",
         "|---|---:|---:|---:|---:|",
