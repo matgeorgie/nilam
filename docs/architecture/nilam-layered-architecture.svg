@@ -1,199 +1,133 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="2400" height="1520" viewBox="0 0 2400 1520" role="img" aria-labelledby="title desc">
-  <title id="title">Nilam layered system architecture</title>
-  <desc id="desc">A monochrome layered architecture for Nilam showing ingestion, land context processing, multimodal suitability, ArchAI2 house generation, Kerala cost estimation, outputs, and persistent data and model storage.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" width="2780" height="1100" viewBox="0 0 2780 1100" role="img" aria-labelledby="title desc">
+  <title id="title">Nilam core system architecture</title>
+  <desc id="desc">A wide monochrome architecture showing Nilam's core flow from user and geospatial inputs through land suitability, ArchAI2 house generation, Kerala cost estimation, and final outputs. A separate support layer shows model training data, project state, and cost data.</desc>
   <defs>
-    <marker id="arrow" markerWidth="11" markerHeight="11" refX="9" refY="5.5" orient="auto" markerUnits="strokeWidth">
-      <path d="M0,0 L11,5.5 L0,11 z" fill="#59636f"/>
+    <marker id="arrow" markerWidth="13" markerHeight="13" refX="11" refY="6.5" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L13,6.5 L0,13 z" fill="#4b5563"/>
     </marker>
     <style>
       .background { fill: #ffffff; }
-      .layer { fill: #ffffff; stroke: #6b7581; stroke-width: 2.8; }
-      .module { fill: #ffffff; stroke: #69737e; stroke-width: 2.2; }
-      .module-soft { fill: #f7f8f9; stroke: #69737e; stroke-width: 2.2; }
-      .title { font: 700 28px Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #29313a; }
-      .layer-title { font: 700 19px Inter, ui-sans-serif, system-ui, sans-serif; fill: #2f3740; }
-      .module-title { font: 700 18px Inter, ui-sans-serif, system-ui, sans-serif; fill: #343c46; }
-      .module-text { font: 500 15px Inter, ui-sans-serif, system-ui, sans-serif; fill: #49535e; }
-      .label { font: 600 14px Inter, ui-sans-serif, system-ui, sans-serif; fill: #3f4852; }
-      .edge { fill: none; stroke: #59636f; stroke-width: 2.4; marker-end: url(#arrow); }
-      .edge-dashed { fill: none; stroke: #6c7680; stroke-width: 2.2; stroke-dasharray: 9 8; marker-end: url(#arrow); }
-      .line { fill: none; stroke: #59636f; stroke-width: 2.4; }
+      .layer { fill: #ffffff; stroke: #66717d; stroke-width: 3; }
+      .module { fill: #ffffff; stroke: #4f5a66; stroke-width: 2.5; }
+      .module-soft { fill: #f4f5f6; stroke: #4f5a66; stroke-width: 2.5; }
+      .inner { fill: #f8f9fa; stroke: #9aa3ad; stroke-width: 1.8; }
+      .title { font: 700 34px Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #202832; letter-spacing: 0.5px; }
+      .subtitle { font: 500 18px Inter, ui-sans-serif, system-ui, sans-serif; fill: #5a6470; }
+      .layer-title { font: 700 21px Inter, ui-sans-serif, system-ui, sans-serif; fill: #313a44; letter-spacing: 0.4px; }
+      .module-title { font: 700 24px Inter, ui-sans-serif, system-ui, sans-serif; fill: #27313b; }
+      .module-text { font: 600 18px Inter, ui-sans-serif, system-ui, sans-serif; fill: #424d58; }
+      .support-title { font: 700 21px Inter, ui-sans-serif, system-ui, sans-serif; fill: #2f3944; }
+      .support-text { font: 500 17px Inter, ui-sans-serif, system-ui, sans-serif; fill: #4d5864; }
+      .edge { fill: none; stroke: #4b5563; stroke-width: 3.2; marker-end: url(#arrow); }
+      .divider { stroke: #c4c9cf; stroke-width: 1.8; }
     </style>
   </defs>
 
-  <rect class="background" width="2400" height="1520"/>
-  <text class="title" x="1200" y="38" text-anchor="middle">NILAM — Layered System Architecture</text>
+  <rect class="background" width="2780" height="1100"/>
+  <text class="title" x="1390" y="48" text-anchor="middle">NILAM — CORE SYSTEM ARCHITECTURE</text>
+  <text class="subtitle" x="1390" y="80" text-anchor="middle">Land suitability · ArchAI2 house generation · Kerala construction cost estimation</text>
 
-  <!-- Client application -->
-  <rect class="module-soft" x="40" y="110" width="300" height="104" rx="11"/>
-  <text class="module-title" x="190" y="151" text-anchor="middle">Nilam Client Application</text>
-  <text class="module-text" x="190" y="181" text-anchor="middle">React + Google Maps</text>
+  <!-- Main product flow -->
+  <rect class="layer" x="50" y="110" width="2680" height="560" rx="30"/>
+  <text class="layer-title" x="90" y="151">MAIN PRODUCT FLOW</text>
 
-  <!-- Layer 1 -->
-  <rect class="layer" x="430" y="70" width="1920" height="230" rx="34"/>
-  <text class="layer-title" x="1390" y="102" text-anchor="middle">Layer 1: Input &amp; Evidence Ingestion</text>
+  <rect class="module" x="100" y="190" width="360" height="410" rx="16"/>
+  <text class="module-title" x="280" y="238" text-anchor="middle">Inputs &amp; Data</text>
+  <line class="divider" x1="132" y1="261" x2="428" y2="261"/>
+  <rect class="inner" x="132" y="292" width="296" height="58" rx="9"/>
+  <text class="module-text" x="280" y="328" text-anchor="middle">Point · Radius · Brief</text>
+  <rect class="inner" x="132" y="370" width="296" height="58" rx="9"/>
+  <text class="module-text" x="280" y="406" text-anchor="middle">Earth Engine · Sentinel-2</text>
+  <rect class="inner" x="132" y="448" width="296" height="58" rx="9"/>
+  <text class="module-text" x="280" y="484" text-anchor="middle">SRTM · Soil · Hazards</text>
+  <rect class="inner" x="132" y="526" width="296" height="48" rx="9"/>
+  <text class="module-text" x="280" y="557" text-anchor="middle">OSM · Places · Maps</text>
 
-  <rect class="module" x="485" y="138" width="350" height="104" rx="11"/>
-  <text class="module-title" x="660" y="176" text-anchor="middle">User Input Gateway</text>
-  <text class="module-text" x="660" y="205" text-anchor="middle">Site · Radius · Text · Voice · House Brief</text>
+  <rect class="module" x="540" y="190" width="620" height="410" rx="16"/>
+  <text class="module-title" x="850" y="238" text-anchor="middle">Land Suitability</text>
+  <line class="divider" x1="578" y1="261" x2="1122" y2="261"/>
+  <rect class="inner" x="578" y="284" width="544" height="52" rx="9"/>
+  <text class="module-text" x="850" y="317" text-anchor="middle">38-Feature Site Processor + Safety Gates</text>
+  <rect class="inner" x="578" y="354" width="262" height="70" rx="9"/>
+  <text class="module-text" x="709" y="382" text-anchor="middle">TabPFN 3.5</text>
+  <text class="support-text" x="709" y="407" text-anchor="middle">Tabular evidence</text>
+  <rect class="inner" x="860" y="354" width="262" height="70" rx="9"/>
+  <text class="module-text" x="991" y="382" text-anchor="middle">TerraMind</text>
+  <text class="support-text" x="991" y="407" text-anchor="middle">Satellite imagery</text>
+  <rect class="inner" x="578" y="442" width="544" height="52" rx="9"/>
+  <text class="module-text" x="850" y="475" text-anchor="middle">Cross-Attention + Calibrated Fusion</text>
+  <rect class="inner" x="578" y="512" width="544" height="62" rx="9"/>
+  <text class="module-text" x="850" y="539" text-anchor="middle">Suitability Score · SHAP</text>
+  <text class="support-text" x="850" y="563" text-anchor="middle">Flat-land ranking · Amenities</text>
 
-  <rect class="module" x="900" y="138" width="360" height="104" rx="11"/>
-  <text class="module-title" x="1080" y="176" text-anchor="middle">Geospatial Data Sources</text>
-  <text class="module-text" x="1080" y="205" text-anchor="middle">Earth Engine · OSM · Kerala Hazards</text>
+  <rect class="module" x="1260" y="190" width="520" height="410" rx="16"/>
+  <text class="module-title" x="1520" y="238" text-anchor="middle">ArchAI2 House Generation</text>
+  <line class="divider" x1="1298" y1="261" x2="1742" y2="261"/>
+  <rect class="inner" x="1298" y="284" width="444" height="58" rx="9"/>
+  <text class="module-text" x="1520" y="320" text-anchor="middle">Selected Site + House Brief</text>
+  <rect class="inner" x="1298" y="360" width="444" height="58" rx="9"/>
+  <text class="module-text" x="1520" y="396" text-anchor="middle">Qwen 3.5 9B Planning</text>
+  <rect class="inner" x="1298" y="436" width="444" height="58" rx="9"/>
+  <text class="module-text" x="1520" y="472" text-anchor="middle">Layout + Geometry Engine</text>
+  <rect class="inner" x="1298" y="512" width="444" height="62" rx="9"/>
+  <text class="module-text" x="1520" y="539" text-anchor="middle">Design Validation</text>
+  <text class="support-text" x="1520" y="563" text-anchor="middle">2D plan · 3D model</text>
 
-  <rect class="module" x="1325" y="138" width="360" height="104" rx="11"/>
-  <text class="module-title" x="1505" y="176" text-anchor="middle">Location Services</text>
-  <text class="module-text" x="1505" y="205" text-anchor="middle">Maps · Places · Street View</text>
+  <rect class="module" x="1880" y="190" width="400" height="410" rx="16"/>
+  <text class="module-title" x="2080" y="238" text-anchor="middle">Cost Calculator</text>
+  <line class="divider" x1="1918" y1="261" x2="2242" y2="261"/>
+  <rect class="inner" x="1918" y="292" width="324" height="58" rx="9"/>
+  <text class="module-text" x="2080" y="328" text-anchor="middle">Design Geometry</text>
+  <rect class="inner" x="1918" y="370" width="324" height="58" rx="9"/>
+  <text class="module-text" x="2080" y="406" text-anchor="middle">District Rates</text>
+  <rect class="inner" x="1918" y="448" width="324" height="58" rx="9"/>
+  <text class="module-text" x="2080" y="484" text-anchor="middle">Finish + Allowances</text>
+  <rect class="inner" x="1918" y="526" width="324" height="48" rx="9"/>
+  <text class="module-text" x="2080" y="557" text-anchor="middle">Budget Breakdown</text>
 
-  <rect class="module" x="1750" y="138" width="540" height="104" rx="11"/>
-  <text class="module-title" x="2020" y="176" text-anchor="middle">Evidence Preprocessor</text>
-  <text class="module-text" x="2020" y="205" text-anchor="middle">38 Features · Seasonal Sentinel-2 Chips</text>
+  <rect class="module-soft" x="2380" y="190" width="300" height="410" rx="16"/>
+  <text class="module-title" x="2530" y="238" text-anchor="middle">Final Outputs</text>
+  <line class="divider" x1="2412" y1="261" x2="2648" y2="261"/>
+  <rect class="inner" x="2412" y="300" width="236" height="70" rx="9"/>
+  <text class="module-text" x="2530" y="330" text-anchor="middle">Land</text>
+  <text class="support-text" x="2530" y="355" text-anchor="middle">Assessment</text>
+  <rect class="inner" x="2412" y="395" width="236" height="70" rx="9"/>
+  <text class="module-text" x="2530" y="425" text-anchor="middle">House</text>
+  <text class="support-text" x="2530" y="450" text-anchor="middle">Design</text>
+  <rect class="inner" x="2412" y="490" width="236" height="70" rx="9"/>
+  <text class="module-text" x="2530" y="520" text-anchor="middle">Construction</text>
+  <text class="support-text" x="2530" y="545" text-anchor="middle">Estimate</text>
 
-  <path class="edge" d="M340 138 H382 V190 H479"/>
-  <text class="label" x="418" y="178" text-anchor="middle">Requests</text>
-  <path class="edge" d="M835 190 H894"/>
-  <path class="edge" d="M1260 190 H1319"/>
-  <path class="edge" d="M1685 190 H1744"/>
+  <!-- Every main connector stays inside its own empty gap. -->
+  <path class="edge" d="M468 395 H532"/>
+  <path class="edge" d="M1168 395 H1252"/>
+  <path class="edge" d="M1788 395 H1872"/>
+  <path class="edge" d="M2288 395 H2372"/>
 
-  <!-- Layer 2 -->
-  <rect class="layer" x="430" y="330" width="1920" height="225" rx="34"/>
-  <text class="layer-title" x="1390" y="362" text-anchor="middle">Layer 2: Land Context Processing</text>
+  <!-- Supporting data and state -->
+  <rect class="layer" x="50" y="710" width="2680" height="320" rx="30"/>
+  <text class="layer-title" x="90" y="751">DATA, TRAINING &amp; STATE</text>
 
-  <rect class="module" x="500" y="401" width="380" height="104" rx="11"/>
-  <text class="module-title" x="690" y="439" text-anchor="middle">Candidate Grid &amp; Site Selection</text>
-  <text class="module-text" x="690" y="468" text-anchor="middle">Point · Polygon · Radius Search</text>
+  <rect class="module-soft" x="230" y="790" width="1080" height="178" rx="16"/>
+  <text class="support-title" x="770" y="831" text-anchor="middle">Statewide Dataset &amp; Model Training</text>
+  <line class="divider" x1="270" y1="852" x2="1270" y2="852"/>
+  <text class="support-text" x="770" y="887" text-anchor="middle">1,400 Kerala points · 38 mapped features · dry and monsoon Sentinel-2 chips</text>
+  <text class="support-text" x="770" y="922" text-anchor="middle">TabPFN fitting · TerraMind fine-tuning · cross-attention training · fusion calibration</text>
 
-  <rect class="module" x="965" y="401" width="350" height="104" rx="11"/>
-  <text class="module-title" x="1140" y="439" text-anchor="middle">38-Feature Engine</text>
-  <text class="module-text" x="1140" y="468" text-anchor="middle">Terrain · Soil · Climate · Access</text>
+  <rect class="module-soft" x="1370" y="790" width="370" height="178" rx="16"/>
+  <text class="support-title" x="1555" y="831" text-anchor="middle">Project State</text>
+  <line class="divider" x1="1408" y1="852" x2="1702" y2="852"/>
+  <text class="support-text" x="1555" y="889" text-anchor="middle">Selected plot · House brief</text>
+  <text class="support-text" x="1555" y="924" text-anchor="middle">Design · Revisions</text>
 
-  <rect class="module" x="1400" y="401" width="390" height="104" rx="11"/>
-  <text class="module-title" x="1595" y="439" text-anchor="middle">Safety &amp; Open-Land Gates</text>
-  <text class="module-text" x="1595" y="468" text-anchor="middle">Slope · Flood · Landslide · Buildings</text>
+  <rect class="module-soft" x="1800" y="790" width="590" height="178" rx="16"/>
+  <text class="support-title" x="2095" y="831" text-anchor="middle">Kerala Cost Data</text>
+  <line class="divider" x1="1840" y1="852" x2="2350" y2="852"/>
+  <text class="support-text" x="2095" y="887" text-anchor="middle">District base rates · Finish tiers</text>
+  <text class="support-text" x="2095" y="922" text-anchor="middle">Services · External works · Contingency</text>
 
-  <rect class="module" x="1875" y="401" width="390" height="104" rx="11"/>
-  <text class="module-title" x="2070" y="439" text-anchor="middle">Preference Router</text>
-  <text class="module-text" x="2070" y="468" text-anchor="middle">Laya + Distil-Whisper</text>
-
-  <path class="edge" d="M880 453 H959"/>
-  <path class="edge" d="M1315 453 H1394"/>
-  <path class="edge" d="M1790 453 H1869"/>
-  <path class="edge" d="M2020 242 V318 H690 V395"/>
-  <path class="edge" d="M2070 505 V562 H2107 V660"/>
-  <text class="label" x="1848" y="315">Prepared evidence</text>
-
-  <!-- Layer 3 -->
-  <rect class="layer" x="430" y="585" width="1920" height="270" rx="34"/>
-  <text class="layer-title" x="1390" y="617" text-anchor="middle">Layer 3: Multimodal Land Suitability Intelligence</text>
-
-  <rect class="module" x="485" y="666" width="305" height="122" rx="11"/>
-  <text class="module-title" x="637" y="707" text-anchor="middle">TabPFN 3.5</text>
-  <text class="module-text" x="637" y="738" text-anchor="middle">Tabular Site Evidence</text>
-  <text class="module-text" x="637" y="765" text-anchor="middle">92% Fusion Weight</text>
-
-  <rect class="module" x="850" y="666" width="305" height="122" rx="11"/>
-  <text class="module-title" x="1002" y="707" text-anchor="middle">TerraMind Base</text>
-  <text class="module-text" x="1002" y="738" text-anchor="middle">Dry + Monsoon Sentinel-2</text>
-  <text class="module-text" x="1002" y="765" text-anchor="middle">8% Fusion Weight</text>
-
-  <rect class="module" x="1215" y="666" width="305" height="122" rx="11"/>
-  <text class="module-title" x="1367" y="707" text-anchor="middle">Probability Fusion</text>
-  <text class="module-text" x="1367" y="738" text-anchor="middle">Four Suitability Classes</text>
-  <text class="module-text" x="1367" y="765" text-anchor="middle">Final Suitability Percentage</text>
-
-  <rect class="module" x="1580" y="666" width="305" height="122" rx="11"/>
-  <text class="module-title" x="1732" y="707" text-anchor="middle">SHAP Explanation</text>
-  <text class="module-text" x="1732" y="738" text-anchor="middle">Feature Drivers</text>
-  <text class="module-text" x="1732" y="765" text-anchor="middle">Evidence Summary</text>
-
-  <rect class="module-soft" x="1945" y="666" width="325" height="122" rx="11"/>
-  <text class="module-title" x="2107" y="707" text-anchor="middle">Land Results</text>
-  <text class="module-text" x="2107" y="738" text-anchor="middle">Score · Ranked Flat Land</text>
-  <text class="module-text" x="2107" y="765" text-anchor="middle">Amenities · Street View</text>
-
-  <path class="edge" d="M790 727 H818 V640 H1367 V660"/>
-  <path class="edge" d="M1155 727 H1209"/>
-  <path class="edge" d="M1520 727 H1574"/>
-  <path class="edge" d="M1885 727 H1939"/>
-  <path class="line" d="M1140 505 V630 H637 V660"/>
-  <path class="edge" d="M2290 190 H2320 V636 H1002 V660"/>
-  <text class="label" x="790" y="628">Features</text>
-  <text class="label" x="1770" y="632">Satellite chips</text>
-
-  <!-- Layer 4 -->
-  <rect class="layer" x="430" y="885" width="1920" height="250" rx="34"/>
-  <text class="layer-title" x="1390" y="917" text-anchor="middle">Layer 4: ArchAI2 House Generation</text>
-
-  <rect class="module" x="475" y="966" width="265" height="108" rx="11"/>
-  <text class="module-title" x="607" y="1005" text-anchor="middle">Site Context</text>
-  <text class="module-text" x="607" y="1035" text-anchor="middle">Location · District</text>
-  <text class="module-text" x="607" y="1061" text-anchor="middle">Suitability Score</text>
-
-  <rect class="module" x="775" y="966" width="265" height="108" rx="11"/>
-  <text class="module-title" x="907" y="1005" text-anchor="middle">Qwen 3.5 9B</text>
-  <text class="module-text" x="907" y="1035" text-anchor="middle">House Requirements</text>
-  <text class="module-text" x="907" y="1061" text-anchor="middle">Local LM Studio</text>
-
-  <rect class="module" x="1075" y="966" width="265" height="108" rx="11"/>
-  <text class="module-title" x="1207" y="1005" text-anchor="middle">Spatial Specification</text>
-  <text class="module-text" x="1207" y="1035" text-anchor="middle">Rooms · Floors · Setbacks</text>
-  <text class="module-text" x="1207" y="1061" text-anchor="middle">Adjacency · Plot Geometry</text>
-
-  <rect class="module" x="1375" y="966" width="280" height="108" rx="11"/>
-  <text class="module-title" x="1515" y="1005" text-anchor="middle">Layout Generation</text>
-  <text class="module-text" x="1515" y="1035" text-anchor="middle">HouseGAN++ Proposals</text>
-  <text class="module-text" x="1515" y="1061" text-anchor="middle">Procedural Optimizer</text>
-
-  <rect class="module" x="1690" y="966" width="280" height="108" rx="11"/>
-  <text class="module-title" x="1830" y="1005" text-anchor="middle">Geometry Validation</text>
-  <text class="module-text" x="1830" y="1035" text-anchor="middle">Access · Area · Circulation</text>
-  <text class="module-text" x="1830" y="1061" text-anchor="middle">Collision · Setbacks</text>
-
-  <rect class="module-soft" x="2005" y="966" width="300" height="108" rx="11"/>
-  <text class="module-title" x="2155" y="1005" text-anchor="middle">Design Outputs</text>
-  <text class="module-text" x="2155" y="1035" text-anchor="middle">2D Plan · 3D Model</text>
-  <text class="module-text" x="2155" y="1061" text-anchor="middle">Revisions · Exports</text>
-
-  <path class="edge" d="M740 1020 H769"/>
-  <path class="edge" d="M1040 1020 H1069"/>
-  <path class="edge" d="M1340 1020 H1369"/>
-  <path class="edge" d="M1655 1020 H1684"/>
-  <path class="edge" d="M1970 1020 H1999"/>
-  <path class="edge" d="M2107 788 V866 H607 V960"/>
-  <text class="label" x="1790" y="864">Selected land</text>
-
-  <!-- Layer 5 -->
-  <rect class="layer" x="430" y="1165" width="1920" height="175" rx="34"/>
-  <text class="layer-title" x="1390" y="1197" text-anchor="middle">Layer 5: Kerala Cost Estimation &amp; Delivery</text>
-
-  <rect class="module" x="540" y="1230" width="360" height="78" rx="11"/>
-  <text class="module-title" x="720" y="1262" text-anchor="middle">Saved Design Geometry</text>
-  <text class="module-text" x="720" y="1287" text-anchor="middle">Measured Floor Area</text>
-
-  <rect class="module" x="1000" y="1230" width="400" height="78" rx="11"/>
-  <text class="module-title" x="1200" y="1262" text-anchor="middle">Kerala Cost Engine</text>
-  <text class="module-text" x="1200" y="1287" text-anchor="middle">District · Finish · Allowances · Reserve</text>
-
-  <rect class="module-soft" x="1500" y="1230" width="700" height="78" rx="11"/>
-  <text class="module-title" x="1850" y="1262" text-anchor="middle">Final Product Outputs</text>
-  <text class="module-text" x="1850" y="1287" text-anchor="middle">Land Report · House Design · Budget Range · Cost Breakdown · Exports</text>
-
-  <path class="edge" d="M900 1269 H994"/>
-  <path class="edge" d="M1400 1269 H1494"/>
-  <path class="edge" d="M2155 1074 V1150 H720 V1224"/>
-
-  <!-- Client feedback / output path -->
-  <path class="edge" d="M1500 1269 V1328 H380 V196 H346"/>
-  <text class="label" x="400" y="1317">Results and interactive views</text>
-
-  <!-- Persistent data and model layer -->
-  <rect class="layer" x="430" y="1370" width="1920" height="118" rx="30"/>
-  <text class="layer-title" x="1390" y="1403" text-anchor="middle">Persistent Data, Model Registry &amp; Project State</text>
-  <text class="module-text" x="1390" y="1437" text-anchor="middle">1,400-Point Statewide Cohort · Seasonal Satellite Chips · TabPFN / TerraMind Artifacts · Fusion Metrics</text>
-  <text class="module-text" x="1390" y="1467" text-anchor="middle">SQLite Projects &amp; Revisions · Canonical House Geometry · Feature / Satellite Caches</text>
-
-  <path class="edge-dashed" d="M520 1370 V1350 H405 V727 H479"/>
-  <path class="edge-dashed" d="M2200 1370 V1350 H2320 V1020 H2311"/>
-  <text class="label" x="430" y="1347">Model artifacts</text>
-  <text class="label" x="2180" y="1347">Project state</text>
+  <!-- Each support connector is vertical and aligned with its target. -->
+  <path class="edge" d="M850 782 V608"/>
+  <path class="edge" d="M1555 782 V608"/>
+  <path class="edge" d="M2095 782 V608"/>
 </svg>
