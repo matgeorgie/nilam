@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="2780" height="1100" viewBox="0 0 2780 1100" role="img" aria-labelledby="title desc">
   <title id="title">Nilam core system architecture</title>
-  <desc id="desc">A wide monochrome architecture showing Nilam's core flow from user and geospatial inputs through land suitability, ArchAI2 house generation, Kerala cost estimation, and final outputs. A separate support layer shows model training data, project state, and cost data.</desc>
+  <desc id="desc">A wide monochrome architecture showing Nilam's core flow from user and geospatial inputs through land suitability, house generation, Kerala cost estimation, and final outputs. A separate support layer shows model training data, project state, and cost data.</desc>
   <defs>
     <marker id="arrow" markerWidth="13" markerHeight="13" refX="11" refY="6.5" orient="auto" markerUnits="strokeWidth">
       <path d="M0,0 L13,6.5 L0,13 z" fill="#4b5563"/>
@@ -25,7 +25,7 @@
 
   <rect class="background" width="2780" height="1100"/>
   <text class="title" x="1390" y="48" text-anchor="middle">NILAM — CORE SYSTEM ARCHITECTURE</text>
-  <text class="subtitle" x="1390" y="80" text-anchor="middle">Land suitability · ArchAI2 house generation · Kerala construction cost estimation</text>
+  <text class="subtitle" x="1390" y="80" text-anchor="middle">Land suitability · House generation · Kerala construction cost estimation</text>
 
   <!-- Main product flow -->
   <rect class="layer" x="50" y="110" width="2680" height="560" rx="30"/>
@@ -61,12 +61,12 @@
   <text class="support-text" x="850" y="563" text-anchor="middle">Flat-land ranking · Amenities</text>
 
   <rect class="module" x="1260" y="190" width="520" height="410" rx="16"/>
-  <text class="module-title" x="1520" y="238" text-anchor="middle">ArchAI2 House Generation</text>
+  <text class="module-title" x="1520" y="238" text-anchor="middle">House Generation</text>
   <line class="divider" x1="1298" y1="261" x2="1742" y2="261"/>
   <rect class="inner" x="1298" y="284" width="444" height="58" rx="9"/>
   <text class="module-text" x="1520" y="320" text-anchor="middle">Selected Site + House Brief</text>
   <rect class="inner" x="1298" y="360" width="444" height="58" rx="9"/>
-  <text class="module-text" x="1520" y="396" text-anchor="middle">Qwen 3.5 9B Planning</text>
+  <text class="module-text" x="1520" y="396" text-anchor="middle">Qwen 3.5 9B + HouseGAN</text>
   <rect class="inner" x="1298" y="436" width="444" height="58" rx="9"/>
   <text class="module-text" x="1520" y="472" text-anchor="middle">Layout + Geometry Engine</text>
   <rect class="inner" x="1298" y="512" width="444" height="62" rx="9"/>
