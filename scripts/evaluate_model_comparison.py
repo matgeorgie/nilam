@@ -19,27 +19,37 @@ os.environ.setdefault("MKL_NUM_THREADS", "1")
 os.environ.setdefault("PYTORCH_ENABLE_MPS_FALLBACK", "1")
 
 import joblib
+import matplotlib
 import numpy as np
 import pandas as pd
 from sklearn.calibration import CalibratedClassifierCV
 from sklearn.dummy import DummyClassifier
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+from sklearn.ensemble import HistGradientBoostingClassifier, RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import (
     accuracy_score,
+    auc,
     balanced_accuracy_score,
     confusion_matrix,
     f1_score,
     log_loss,
     precision_recall_fscore_support,
+    roc_auc_score,
+    roc_curve,
 )
+from sklearn.naive_bayes import GaussianNB
+from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
+from sklearn.tree import DecisionTreeClassifier
 from sklearn.utils.class_weight import compute_sample_weight
 from xgboost import XGBClassifier
 
 from kerala_land_lab.fusion import FusionConfig, combine_probabilities
 from kerala_land_lab.weak_labels import LABEL_NAMES, VERSION
+
+matplotlib.use("Agg")
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / "data/processed/kerala_statewide_features.csv"
@@ -51,7 +61,9 @@ VALIDATION_DISTRICTS = ("Ernakulam", "Wayanad")
 TEST_DISTRICTS = ("Alappuzha", "Idukki", "Kasaragod")
 ORDER = (
     "TabPFN + TerraMind", "TabPFN", "TerraMind only", "XGBoost",
-    "ExtraTrees", "Random Forest", "RBF SVM", "Logistic Regression", "Majority class",
+    "ExtraTrees", "Random Forest", "Histogram Gradient Boosting", "RBF SVM",
+    "Logistic Regression", "Linear Discriminant Analysis", "k-Nearest Neighbours",
+    "Gaussian Naive Bayes", "Decision Tree", "Majority class",
 )
 HEAD_CACHE_KEYS = {
     "vision": "TerraMind only",
@@ -112,6 +124,15 @@ def read_predictions(path: Path, study: pd.DataFrame, split: np.ndarray, digest:
         return {key: archive[key] for key in archive.files if key not in {"dataset_sha256", "point_id", "label", "split"}}
 
 
+def probability_matrix(estimator, values: np.ndarray) -> np.ndarray:
+    """Return probabilities in the fixed Nilam class order 0, 1, 2, 3."""
+    probability = np.asarray(estimator.predict_proba(values), dtype=np.float64)
+    classes = np.asarray(estimator.classes_, dtype=np.int64)
+    aligned = np.zeros((len(values), 4), dtype=np.float64)
+    aligned[:, classes] = probability
+    return aligned
+
+
 def train_tabular(train: pd.DataFrame, study: pd.DataFrame, split: np.ndarray, digest: str):
     from tabpfn.model_loading import load_fitted_tabpfn_model
 
@@ -124,14 +145,19 @@ def train_tabular(train: pd.DataFrame, study: pd.DataFrame, split: np.ndarray, d
     x_study = bundle["imputer"].transform(study[features].to_numpy(dtype=np.float32)).astype(np.float32)
     y_train = train.label.to_numpy(dtype=np.int64)
     probabilities = {}
+    cache_path = CACHE / "tabular.npz"
+    cached = read_predictions(cache_path, study, split, digest) if cache_path.exists() else {}
+    if "TabPFN" in cached:
+        probabilities["TabPFN"] = cached["TabPFN"]
+        print("[tabular] reused audited TabPFN predictions", flush=True)
+    else:
+        tabpfn = load_fitted_tabpfn_model(ROOT / "models/statewide/tabpfn.tabpfn_fit", device="cpu")
+        probabilities["TabPFN"] = probability_matrix(tabpfn, x_study)
+        print("[tabular] TabPFN: 500 held-out predictions", flush=True)
+        del tabpfn
+        gc.collect()
 
-    tabpfn = load_fitted_tabpfn_model(ROOT / "models/statewide/tabpfn.tabpfn_fit", device="cpu")
-    probabilities["TabPFN"] = tabpfn.predict_proba(x_study)
-    print("[tabular] TabPFN: 500 held-out predictions", flush=True)
-    del tabpfn
-    gc.collect()
-
-    probabilities["ExtraTrees"] = bundle["estimator"].predict_proba(x_study)
+    probabilities["ExtraTrees"] = probability_matrix(bundle["estimator"], x_study)
     del bundle
 
     MODEL_DIR.mkdir(parents=True, exist_ok=True)
@@ -142,15 +168,21 @@ def train_tabular(train: pd.DataFrame, study: pd.DataFrame, split: np.ndarray, d
         num_class=4, eval_metric="mlogloss", tree_method="hist", random_state=42, n_jobs=4,
     )
     xgb.fit(x_train, y_train, sample_weight=balanced_weights)
-    probabilities["XGBoost"] = xgb.predict_proba(x_study)
+    probabilities["XGBoost"] = probability_matrix(xgb, x_study)
     xgb.save_model(MODEL_DIR / "xgboost.json")
     print("[tabular] XGBoost trained on nine districts", flush=True)
 
     forest = RandomForestClassifier(
         n_estimators=500, min_samples_leaf=2, class_weight="balanced_subsample", random_state=42, n_jobs=4,
     ).fit(x_train, y_train)
-    probabilities["Random Forest"] = forest.predict_proba(x_study)
+    probabilities["Random Forest"] = probability_matrix(forest, x_study)
     joblib.dump(forest, MODEL_DIR / "random_forest.joblib")
+
+    histogram = HistGradientBoostingClassifier(
+        learning_rate=0.06, max_iter=300, max_leaf_nodes=31,
+        min_samples_leaf=12, l2_regularization=0.1, random_state=42,
+    ).fit(x_train, y_train, sample_weight=balanced_weights)
+    probabilities["Histogram Gradient Boosting"] = probability_matrix(histogram, x_study)
 
     scaler = StandardScaler().fit(x_train)
     z_train, z_study = scaler.transform(x_train), scaler.transform(x_study)
@@ -158,15 +190,35 @@ def train_tabular(train: pd.DataFrame, study: pd.DataFrame, split: np.ndarray, d
         SVC(kernel="rbf", C=3, gamma="scale", class_weight="balanced", random_state=42),
         method="sigmoid", cv=5, ensemble=False,
     ).fit(z_train, y_train)
-    probabilities["RBF SVM"] = svm.predict_proba(z_study)
+    probabilities["RBF SVM"] = probability_matrix(svm, z_study)
     logistic = LogisticRegression(max_iter=2000, class_weight="balanced", random_state=42).fit(z_train, y_train)
-    probabilities["Logistic Regression"] = logistic.predict_proba(z_study)
-    joblib.dump({"scaler": scaler, "svm": svm, "logistic": logistic}, MODEL_DIR / "linear_and_svm.joblib")
+    probabilities["Logistic Regression"] = probability_matrix(logistic, z_study)
+
+    lda = LinearDiscriminantAnalysis(solver="lsqr", shrinkage="auto").fit(z_train, y_train)
+    probabilities["Linear Discriminant Analysis"] = probability_matrix(lda, z_study)
+    knn = KNeighborsClassifier(n_neighbors=15, weights="distance", p=2, n_jobs=4).fit(z_train, y_train)
+    probabilities["k-Nearest Neighbours"] = probability_matrix(knn, z_study)
+    gaussian = GaussianNB(var_smoothing=1e-8).fit(z_train, y_train)
+    probabilities["Gaussian Naive Bayes"] = probability_matrix(gaussian, z_study)
+
+    tree = DecisionTreeClassifier(
+        max_depth=8, min_samples_leaf=5, class_weight="balanced", random_state=42,
+    ).fit(x_train, y_train)
+    probabilities["Decision Tree"] = probability_matrix(tree, x_study)
+
+    joblib.dump(
+        {
+            "scaler": scaler, "svm": svm, "logistic": logistic, "lda": lda,
+            "knn": knn, "gaussian_nb": gaussian, "histogram_gradient_boosting": histogram,
+            "decision_tree": tree,
+        },
+        MODEL_DIR / "traditional_baselines.joblib",
+    )
 
     majority = DummyClassifier(strategy="most_frequent").fit(x_train, y_train)
-    probabilities["Majority class"] = majority.predict_proba(x_study)
+    probabilities["Majority class"] = probability_matrix(majority, x_study)
     save_predictions(CACHE / "tabular.npz", study, split, digest, probabilities)
-    print("[tabular] saved seven comparable model predictions", flush=True)
+    print(f"[tabular] saved {len(probabilities)} comparable tabular model predictions", flush=True)
 
 
 def infer_vision(study: pd.DataFrame, split: np.ndarray, digest: str, batch_size: int):
@@ -209,18 +261,96 @@ def metrics(y: np.ndarray, probabilities: np.ndarray):
     )
     normalized = np.clip(probabilities.astype(np.float64), 1e-7, 1)
     normalized /= normalized.sum(axis=1, keepdims=True)
+    one_hot = np.eye(4, dtype=np.float64)[y]
     return {
         "n": int(len(y)), "accuracy": float(accuracy_score(y, prediction)),
         "balanced_accuracy": float(balanced_accuracy_score(y, prediction)),
         "macro_precision": float(precision.mean()), "macro_recall": float(recall.mean()),
         "macro_f1": float(f1_score(y, prediction, labels=[0, 1, 2, 3], average="macro", zero_division=0)),
         "weighted_f1": float(f1_score(y, prediction, labels=[0, 1, 2, 3], average="weighted", zero_division=0)),
+        "macro_roc_auc_ovr": float(roc_auc_score(y, normalized, labels=[0, 1, 2, 3], multi_class="ovr", average="macro")),
+        "weighted_roc_auc_ovr": float(roc_auc_score(y, normalized, labels=[0, 1, 2, 3], multi_class="ovr", average="weighted")),
+        "multiclass_brier": float(np.mean(np.sum((normalized - one_hot) ** 2, axis=1))),
         "log_loss": float(log_loss(y, normalized, labels=[0, 1, 2, 3])),
         "confusion_matrix": confusion_matrix(y, prediction, labels=[0, 1, 2, 3]).tolist(),
         "per_class": {str(index): {"name": LABEL_NAMES[index], "precision": float(precision[index]),
                                       "recall": float(recall[index]), "f1": float(f1[index]),
                                       "support": int(support[index])} for index in range(4)},
     }
+
+
+def write_roc_outputs(study: pd.DataFrame, split: np.ndarray, predictions: dict[str, np.ndarray]):
+    """Write comparable macro one-vs-rest ROC curves for the test districts."""
+    import matplotlib.pyplot as plt
+
+    test_mask = split == "test"
+    labels = study.label.to_numpy(dtype=np.int64)[test_mask]
+    one_hot = np.eye(4, dtype=np.float64)[labels]
+    grid = np.linspace(0.0, 1.0, 1001)
+    curves = {}
+    rows = []
+    for name in ORDER:
+        probability = np.clip(np.asarray(predictions[name][test_mask], dtype=np.float64), 1e-7, 1)
+        probability /= probability.sum(axis=1, keepdims=True)
+        class_tpr = []
+        for class_index in range(4):
+            fpr, tpr, _ = roc_curve(one_hot[:, class_index], probability[:, class_index])
+            class_tpr.append(np.interp(grid, fpr, tpr))
+        mean_tpr = np.mean(class_tpr, axis=0)
+        mean_tpr[0], mean_tpr[-1] = 0.0, 1.0
+        score = float(roc_auc_score(labels, probability, labels=[0, 1, 2, 3], multi_class="ovr", average="macro"))
+        curves[name] = (mean_tpr, score)
+        rows.extend(
+            {"model": name, "false_positive_rate": float(fpr), "true_positive_rate": float(tpr), "macro_roc_auc_ovr": score}
+            for fpr, tpr in zip(grid, mean_tpr)
+        )
+    pd.DataFrame(rows).to_csv(DOCS / "model-roc-curves.csv", index=False, float_format="%.6f")
+
+    fig, ax = plt.subplots(figsize=(15.5, 9.2), constrained_layout=False)
+    fig.subplots_adjust(left=0.09, right=0.71, top=0.82, bottom=0.12)
+    emphasized = {
+        "TabPFN + TerraMind": ("#0f766e", "-", 3.2),
+        "TabPFN": ("#2563eb", "-", 2.8),
+        "TerraMind only": ("#7c3aed", "-", 2.5),
+        "XGBoost": ("#d97706", "-", 2.5),
+    }
+    palette = plt.get_cmap("tab20").colors
+    styles = ("--", "-.", ":")
+    baseline_index = 0
+    for name in ORDER:
+        mean_tpr, score = curves[name]
+        if name in emphasized:
+            color, style, width = emphasized[name]
+            alpha = 1.0
+        else:
+            color = palette[(baseline_index * 2 + 1) % len(palette)]
+            style = styles[baseline_index % len(styles)]
+            width = 1.8
+            alpha = 0.9
+            baseline_index += 1
+        ax.plot(grid, mean_tpr, color=color, linestyle=style, linewidth=width, alpha=alpha,
+                label=f"{name}  (AUC {score:.3f})")
+    ax.plot([0, 1], [0, 1], color="#6b7280", linewidth=1.4, linestyle=(0, (3, 4)), label="Chance  (AUC 0.500)")
+    ax.set_xlim(0, 1)
+    ax.set_ylim(0, 1.01)
+    ax.set_xlabel("False-positive rate", fontsize=13, fontweight="bold")
+    ax.set_ylabel("True-positive rate", fontsize=13, fontweight="bold")
+    fig.suptitle("Land-suitability model ROC comparison", x=0.09, y=0.965, ha="left", fontsize=20, fontweight="bold")
+    fig.text(0.09, 0.915, "Macro-average one-vs-rest ROC · Alappuzha, Idukki and Kasaragod holdout (n = 300)",
+             fontsize=11.5, color="#4b5563")
+    ax.grid(True, color="#d1d5db", linewidth=0.8, alpha=0.65)
+    ax.spines[["top", "right"]].set_visible(False)
+    ax.tick_params(labelsize=11)
+    ax.legend(loc="center left", bbox_to_anchor=(1.02, 0.5), frameon=False, fontsize=10.5,
+              handlelength=3.2, labelspacing=0.9)
+    fig.text(0.09, 0.035,
+             "Experimental four-class weak-label target derived from public data; ROC performance does not establish construction safety.",
+             fontsize=10.5, color="#4b5563")
+    for extension, kwargs in (("png", {"dpi": 220}), ("pdf", {}), ("svg", {})):
+        fig.savefig(DOCS / f"model-roc-curves.{extension}", bbox_inches="tight", facecolor="white", **kwargs)
+    plt.close(fig)
+    svg_path = DOCS / "model-roc-curves.svg"
+    svg_path.write_text("\n".join(line.rstrip() for line in svg_path.read_text().splitlines()) + "\n")
 
 
 def write_report(study: pd.DataFrame, split: np.ndarray, digest: str):
@@ -234,6 +364,7 @@ def write_report(study: pd.DataFrame, split: np.ndarray, digest: str):
         raise RuntimeError(f"Unexpected model list: {sorted(predictions)}")
     results = {name: {part: metrics(study.label.to_numpy()[split == part], values[split == part])
                       for part in ("validation", "test")} for name, values in predictions.items()}
+    write_roc_outputs(study, split, predictions)
     test_mask = split == "test"
     labels = study.label.to_numpy(dtype=np.int64)[test_mask]
     tabpfn_prediction = tabular["TabPFN"][test_mask].argmax(1)
@@ -270,23 +401,32 @@ def write_report(study: pd.DataFrame, split: np.ndarray, digest: str):
     }
     DOCS.mkdir(parents=True, exist_ok=True)
     (DOCS / "model-comparison.json").write_text(json.dumps(report, indent=2) + "\n")
-    columns = ["model", "n", "accuracy", "balanced_accuracy", "macro_precision", "macro_recall", "macro_f1", "weighted_f1", "log_loss"]
+    columns = [
+        "model", "n", "accuracy", "balanced_accuracy", "macro_precision", "macro_recall",
+        "macro_f1", "weighted_f1", "macro_roc_auc_ovr", "weighted_roc_auc_ovr",
+        "multiclass_brier", "log_loss",
+    ]
     rows = [{"model": name, **{key: results[name]["test"][key] for key in columns[1:]}} for name in ORDER]
     pd.DataFrame(rows).to_csv(DOCS / "model-comparison.csv", index=False, float_format="%.6f")
     markdown = [
         "# Land-suitability model comparison", "",
         "**Target:** four-class experimental public-data screening label. These are not verified building outcomes or probabilities that a house is safe.", "",
         "**Evaluation:** 1,400 points (100 per Kerala district); train on 900 points from nine districts, use 200 points from Ernakulam and Wayanad for validation, and report the same 300 test points from Alappuzha, Idukki and Kasaragod for every model. All tabular models use the same 38 mapped features. TerraMind additionally reads dry- and monsoon-season Sentinel-2 chips. No test row is used to fit the new baselines. The fusion weights were already selected on validation data.", "",
-        "| Model | Accuracy | Balanced accuracy | Macro precision | Macro recall | Macro F1 | Weighted F1 | Log loss |",
-        "|---|---:|---:|---:|---:|---:|---:|---:|",
+        "| Model | Accuracy | Balanced accuracy | Macro precision | Macro recall | Macro F1 | Weighted F1 | Macro ROC-AUC | Log loss |",
+        "|---|---:|---:|---:|---:|---:|---:|---:|---:|",
     ]
     for name in ORDER:
         value = results[name]["test"]
-        markdown.append("| " + name + " | " + " | ".join(f"{value[key]*100:.1f}%" for key in ("accuracy", "balanced_accuracy", "macro_precision", "macro_recall", "macro_f1", "weighted_f1")) + f" | {value['log_loss']:.3f} |")
+        markdown.append(
+            "| " + name + " | "
+            + " | ".join(f"{value[key]*100:.1f}%" for key in ("accuracy", "balanced_accuracy", "macro_precision", "macro_recall", "macro_f1", "weighted_f1"))
+            + f" | {value['macro_roc_auc_ovr']:.3f} | {value['log_loss']:.3f} |"
+        )
     markdown.extend([
-        "", "Macro precision, recall and F1 average the four classes equally; weighted F1 gives more influence to common classes. Balanced accuracy is the mean class recall. Higher is better except for log loss.",
+        "", "Macro precision, recall, F1 and one-vs-rest ROC-AUC average the four classes equally; weighted F1 gives more influence to common classes. Balanced accuracy is the mean class recall. Higher is better except for log loss.",
         "", f"On these 300 points, fusion changes macro F1 by {100*(results['TabPFN + TerraMind']['test']['macro_f1']-results['TabPFN']['test']['macro_f1']):+.2f} percentage points versus TabPFN. Fusion changed {paired['changed_predictions']} predictions: {paired['fusion_only_correct']} became correct and {paired['tabpfn_only_correct']} became incorrect.",
         "", f"The current app geometrically combines TabPFN with the trained **{secondary_key}**. Agreement and disagreement weights are read from the audited fusion artifact. **TerraMind only** remains the vision-only ablation.",
+        "", "![Macro one-vs-rest ROC curves](./model-roc-curves.svg)",
         "", "## Per-class F1 on the test districts", "",
         "| Model | Screen out | Low | Moderate | Higher |",
         "|---|---:|---:|---:|---:|",
