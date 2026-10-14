@@ -1,0 +1,141 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2800" height="1240" viewBox="0 0 2800 1240" role="img" aria-labelledby="title desc">
+  <title id="title">Nilam TerraMind architecture comparison</title>
+  <desc id="desc">Side-by-side technical architecture of Nilam multimodal v1 and v2, showing satellite and mapped-feature inputs, TerraMind and tabular encoders, cross-attention, fusion, outputs, and a separate deployed TabPFN stage.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#262626"/>
+    </marker>
+  </defs>
+  <style>
+    text { font-family: Arial, Helvetica, sans-serif; fill: #151515; }
+    .title { font-size: 43px; font-weight: 700; letter-spacing: 0.2px; }
+    .subtitle { font-size: 21px; fill: #4b4b4b; }
+    .panel-title { font-size: 32px; font-weight: 700; }
+    .panel-subtitle { font-size: 19px; fill: #555; }
+    .box-title { font-size: 23px; font-weight: 700; }
+    .box-note { font-size: 18px; fill: #454545; }
+    .metric { font-size: 20px; font-weight: 700; }
+    .footer-title { font-size: 22px; font-weight: 700; }
+    .footer-text { font-size: 20px; }
+    .fine { font-size: 16px; fill: #595959; }
+    .panel { fill: #fff; stroke: #393939; stroke-width: 2.3; }
+    .box { fill: #fff; stroke: #282828; stroke-width: 2; }
+    .fusion { fill: #f1f1f1; stroke: #151515; stroke-width: 2.5; }
+    .output { fill: #e8e8e8; stroke: #151515; stroke-width: 2.5; }
+    .wire { fill: none; stroke: #262626; stroke-width: 2.8; marker-end: url(#arrow); }
+    .rule { stroke: #c2c2c2; stroke-width: 1.5; }
+  </style>
+  <rect width="2800" height="1240" fill="#fff"/>
+  <text class="title" x="50" y="72">NILAM  /  TERRAMIND ARCHITECTURE EVOLUTION</text>
+  <text class="subtitle" x="50" y="110">Same pretrained satellite backbone; different tabular integration and fusion mechanism</text>
+
+  <!-- Original Nilam multimodal v1. Coordinates inside this group are local to the panel. -->
+  <g transform="translate(50 150)">
+    <rect class="panel" x="0" y="0" width="1320" height="890"/>
+    <text class="panel-title" x="70" y="55">OLD  /  MULTIMODAL v1</text>
+    <text class="panel-subtitle" x="70" y="88">Representation-level fusion  ·  original TerraMind experiment</text>
+    <line class="rule" x1="70" y1="111" x2="1250" y2="111"/>
+
+    <rect class="box" x="70" y="135" width="360" height="80"/>
+    <text class="box-title" x="250" y="167" text-anchor="middle">Sentinel-2 satellite chips</text>
+    <text class="box-note" x="250" y="194" text-anchor="middle">Dry + monsoon · 2 × 12 × 224 × 224</text>
+    <rect class="box" x="890" y="135" width="360" height="80"/>
+    <text class="box-title" x="1070" y="167" text-anchor="middle">Mapped site features</text>
+    <text class="box-note" x="1070" y="194" text-anchor="middle">38 tabular inputs</text>
+
+    <path class="wire" d="M250 215 V255"/>
+    <path class="wire" d="M1070 215 V255"/>
+    <rect class="box" x="70" y="265" width="360" height="100"/>
+    <text class="box-title" x="250" y="299" text-anchor="middle">TerraMind Base</text>
+    <text class="box-note" x="250" y="328" text-anchor="middle">Shared seasonal encoder</text>
+    <text class="box-note" x="250" y="352" text-anchor="middle">Pool + temporal Transformer</text>
+    <rect class="box" x="890" y="265" width="360" height="100"/>
+    <text class="box-title" x="1070" y="299" text-anchor="middle">Tabular token encoder</text>
+    <text class="box-note" x="1070" y="328" text-anchor="middle">Learned from scratch</text>
+    <text class="box-note" x="1070" y="352" text-anchor="middle">2-layer Transformer</text>
+
+    <path class="wire" d="M250 365 V405"/>
+    <path class="wire" d="M1070 365 V405"/>
+    <rect class="box" x="70" y="415" width="360" height="100"/>
+    <text class="box-title" x="250" y="457" text-anchor="middle">Vision embedding</text>
+    <text class="box-note" x="250" y="486" text-anchor="middle">Seasonal image context</text>
+    <rect class="box" x="470" y="415" width="380" height="100"/>
+    <text class="box-title" x="660" y="457" text-anchor="middle">Cross-attention</text>
+    <text class="box-note" x="660" y="486" text-anchor="middle">Vision queries feature tokens</text>
+    <rect class="box" x="890" y="415" width="360" height="100"/>
+    <text class="box-title" x="1070" y="457" text-anchor="middle">Tabular embedding</text>
+    <text class="box-note" x="1070" y="486" text-anchor="middle">Mapped-feature context</text>
+    <path class="wire" d="M430 465 H460"/>
+    <path class="wire" d="M890 465 H860"/>
+
+    <path class="wire" d="M250 515 V595"/>
+    <path class="wire" d="M660 515 V595"/>
+    <path class="wire" d="M1070 515 V595"/>
+    <rect class="fusion" x="70" y="605" width="1180" height="91"/>
+    <text class="box-title" x="660" y="639" text-anchor="middle">Three-way softmax gate over embeddings</text>
+    <text class="box-note" x="660" y="670" text-anchor="middle">Weighted representation sum → fusion MLP → four class logits</text>
+    <path class="wire" d="M660 696 V736"/>
+    <rect class="output" x="345" y="746" width="630" height="65"/>
+    <text class="box-title" x="660" y="787" text-anchor="middle">Four suitability-class probabilities</text>
+    <line class="rule" x1="70" y1="835" x2="1250" y2="835"/>
+    <text class="metric" x="660" y="865" text-anchor="middle">Test macro-F1 0.501  ·  gate routed ~100% to vision</text>
+  </g>
+
+  <!-- Current Nilam multimodal v2. The TerraMind backbone is not a different foundation model. -->
+  <g transform="translate(1430 150)">
+    <rect class="panel" x="0" y="0" width="1320" height="890"/>
+    <text class="panel-title" x="70" y="55">NEW  /  MULTIMODAL v2</text>
+    <text class="panel-subtitle" x="70" y="88">Logit-level expert fusion  ·  current TerraMind multimodal head</text>
+    <line class="rule" x1="70" y1="111" x2="1250" y2="111"/>
+
+    <rect class="box" x="70" y="135" width="360" height="80"/>
+    <text class="box-title" x="250" y="167" text-anchor="middle">Sentinel-2 satellite chips</text>
+    <text class="box-note" x="250" y="194" text-anchor="middle">Dry + monsoon · 2 × 12 × 224 × 224</text>
+    <rect class="box" x="890" y="135" width="360" height="80"/>
+    <text class="box-title" x="1070" y="167" text-anchor="middle">Mapped site features</text>
+    <text class="box-note" x="1070" y="194" text-anchor="middle">Same 38 tabular inputs</text>
+
+    <path class="wire" d="M250 215 V255"/>
+    <path class="wire" d="M1070 215 V255"/>
+    <rect class="box" x="70" y="265" width="360" height="100"/>
+    <text class="box-title" x="250" y="299" text-anchor="middle">TerraMind Base</text>
+    <text class="box-note" x="250" y="328" text-anchor="middle">Shared seasonal encoder</text>
+    <text class="box-note" x="250" y="352" text-anchor="middle">Pool + temporal Transformer</text>
+    <rect class="box" x="890" y="265" width="360" height="100"/>
+    <text class="box-title" x="1070" y="299" text-anchor="middle">FeatureTransformer</text>
+    <text class="box-note" x="1070" y="328" text-anchor="middle">Pretrained statewide expert</text>
+    <text class="box-note" x="1070" y="352" text-anchor="middle">Frozen during fusion training</text>
+
+    <path class="wire" d="M250 365 V405"/>
+    <path class="wire" d="M1070 365 V405"/>
+    <rect class="box" x="70" y="415" width="360" height="100"/>
+    <text class="box-title" x="250" y="457" text-anchor="middle">Vision tokens + logits</text>
+    <text class="box-note" x="250" y="486" text-anchor="middle">Seasonal image context</text>
+    <rect class="box" x="470" y="415" width="380" height="100"/>
+    <text class="box-title" x="660" y="457" text-anchor="middle">Cross-attention logits</text>
+    <text class="box-note" x="660" y="486" text-anchor="middle">Vision ↔ projected feature tokens</text>
+    <rect class="box" x="890" y="415" width="360" height="100"/>
+    <text class="box-title" x="1070" y="457" text-anchor="middle">Feature tokens + logits</text>
+    <text class="box-note" x="1070" y="486" text-anchor="middle">Frozen tabular expert</text>
+    <path class="wire" d="M430 465 H460"/>
+    <path class="wire" d="M890 465 H860"/>
+
+    <path class="wire" d="M250 515 V595"/>
+    <path class="wire" d="M660 515 V595"/>
+    <path class="wire" d="M1070 515 V595"/>
+    <rect class="fusion" x="70" y="605" width="1180" height="91"/>
+    <text class="box-title" x="660" y="639" text-anchor="middle">Bounded three-way gate over class logits + residual</text>
+    <text class="box-note" x="660" y="670" text-anchor="middle">At least 2% per branch · zero-initialized residual correction</text>
+    <path class="wire" d="M660 696 V736"/>
+    <rect class="output" x="345" y="746" width="630" height="65"/>
+    <text class="box-title" x="660" y="787" text-anchor="middle">Four-class multimodal probabilities</text>
+    <line class="rule" x1="70" y1="835" x2="1250" y2="835"/>
+    <text class="metric" x="660" y="865" text-anchor="middle">Test macro-F1 0.829  ·  mean gate: 5.5% vision / 88.4% tabular / 6.1% cross</text>
+  </g>
+
+  <rect class="panel" x="50" y="1072" width="2700" height="117"/>
+  <text class="footer-title" x="85" y="1111">CURRENT NILAM DEPLOYMENT</text>
+  <text class="footer-text" x="85" y="1147">Separate TabPFN 3.5 probabilities  +  v2 multimodal probabilities  →  agreement-aware geometric pool  →  final site score</text>
+  <text class="fine" x="85" y="1174">The v2 head is weighted 29% when experts agree, 13% when they disagree. Evaluations use 300 held-out points with rule-derived weak labels, not verified building outcomes.</text>
+  <text class="fine" x="50" y="1223">Architecture verified against src/kerala_land_lab/multimodal.py, src/kerala_land_lab/fusion.py, and models/multimodal_v1 + multimodal_v2 evaluation files.</text>
+</svg>
