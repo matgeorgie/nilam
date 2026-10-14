@@ -29,6 +29,7 @@ from kerala_land_lab.search import (
     rank_candidates,
 )
 from kerala_land_lab.semantic import interpret_request, semantic_status
+from kerala_land_lab.preference_learning import PreferenceStore
 
 ROOT=Path(__file__).resolve().parents[2]
 DATA=ROOT/'data/processed'
@@ -125,6 +126,22 @@ class CandidateSearch(BaseModel):
 
 class PreferenceText(BaseModel):
     text:str=Field(min_length=1,max_length=2000)
+
+
+class ComparisonRequest(BaseModel):
+    search_id:str=Field(min_length=32,max_length=32)
+    browser_id:str=Field(min_length=16,max_length=80)
+
+
+class ComparisonVote(BaseModel):
+    pair_id:str=Field(min_length=32,max_length=32)
+    browser_id:str=Field(min_length=16,max_length=80)
+    choice:Literal['left','right','tie','skip']
+
+
+@lru_cache(maxsize=1)
+def preference_store():
+    return PreferenceStore(DATA/'preference_feedback.sqlite3')
 
 
 @app.get('/api/config')
@@ -620,12 +637,37 @@ def search_candidates(request:CandidateSearch):
     probabilities=_tabpfn_probabilities(imputed)
     suitability=probabilities@SCORE_ANCHORS*100
     eligible_points=int(eligible_candidate_mask(selected,requirements).sum())
-    candidates=rank_candidates(selected,suitability,requirements,request.limit)
-    return {'candidates':candidates,'searched_points':selected.attrs.get('initial_grid_points',len(selected)),'measured_points':selected.attrs.get('earth_measured_points',len(selected)),'satellite_candidate_points':selected.attrs.get('satellite_candidate_points',len(selected)),'model_ranked_points':len(selected),'eligible_points':eligible_points,'requirements':requirements,'semantic':interpreted.get('semantic',{}),
+    eligible_candidates=rank_candidates(selected,suitability,requirements,len(selected))
+    search_id,candidates=preference_store().save_search(eligible_candidates,request.limit)
+    return {'search_id':search_id,'preference_model':preference_store().status(),'candidates':candidates,'searched_points':selected.attrs.get('initial_grid_points',len(selected)),'measured_points':selected.attrs.get('earth_measured_points',len(selected)),'satellite_candidate_points':selected.attrs.get('satellite_candidate_points',len(selected)),'model_ranked_points':len(selected),'eligible_points':eligible_points,'requirements':requirements,'semantic':interpreted.get('semantic',{}),
             'search':{'center_lat':request.area.center_lat,'center_lon':request.area.center_lon,'radius_km':request.area.radius_km,
                       'fresh_grid':True,'earth_engine':'Dynamic World 10 m open/built probability','buildings':'OpenStreetMap mapped building centres'},
-            'method':'Fresh cells inside the selected radius are measured with Earth Engine, screened for mapped buildings and hazards, then ranked by TabPFN and the interpreted preferences.',
+            'method':'Fresh cells inside the selected radius are measured with Earth Engine, screened for mapped buildings and hazards, then ranked by TabPFN, stated needs, and locally learned community preferences.',
             'limitation':'Open-land evidence is a remote-screening signal, not a land listing or proof of ownership, availability, or legal buildability.'}
+
+
+@app.post('/api/preferences/pair')
+def comparison_pair(request:ComparisonRequest):
+    try:
+        pair=preference_store().create_pair(request.search_id,request.browser_id)
+    except KeyError as exc:
+        raise HTTPException(404,str(exc)) from exc
+    return {'status':'ready','comparison':pair} if pair else {'status':'exhausted','comparison':None}
+
+
+@app.post('/api/preferences/vote')
+def comparison_vote(request:ComparisonVote):
+    try:
+        return preference_store().vote(request.pair_id,request.browser_id,request.choice)
+    except KeyError as exc:
+        raise HTTPException(404,str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(409,str(exc)) from exc
+
+
+@app.get('/api/preferences/evaluation')
+def preference_evaluation():
+    return preference_store().evaluation()
 
 
 @lru_cache(maxsize=1)

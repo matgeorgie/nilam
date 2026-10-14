@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
+import ComparisonDialog from "./ComparisonDialog.jsx";
 import "./style.css";
 
 const KERALA_CENTER = { lat: 10.36, lng: 76.27 };
@@ -46,6 +47,14 @@ const api = async (path, options = {}) => {
   return response.json();
 };
 const post = (path, body, signal) => api(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body), signal });
+let fallbackFeedbackBrowserId;
+const feedbackBrowserId = () => {
+  try {
+    let id = localStorage.getItem("nilam-comparison-browser-id");
+    if (!id) { id = crypto.randomUUID(); localStorage.setItem("nilam-comparison-browser-id", id); }
+    return id;
+  } catch { fallbackFeedbackBrowserId ||= "local-browser-" + crypto.randomUUID(); return fallbackFeedbackBrowserId; }
+};
 const valueLabel = (item) => {
   if (item.value == null) return "No reading";
   if (DISTANCES.has(item.feature)) return item.value >= 1000 ? `${fmt(item.value / 1000)} km` : `${fmt(item.value, 0)} m`;
@@ -209,8 +218,9 @@ function CandidateDetails({ candidate, onAssess, onStreetView, searched = false 
   if (!candidate) return <div className="candidate-empty"><span><Icon type={searched ? "search" : "point"} /></span><h3>{searched ? "No flat, open match here" : "Results will appear on the map"}</h3><p>{searched ? "Increase the radius or move the centre. The scan rejected cells with uneven terrain, mapped buildings, weak open-land evidence, water, flood, or landslide constraints." : "Run the search, then select a result card on the map to inspect that location."}</p></div>;
   const evidence = candidate.evidence || {};
   return <section className="candidate-detail">
-    <div className="candidate-title"><span>#{candidate.rank}</span><div><p>Selected result</p><h2>{candidate.district}</h2><small>{candidate.lat.toFixed(5)}, {candidate.lon.toFixed(5)}</small></div><strong>{fmt(candidate.overall_fit_percent, 0)}%</strong></div>
-    <div className="candidate-scores"><div><strong>{fmt(candidate.suitability_percent, 0)}%</strong><span>Land score</span></div><div><strong>{fmt(candidate.surface_percent, 0)}%</strong><span>Flat & open</span></div><div><strong>{fmt(candidate.preference_fit_percent, 0)}%</strong><span>Preference match</span></div></div>
+    <div className="candidate-title"><span>#{candidate.rank}</span><div><p>{candidate.community_votes ? "Community-adjusted land score" : "Selected result"}</p><h2>{candidate.district}</h2><small>{candidate.lat.toFixed(5)}, {candidate.lon.toFixed(5)}</small></div><strong>{fmt(candidate.suitability_percent, 0)}%</strong></div>
+    {candidate.community_votes > 0 && <p className="candidate-learning">Original model {fmt(candidate.original_suitability_percent, 0)}% · community preference {candidate.preference_adjustment_points >= 0 ? "+" : ""}{fmt(candidate.preference_adjustment_points)} points from {candidate.community_votes} votes</p>}
+    <div className="candidate-scores"><div><strong>{fmt(candidate.original_suitability_percent ?? candidate.suitability_percent, 0)}%</strong><span>Model only</span></div><div><strong>{fmt(candidate.surface_percent, 0)}%</strong><span>Flat & open</span></div><div><strong>{fmt(candidate.preference_fit_percent, 0)}%</strong><span>Your request</span></div></div>
     <div className="detail-grid"><div><span>Mean slope across 45 m</span><strong>{fmt(evidence.mean_slope_45m)}°</strong></div><div><span>90% of terrain below</span><strong>{fmt(evidence.p90_slope_45m)}°</strong></div><div><span>Ground-height variation</span><strong>{fmt(evidence.elevation_variation_45m)} m</strong></div><div><span>Satellite open-land signal</span><strong>{fmt(evidence.satellite_open_probability)}%</strong></div><div><span>Nearest mapped building</span><strong>{distanceLabel(evidence.building_distance_m)}</strong></div><div><span>Built-up around 45 m</span><strong>{fmt(evidence.nearby_built_probability)}%</strong></div><div><span>Nearest road</span><strong>{distanceLabel(evidence.road_distance_m)}</strong></div><div><span>100-year flood depth</span><strong>{fmt(evidence.flood_level_100yr_m)} m</strong></div></div>
     {candidate.advantages.length > 0 && <div className="candidate-reasons">{candidate.advantages.map((item) => <span key={item}>✓ {item}</span>)}</div>}
     <div className="candidate-actions"><button className="secondary-action" onClick={() => onStreetView(candidate)}><Icon type="street" />Street View</button><button className="primary-action" onClick={() => onAssess(candidate)}>Full assessment <Icon type="arrow" /></button><a className="design-action" href={designLink(candidate.lat, candidate.lon, candidate.district, candidate.suitability_percent)}>Design a home here <Icon type="arrow" /></a></div>
@@ -239,10 +249,16 @@ function App() {
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   const [searchPhase, setSearchPhase] = useState("");
   const [interpretation, setInterpretation] = useState(null);
+  const [comparisonPair, setComparisonPair] = useState(null);
+  const [comparisonStatus, setComparisonStatus] = useState("idle");
+  const [comparisonBusy, setComparisonBusy] = useState(false);
+  const [comparisonError, setComparisonError] = useState("");
+  const [comparisonFeedback, setComparisonFeedback] = useState("");
+  const [comparisonEvaluation, setComparisonEvaluation] = useState(null);
   const [streetNote, setStreetNote] = useState("Explore the road-level surroundings of the selected point.");
   const mapElement = useRef(null), placeSearchElement = useRef(null), reportElement = useRef(null);
   const map = useRef(null), boundaries = useRef(null), AdvancedMarker = useRef(null), pointMarker = useRef(null), searchMarker = useRef(null), searchCircle = useRef(null), areaPolygon = useRef(null), candidateMarkers = useRef([]), polygonPath = useRef([]);
-  const latest = useRef({}), request = useRef(null), media = useRef(null), mediaChunks = useRef([]), streetDialog = useRef(null), streetElement = useRef(null);
+  const latest = useRef({}), request = useRef(null), media = useRef(null), mediaChunks = useRef([]), streetDialog = useRef(null), streetElement = useRef(null), comparisonDialog = useRef(null);
   latest.current = { workspace, mode, searchRadius };
 
   useEffect(() => { api("/api/config").then(setConfig).catch((reason) => setError(reason.message)); }, []);
@@ -263,14 +279,14 @@ function App() {
     const pin = document.createElement("div"); pin.className = "search-centre-pin"; pin.innerHTML = "<i></i><span>Search centre</span>";
     const marker = new Marker({ map: map.current, position: { lat, lng }, title: "Search centre", gmpClickable: false }); marker.append(pin); searchMarker.current = marker;
     searchCircle.current = new window.google.maps.Circle({ map: map.current, center: { lat, lng }, radius: latest.current.searchRadius * 1000, clickable: false, strokeColor: "#17694f", strokeWeight: 2, strokeOpacity: .9, fillColor: "#258866", fillOpacity: .1 });
-    setSearchCenter({ lat, lng }); setSearchResult(null); setSelectedCandidate(null); setInterpretation(null); clearCandidateMarkers();
+    setSearchCenter({ lat, lng }); setSearchResult(null); setSelectedCandidate(null); setInterpretation(null); comparisonDialog.current?.close(); clearCandidateMarkers();
     if (zoom) map.current.fitBounds(searchCircle.current.getBounds(), 55);
   };
 
   useEffect(() => {
     if (!searchCenter || !searchCircle.current) return;
     searchCircle.current.setRadius(searchRadius * 1000); map.current?.fitBounds(searchCircle.current.getBounds(), 55);
-    setSearchResult(null); setSelectedCandidate(null); clearCandidateMarkers();
+    setSearchResult(null); setSelectedCandidate(null); comparisonDialog.current?.close(); clearCandidateMarkers();
   }, [searchRadius]);
 
   const runProgressive = async (path, body) => {
@@ -363,7 +379,7 @@ function App() {
   const switchWorkspace = (next) => {
     request.current?.abort(); setWorkspace(next); setError(""); setStage(""); setReport(null); polygonPath.current = []; setPolygonPoints(0); removeMarker(pointMarker.current); pointMarker.current = null;
     areaPolygon.current?.setMap(null); areaPolygon.current = null;
-    clearCandidateMarkers(); setSelectedCandidate(null); setSearchResult(null);
+    clearCandidateMarkers(); setSelectedCandidate(null); setSearchResult(null); comparisonDialog.current?.close();
     if (next === "find") setMapStyle("hybrid");
     if (next === "assess") { removeMarker(searchMarker.current); searchMarker.current = null; searchCircle.current?.setMap(null); searchCircle.current = null; setSearchCenter(null); }
   };
@@ -406,7 +422,7 @@ function App() {
 
   const findLand = async () => {
     if (!searchCenter) { setError("Click the map or search for a place to choose the centre first."); return; }
-    setSearching(true); setError(""); setSelectedCandidate(null); setSearchResult(null); clearCandidateMarkers();
+    setSearching(true); setError(""); setSelectedCandidate(null); setSearchResult(null); comparisonDialog.current?.close(); clearCandidateMarkers();
     try {
       let requirements = { avoid_high_flood: true, avoid_high_landslide: true, prefer_open_land: true, max_slope: 8 };
       if (query.trim()) {
@@ -419,6 +435,37 @@ function App() {
       const result = await post("/api/search", { area, query: "", requirements, limit: 20 }); setSearchResult(result); setSelectedCandidate(result.candidates[0] || null); showCandidates(result.candidates);
     } catch (reason) { setError(reason.message); }
     finally { setSearching(false); setSearchPhase(""); }
+  };
+
+  const nextComparison = async (searchId) => {
+    setComparisonStatus("loading"); setComparisonPair(null); setComparisonError("");
+    const result = await post("/api/preferences/pair", { search_id: searchId, browser_id: feedbackBrowserId() });
+    setComparisonPair(result.comparison); setComparisonStatus(result.status);
+  };
+
+  const openComparison = async () => {
+    if (!searchResult?.search_id) return;
+    setComparisonFeedback(""); setComparisonError("");
+    if (!comparisonDialog.current?.open) comparisonDialog.current?.showModal();
+    try {
+      const [evaluation] = await Promise.all([api("/api/preferences/evaluation"), nextComparison(searchResult.search_id)]);
+      setComparisonEvaluation(evaluation);
+    } catch (reason) { setComparisonError(reason.message); setComparisonStatus("error"); }
+  };
+
+  const voteComparison = async (choice) => {
+    if (!comparisonPair || comparisonBusy || !searchResult?.search_id) return;
+    setComparisonBusy(true); setComparisonError("");
+    try {
+      const result = await post("/api/preferences/vote", { pair_id: comparisonPair.pair_id, browser_id: feedbackBrowserId(), choice });
+      setSearchResult((current) => current ? { ...current, candidates: result.candidates, preference_model: { model_version: result.model_version, votes: result.community_votes } } : current);
+      setSelectedCandidate((current) => result.candidates.find((item) => item.point_id === current?.point_id) || result.candidates[0] || null);
+      showCandidates(result.candidates);
+      setComparisonEvaluation(result.evaluation);
+      setComparisonFeedback(choice === "skip" ? "Skipped. Here’s another pair." : choice === "tie" ? "Tie noted. The shared model has been updated." : "Preference saved. The land ranking has been updated.");
+      await nextComparison(searchResult.search_id);
+    } catch (reason) { setComparisonError(reason.message); }
+    finally { setComparisonBusy(false); }
   };
 
   const assessCandidate = (candidate) => {
@@ -464,6 +511,7 @@ function App() {
             <button className="search-action" disabled={searching || !searchCenter} onClick={findLand}><Icon type="search" />{searching ? searchPhase === "laya" ? "Understanding your request…" : "Screening fresh land cells…" : !searchCenter ? "Choose a centre on the map" : "Find the best matches"}</button>
             {error && <div className="inline-error">{error}</div>}
             {searchResult && <div className="search-summary"><strong>{searchResult.candidates.length ? `${searchResult.candidates.length} best flat, open matches on the map` : "No cells passed every screen"}</strong><span>{searchResult.searched_points} cells checked by satellite · {searchResult.satellite_candidate_points || 0} flat/open cells found · {searchResult.eligible_points || 0} passed your needs{searchResult.candidates.length ? " · click a result for details" : ""}</span></div>}
+            {searchResult?.candidates?.length >= 2 && <div className="comparison-entry"><div><strong>Help Nilam learn what people prefer</strong><span>Compare two sites. Each choice tunes a shared model on this Mac.</span></div><button onClick={openComparison}>Compare two sites</button><small>{searchResult.preference_model?.votes || 0} real votes · adjusted land scores stay within 10 points of the original model</small></div>}
             <CandidateDetails candidate={selectedCandidate} searched={Boolean(searchResult)} onAssess={assessCandidate} onStreetView={showStreetViewAt} />
           </div>}
         </aside>
@@ -471,6 +519,7 @@ function App() {
     </main>
     <footer><strong>nilam</strong><span>Kerala land intelligence</span></footer>
     <dialog ref={streetDialog} className="street-dialog"><button className="dialog-close" onClick={() => streetDialog.current?.close()} aria-label="Close"><Icon type="close" /></button><div className="street-head"><h2>Street View toward the selected land</h2><p>{streetNote}</p></div><div ref={streetElement} className="street-view" /></dialog>
+    <ComparisonDialog dialogRef={comparisonDialog} pair={comparisonPair} status={comparisonStatus} busy={comparisonBusy} error={comparisonError} feedback={comparisonFeedback} evaluation={comparisonEvaluation} onVote={voteComparison} onClose={() => setComparisonPair(null)} />
   </div>;
 }
 

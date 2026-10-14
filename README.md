@@ -45,6 +45,8 @@ The 1,400 points remain the controlled academic training/evaluation cohort. They
 
 Google Maps provides the basemap, address search, device-location context, and Street View from both workflows. The Street View camera is aimed from the nearest outdoor panorama within 300 m toward the selected cell. Open-land evidence comes from Dynamic World built probability, recent land cover, SRTM neighbourhood flatness, and the local OSM building index.
 
+After a land search, **Compare two sites** collects real pairwise choices using nearby Street View and satellite context. A local shared preference model updates the candidate ranking and adjusts displayed land scores by at most ten percentage points; the original model score remains visible. Votes and held-out evaluation stay in the local SQLite database. See [preference learning](docs/preference-learning.md) for the equations and evaluation command.
+
 The first Laya interpretation downloads its local checkpoint (about 846 MB)
 from Hugging Face. Later requests use the local cache. GLiNER and Distil-Whisper
 also download only when their optional paths are used.
