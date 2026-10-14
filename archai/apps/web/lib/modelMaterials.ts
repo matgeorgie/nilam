@@ -42,7 +42,7 @@ export function photoTexture(pattern:Pattern,channel:'diff'|'nor_gl'|'rough'='di
  const asset=pattern==='wood'?'wood_floor_deck':pattern==='deck'?'brown_planks_03':null;
  if(!asset)return null;
  const key=asset+channel;if(photoTextures.has(key))return photoTextures.get(key)!;
- const texture=new TextureLoader().load(`/materials/${asset}/${channel}.jpg`);
+ const texture=new TextureLoader().load(`/design/materials/${asset}/${channel}.jpg`);
  texture.wrapS=texture.wrapT=RepeatWrapping;texture.repeat.set(1/6,1/6);texture.anisotropy=4;
  if(channel==='diff')texture.colorSpace=SRGBColorSpace;
  photoTextures.set(key,texture);return texture;
