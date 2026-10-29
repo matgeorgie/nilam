@@ -1,5 +1,3 @@
-[![Assignment 2 safe CI](https://github.com/matgeorgie/nilam/actions/workflows/assignment2-ci.yml/badge.svg)](https://github.com/matgeorgie/nilam/actions/workflows/assignment2-ci.yml)
-
 # Nilam
 
 Nilam is a local-first Kerala residential land-screening research project. It has two workflows:
