@@ -1,0 +1,27 @@
+name: Assignment 2 safe CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  unit-tests:
+    name: Safe deterministic unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install test tools
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install "pytest>=8,<10" numpy
+      - name: Run deterministic unit tests
+        env:
+          PYTHONPATH: src
+        run: |
+          pytest tests/test_weak_labels.py tests/test_preference_learning.py -q
